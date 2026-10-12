@@ -1,0 +1,20 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/node_modules-pnpm-backup": true,
+    ".tools": true,
+    ".recovery": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/node_modules-pnpm-backup": true,
+    ".tools": true,
+    ".recovery": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/node_modules-pnpm-backup/**": true,
+    "**/.tools/**": true,
+    "**/.recovery/**": true
+  }
+}

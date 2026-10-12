@@ -1,0 +1,726 @@
+import express, { type Request, type Response, type NextFunction } from 'express';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import bcrypt from 'bcryptjs';
+import { randomBytes, createHash } from 'node:crypto';
+import path from 'node:path';
+import multer from 'multer';
+import { z, ZodError } from 'zod';
+import type { User } from '@prisma/client';
+import { db } from './db';
+import { dictionaryStatus, entryInclude, searchDictionary } from './dictionary';
+import { schedule } from '../../../packages/shared/srs';
+import { explainJapanese } from './assistant';
+import { testDefinitions, type Exercise } from '../../../packages/shared/content';
+declare global {
+  namespace Express {
+    interface Locals {
+      user: User;
+    }
+  }
+}
+export const app = express();
+app.disable('x-powered-by');
+// Only enable for the local Cloudflare connector used by the sharing script.
+if (process.env.TRUST_PROXY_LOOPBACK === '1') app.set('trust proxy', 'loopback');
+app.use(express.json({ limit: '1mb' }));
+app.use(cookieParser());
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'same-origin');
+  res.setHeader('X-Frame-Options', 'DENY');
+  next();
+});
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin) {
+    const allowed = (
+      process.env.APP_ORIGINS ||
+      'http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:3001,http://localhost:3001'
+    ).split(',');
+    if (!allowed.includes(req.headers.origin)) {
+      res.status(403).json({ error: 'Nguồn yêu cầu không hợp lệ.' });
+      return;
+    }
+  }
+  next();
+});
+const safeUser = (u: User) => ({
+  id: u.id,
+  email: u.email,
+  name: u.name,
+  avatar: u.avatar,
+  goal: u.goal,
+  level: u.level,
+  theme: u.theme,
+  role: u.role,
+});
+const digest = (s: string) => createHash('sha256').update(s).digest('hex');
+async function session(res: Response, userId: string) {
+  const token = randomBytes(32).toString('hex');
+  await db.session.create({
+    data: { token: digest(token), userId, expires: new Date(Date.now() + 30 * 86400000) },
+  });
+  res.cookie('komorebi_session', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 30 * 86400000,
+    path: '/',
+  });
+}
+async function auth(req: Request, res: Response, next: NextFunction) {
+  const token = req.cookies.komorebi_session as string | undefined;
+  if (!token) {
+    res.status(401).json({ error: 'Vui lòng đăng nhập để tiếp tục.' });
+    return;
+  }
+  const s = await db.session.findUnique({
+    where: { token: digest(token) },
+    include: { user: true },
+  });
+  if (!s || s.expires < new Date()) {
+    res.status(401).json({ error: 'Phiên đăng nhập đã hết hạn.' });
+    return;
+  }
+  res.locals.user = s.user;
+  next();
+}
+const credentials = z.object({
+  email: z
+    .email()
+    .max(254)
+    .transform((s) => s.toLowerCase()),
+  password: z.string().min(8).max(128),
+});
+const sensitive = rateLimit({
+  windowMs: 15 * 60000,
+  limit: 40,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'Bạn thử quá nhiều lần. Vui lòng chờ 15 phút.' },
+});
+app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+app.post('/api/auth/register', sensitive, async (req, res) => {
+  const data = credentials.extend({ name: z.string().trim().min(1).max(60) }).parse(req.body);
+  if (await db.user.findUnique({ where: { email: data.email } })) {
+    res.status(409).json({ error: 'Email này đã được đăng ký.' });
+    return;
+  }
+  const user = await db.user.create({
+    data: { ...data, password: await bcrypt.hash(data.password, 12) },
+  });
+  await db.deck.create({
+    data: {
+      userId: user.id,
+      name: 'Từ vựng của tôi',
+      description: 'Những từ đầu tiên trong hành trình của bạn',
+    },
+  });
+  await session(res, user.id);
+  res.status(201).json(safeUser(user));
+});
+app.post('/api/auth/login', sensitive, async (req, res) => {
+  const data = credentials.parse(req.body);
+  const user = await db.user.findUnique({ where: { email: data.email } });
+  if (!user || !(await bcrypt.compare(data.password, user.password))) {
+    res.status(401).json({ error: 'Email hoặc mật khẩu chưa đúng.' });
+    return;
+  }
+  await session(res, user.id);
+  res.json(safeUser(user));
+});
+app.post('/api/auth/demo', sensitive, async (_req, res) => {
+  const user = await db.user.findUnique({ where: { email: 'demo@komorebi.local' } });
+  if (!user) {
+    res.status(503).json({ error: 'Chưa có tài khoản mẫu. Hãy chạy db:setup.' });
+    return;
+  }
+  await session(res, user.id);
+  res.json(safeUser(user));
+});
+app.post('/api/auth/logout', async (req, res) => {
+  if (req.cookies.komorebi_session)
+    await db.session.deleteMany({ where: { token: digest(String(req.cookies.komorebi_session)) } });
+  res.clearCookie('komorebi_session', { path: '/' });
+  res.json({ ok: true });
+});
+app.get('/api/auth/me', auth, (_req, res) => res.json(safeUser(res.locals.user)));
+app.use('/api', auth);
+app.get('/api/assistant/status', (_req, res) =>
+  res.json({ configured: !!(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL) }),
+);
+app.post(
+  '/api/assistant',
+  rateLimit({
+    windowMs: 15 * 60000,
+    limit: 10,
+    message: { error: 'Bạn đã dùng 10 lượt hỏi trong 15 phút. Hãy nghỉ một chút rồi quay lại.' },
+  }),
+  async (req, res) => {
+    const { question } = z.object({ question: z.string().trim().min(3).max(1000) }).parse(req.body);
+    res.json(await explainJapanese(question, res.locals.user.level));
+  },
+);
+app.patch('/api/profile', async (req, res) => {
+  const data = z
+    .object({
+      name: z.string().trim().min(1).max(60).optional(),
+      avatar: z.enum(['花', '山', '月', '海', '猫', '森']).optional(),
+      goal: z.number().int().min(1).max(200).optional(),
+      level: z.enum(['N5', 'N4', 'N3', 'N2', 'N1']).optional(),
+      theme: z.enum(['light', 'dark', 'system']).optional(),
+    })
+    .parse(req.body);
+  res.json(safeUser(await db.user.update({ where: { id: res.locals.user.id }, data })));
+});
+app.post('/api/profile/password', sensitive, async (req, res) => {
+  const { currentPassword, password } = z
+    .object({ currentPassword: z.string().max(128), password: z.string().min(8).max(128) })
+    .parse(req.body);
+  if (!(await bcrypt.compare(currentPassword, res.locals.user.password))) {
+    res.status(400).json({ error: 'Mật khẩu hiện tại chưa đúng.' });
+    return;
+  }
+  await db.$transaction([
+    db.user.update({
+      where: { id: res.locals.user.id },
+      data: { password: await bcrypt.hash(password, 12) },
+    }),
+    db.session.deleteMany({ where: { userId: res.locals.user.id } }),
+  ]);
+  await session(res, res.locals.user.id);
+  res.json({ ok: true });
+});
+const localDay = (d: Date) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+app.get('/api/dashboard', async (_req, res) => {
+  const userId = res.locals.user.id;
+  const [cards, reviews, progress, attempts, writings] = await Promise.all([
+    db.card.findMany({ where: { deck: { userId } }, orderBy: { lastReviewed: 'desc' } }),
+    db.review.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
+    db.grammarProgress.findMany({ where: { userId, completed: true }, include: { grammar: true } }),
+    db.attempt.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 30 }),
+    db.writing.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 90 }),
+  ]);
+  const activity = [
+    ...reviews.map((r) => ({ date: r.createdAt, type: 'review' })),
+    ...progress.map((p) => ({ date: p.updatedAt, type: 'grammar' })),
+    ...attempts.map((a) => ({ date: a.createdAt, type: 'test' })),
+    ...writings.map((w) => ({ date: w.createdAt, type: 'writing' })),
+  ];
+  const days = new Set(activity.map((a) => localDay(a.date)));
+  let streak = 0;
+  const now = new Date();
+  let cursor = now;
+  if (!days.has(localDay(cursor))) cursor = new Date(cursor.getTime() - 86400000);
+  while (days.has(localDay(cursor))) {
+    streak++;
+    cursor = new Date(cursor.getTime() - 86400000);
+  }
+  const weekly = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(now.getTime() - (6 - i) * 86400000);
+    const key = localDay(date);
+    return {
+      date: key,
+      label: new Intl.DateTimeFormat('vi', {
+        weekday: 'short',
+        timeZone: 'Asia/Ho_Chi_Minh',
+      }).format(date),
+      reviews: reviews.filter((r) => localDay(r.createdAt) === key).length,
+      activities: activity.filter((a) => localDay(a.date) === key).length,
+    };
+  });
+  res.json({
+    user: safeUser(res.locals.user),
+    learned: cards.filter((c) => c.repetitions > 0).length,
+    totalCards: cards.length,
+    due: cards.filter((c) => c.due <= now).length,
+    grammarCompleted: progress.length,
+    grammarTotal: await db.grammar.count(),
+    today: weekly[6].reviews,
+    streak,
+    accuracy: attempts.length
+      ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length)
+      : null,
+    weekly,
+    recent: cards.filter((c) => c.lastReviewed).slice(0, 5),
+    nextLesson: await db.grammar.findFirst({
+      where: { id: { notIn: progress.map((p) => p.grammarId) } },
+      orderBy: { position: 'asc' },
+    }),
+    attempts,
+    upcoming: Array.from({ length: 7 }, (_, i) => {
+      const date = localDay(new Date(now.getTime() + i * 86400000));
+      return { date, count: cards.filter((c) => localDay(c.due) === date).length };
+    }),
+    activeDays: [...days],
+  });
+});
+app.get('/api/dictionary/status', async (_req, res) => {
+  const s = await dictionaryStatus();
+  res.json({ ...s, jobs: undefined });
+});
+const searchParams = z.object({
+  q: z.string().max(100).default(''),
+  page: z.coerce.number().int().min(1).max(1000).default(1),
+  limit: z.coerce.number().int().min(1).max(40).default(15),
+});
+app.get('/api/dictionary/search', async (req, res) => {
+  const p = searchParams.parse(req.query);
+  res.json(await searchDictionary(p.q, p.page, p.limit));
+});
+app.get('/api/dictionary/suggestions', async (req, res) => {
+  const { q } = searchParams.parse(req.query);
+  const result = await searchDictionary(q, 1, 5);
+  res.json(
+    result.items.map((e) => ({
+      id: e.id,
+      text: e.kanji[0]?.text || e.readings[0]?.text,
+      reading: e.readings[0]?.text,
+    })),
+  );
+});
+app.get('/api/dictionary/history', async (_req, res) =>
+  res.json(
+    await db.searchHistory.findMany({
+      where: { userId: res.locals.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+    }),
+  ),
+);
+app.post('/api/dictionary/history', async (req, res) => {
+  const { query } = z.object({ query: z.string().trim().min(1).max(100) }).parse(req.body);
+  await db.searchHistory.deleteMany({ where: { userId: res.locals.user.id, query } });
+  res.json(await db.searchHistory.create({ data: { userId: res.locals.user.id, query } }));
+});
+app.get('/api/dictionary/:id', async (req, res) => {
+  const entry = await db.dictionaryEntry.findUnique({
+    where: { id: String(req.params.id) },
+    include: entryInclude,
+  });
+  if (!entry) {
+    res.status(404).json({ error: 'Không tìm thấy từ này.' });
+    return;
+  }
+  res.json(entry);
+});
+async function ownedDeck(id: string, userId: string) {
+  const deck = await db.deck.findFirst({
+    where: { id, userId },
+    include: { cards: { orderBy: { japanese: 'asc' } } },
+  });
+  if (!deck) throw Object.assign(Error('Không tìm thấy bộ thẻ.'), { status: 404 });
+  return deck;
+}
+async function ownedCard(id: string, userId: string) {
+  const card = await db.card.findFirst({ where: { id, deck: { userId } } });
+  if (!card) throw Object.assign(Error('Không tìm thấy thẻ.'), { status: 404 });
+  return card;
+}
+app.get('/api/flashcards/decks', async (_req, res) =>
+  res.json(
+    await db.deck.findMany({
+      where: { userId: res.locals.user.id },
+      include: { cards: true },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ),
+);
+const deckSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  description: z.string().max(300).default(''),
+});
+app.post('/api/flashcards/decks', async (req, res) =>
+  res
+    .status(201)
+    .json(
+      await db.deck.create({ data: { ...deckSchema.parse(req.body), userId: res.locals.user.id } }),
+    ),
+);
+app.get('/api/flashcards/decks/:id', async (req, res) =>
+  res.json(await ownedDeck(String(req.params.id), res.locals.user.id)),
+);
+app.patch('/api/flashcards/decks/:id', async (req, res) => {
+  await ownedDeck(String(req.params.id), res.locals.user.id);
+  res.json(
+    await db.deck.update({
+      where: { id: String(req.params.id) },
+      data: deckSchema.partial().parse(req.body),
+    }),
+  );
+});
+app.delete('/api/flashcards/decks/:id', async (req, res) => {
+  await ownedDeck(String(req.params.id), res.locals.user.id);
+  await db.deck.delete({ where: { id: String(req.params.id) } });
+  res.json({ ok: true });
+});
+const cardSchema = z.object({
+  deckId: z.string(),
+  japanese: z.string().trim().min(1).max(120),
+  reading: z.string().max(200),
+  meaning: z.string().trim().min(1).max(1000),
+  english: z.string().max(1000).default(''),
+  note: z.string().max(2000).default(''),
+  example: z.string().max(1000).default(''),
+  entryId: z.string().nullable().optional(),
+});
+app.post('/api/flashcards/cards', async (req, res) => {
+  const data = cardSchema.parse(req.body);
+  await ownedDeck(data.deckId, res.locals.user.id);
+  res.status(201).json(await db.card.create({ data }));
+});
+app.patch('/api/flashcards/cards/:id', async (req, res) => {
+  await ownedCard(String(req.params.id), res.locals.user.id);
+  const data = cardSchema.partial().parse(req.body);
+  if (data.deckId) await ownedDeck(data.deckId, res.locals.user.id);
+  res.json(await db.card.update({ where: { id: String(req.params.id) }, data }));
+});
+app.delete('/api/flashcards/cards/:id', async (req, res) => {
+  await ownedCard(String(req.params.id), res.locals.user.id);
+  await db.card.delete({ where: { id: String(req.params.id) } });
+  res.json({ ok: true });
+});
+app.get('/api/flashcards/review/due', async (req, res) =>
+  res.json(
+    await db.card.findMany({
+      where: {
+        deck: {
+          userId: res.locals.user.id,
+          ...(typeof req.query.deck === 'string' ? { id: req.query.deck } : {}),
+        },
+        due: { lte: new Date() },
+      },
+      orderBy: { due: 'asc' },
+      take: 100,
+    }),
+  ),
+);
+app.post('/api/flashcards/review', async (req, res) => {
+  const { cardId, rating } = z
+    .object({ cardId: z.string(), rating: z.number().int().min(0).max(3) })
+    .parse(req.body);
+  const card = await ownedCard(cardId, res.locals.user.id);
+  if (card.due > new Date()) {
+    res.status(409).json({ error: 'Thẻ này đã được ôn. Vui lòng tải lại hàng đợi.' });
+    return;
+  }
+  const next = schedule(card, rating);
+  await db.$transaction([
+    db.card.update({ where: { id: cardId }, data: next }),
+    db.review.create({
+      data: { userId: res.locals.user.id, cardId, rating, interval: next.interval },
+    }),
+  ]);
+  res.json(next);
+});
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(Object.assign(Error('Chỉ chấp nhận tệp PDF.'), { status: 400 }));
+  },
+});
+app.post('/api/flashcards/pdf', upload.single('file'), async (req, res) => {
+  if (!req.file || req.file.buffer.subarray(0, 5).toString() !== '%PDF-') {
+    res.status(400).json({ error: 'Tệp PDF không hợp lệ.' });
+    return;
+  }
+  const { PDFParse } = await import('pdf-parse');
+  const parser = new PDFParse({ data: req.file.buffer });
+  try {
+    const result = await parser.getText();
+    const lines = result.text
+      .split('\n')
+      .map((s) => s.trim())
+      .filter((s) => /[\u3040-\u30ff\u4e00-\u9fff]/.test(s))
+      .slice(0, 100);
+    res.json({
+      lines,
+      message: lines.length
+        ? 'Hãy kiểm tra từng dòng và bổ sung nghĩa trước khi lưu.'
+        : 'Không tìm thấy văn bản tiếng Nhật. PDF ảnh quét cần OCR; ứng dụng chưa hỗ trợ OCR.',
+    });
+  } finally {
+    await parser.destroy();
+  }
+});
+app.get('/api/grammar', async (req, res) => {
+  const level = typeof req.query.level === 'string' ? req.query.level : undefined;
+  const q = String(req.query.q || '');
+  res.json(
+    await db.grammar.findMany({
+      where: {
+        ...(level ? { level } : {}),
+        OR: [{ title: { contains: q } }, { pattern: { contains: q } }],
+      },
+      include: { progress: { where: { userId: res.locals.user.id } } },
+      orderBy: { position: 'asc' },
+    }),
+  );
+});
+app.get('/api/grammar/:id', async (req, res) => {
+  const lesson = await db.grammar.findUnique({
+    where: { id: String(req.params.id) },
+    include: { progress: { where: { userId: res.locals.user.id } } },
+  });
+  if (!lesson) {
+    res.status(404).json({ error: 'Không tìm thấy bài học.' });
+    return;
+  }
+  res.json({
+    ...lesson,
+    content: JSON.parse(lesson.content),
+    exercises: (JSON.parse(lesson.exercises) as Exercise[]).map(
+      ({ answer: _, explanation: __, ...q }) => q,
+    ),
+  });
+});
+app.post('/api/grammar/:id/progress', async (req, res) => {
+  const data = z
+    .object({ completed: z.boolean().optional(), bookmarked: z.boolean().optional() })
+    .parse(req.body);
+  const grammarId = String(req.params.id);
+  if (!(await db.grammar.findUnique({ where: { id: grammarId } }))) {
+    res.status(404).json({ error: 'Không tìm thấy bài học.' });
+    return;
+  }
+  res.json(
+    await db.grammarProgress.upsert({
+      where: { userId_grammarId: { userId: res.locals.user.id, grammarId } },
+      create: { userId: res.locals.user.id, grammarId, ...data },
+      update: data,
+    }),
+  );
+});
+const normalizeAnswer = (s: string) =>
+  s
+    .normalize('NFKC')
+    .replace(/[\s。.!！?？]/g, '')
+    .toLowerCase();
+app.post('/api/grammar/:id/exercise', async (req, res) => {
+  const { exerciseId, answer } = z
+    .object({ exerciseId: z.string(), answer: z.string().max(1000) })
+    .parse(req.body);
+  const lesson = await db.grammar.findUniqueOrThrow({ where: { id: String(req.params.id) } });
+  const exercise = (JSON.parse(lesson.exercises) as Exercise[]).find((e) => e.id === exerciseId);
+  if (!exercise) {
+    res.status(404).json({ error: 'Không tìm thấy câu hỏi.' });
+    return;
+  }
+  res.json({
+    correct: normalizeAnswer(answer) === normalizeAnswer(exercise.answer),
+    answer: exercise.answer,
+    explanation: exercise.explanation,
+  });
+});
+app.get('/api/tests', async (_req, res) =>
+  res.json([
+    ...testDefinitions,
+    {
+      id: 'vocabulary',
+      title: 'Từ vựng của bạn',
+      description: 'Trắc nghiệm, gõ đáp án và ghép nghĩa',
+      kind: 'vocabulary',
+      lessonIds: [],
+    },
+    {
+      id: 'mixed',
+      title: 'Ôn tập tổng hợp',
+      description: 'Kết hợp từ vựng và ngữ pháp N5',
+      kind: 'mixed',
+      lessonIds: ['desu', 'wo'],
+    },
+  ]),
+);
+app.get('/api/tests/history', async (_req, res) =>
+  res.json(
+    await db.attempt.findMany({
+      where: { userId: res.locals.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    }),
+  ),
+);
+app.post('/api/tests/:id/start', async (req, res) => {
+  const id = String(req.params.id);
+  let questions: Exercise[] = [];
+  const def = testDefinitions.find((t) => t.id === id);
+  const lessonIds = def?.lessonIds || (id === 'mixed' ? ['desu', 'wo'] : []);
+  if (!def && !['vocabulary', 'mixed'].includes(id)) {
+    res.status(404).json({ error: 'Không tìm thấy bài kiểm tra.' });
+    return;
+  }
+  if (lessonIds.length) {
+    const rows = await db.grammar.findMany({
+      where: { id: { in: lessonIds } },
+      orderBy: { position: 'asc' },
+    });
+    questions = rows.flatMap((r) => JSON.parse(r.exercises) as Exercise[]);
+  }
+  if (['vocabulary', 'mixed'].includes(id)) {
+    const cards = await db.card.findMany({
+      where: { deck: { userId: res.locals.user.id } },
+      take: 30,
+    });
+    if (cards.length < 4) {
+      res.status(400).json({ error: 'Hãy thêm ít nhất 4 thẻ để làm bài kiểm tra từ vựng.' });
+      return;
+    }
+    const chosen = cards.sort(() => Math.random() - 0.5).slice(0, 10);
+    questions.push(
+      ...chosen.map((c, i): Exercise => ({
+        id: 'vocab-' + c.id,
+        type: i % 4 === 1 ? 'fill' : 'choice',
+        prompt:
+          i % 4 === 1
+            ? `Viết từ tiếng Nhật có nghĩa: ${c.meaning}`
+            : i % 4 === 2 ? `Chọn từ tiếng Nhật có nghĩa: ${c.meaning}` : `「${c.japanese}」 có nghĩa là gì?`,
+        ...(i % 4 === 1
+          ? {}
+          : {
+              options: [
+                i % 4 === 2 ? c.japanese : c.meaning,
+                ...[...new Set(cards
+                  .filter((x) => x.meaning !== c.meaning && x.japanese !== c.japanese)
+                  .map((x) => i % 4 === 2 ? x.japanese : x.meaning))].slice(0,3),
+              ].sort(() => Math.random() - 0.5),
+            }),
+        answer: i % 4 === 1 || i % 4 === 2 ? c.japanese : c.meaning,
+        explanation: `${c.japanese}（${c.reading}）: ${c.meaning}`,
+      })),
+    );
+  }
+  if (['vocabulary','mixed'].includes(id)) {
+    const pairs = await db.card.findMany({where:{deck:{userId:res.locals.user.id}},take:4});
+    questions.push({id:'matching',type:'matching',prompt:'Ghép mỗi từ với nghĩa phù hợp.',rows:pairs.map(c=>c.japanese),options:[...new Set(pairs.map(c=>c.meaning))].sort(()=>Math.random()-0.5),answer:JSON.stringify(pairs.map(c=>c.meaning)),explanation:pairs.map(c=>`${c.japanese}: ${c.meaning}`).join(' · ')});
+  }
+  const run = await db.testRun.create({
+    data: { userId: res.locals.user.id, testId: id, questions: JSON.stringify(questions) },
+  });
+  res.json({
+    runId: run.id,
+    startedAt: run.startedAt,
+    questions: questions.map(({ answer: _, explanation: __, ...q }) => q),
+  });
+});
+app.post('/api/tests/:id/submit', async (req, res) => {
+  const { runId, answers } = z
+    .object({ runId: z.string(), answers: z.record(z.string(), z.string().max(1000)) })
+    .parse(req.body);
+  const run = await db.testRun.findFirst({
+    where: {
+      id: runId,
+      userId: res.locals.user.id,
+      testId: String(req.params.id),
+      submitted: false,
+    },
+  });
+  if (!run) {
+    res.status(409).json({ error: 'Bài làm đã được nộp hoặc không tồn tại.' });
+    return;
+  }
+  const questions = JSON.parse(run.questions) as Exercise[];
+  const results = questions.map((q) => ({
+    ...q,
+    given: answers[q.id] || '',
+    correct: normalizeAnswer(answers[q.id] || '') === normalizeAnswer(q.answer),
+  }));
+  const score = Math.round((results.filter((r) => r.correct).length / results.length) * 100);
+  const attempt = await db.$transaction(async (tx) => {
+    const claimed = await tx.testRun.updateMany({
+      where: { id: run.id, submitted: false },
+      data: { submitted: true },
+    });
+    if (!claimed.count) throw Object.assign(Error('Bài đã được nộp.'), { status: 409 });
+    return tx.attempt.create({
+      data: {
+        userId: res.locals.user.id,
+        testId: run.testId,
+        score,
+        answers: JSON.stringify(results),
+        duration: Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
+      },
+    });
+  });
+  res.json({ ...attempt, results });
+});
+app.get('/api/writing', async (_req, res) =>
+  res.json(
+    await db.writing.findMany({
+      where: { userId: res.locals.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    }),
+  ),
+);
+app.post('/api/writing', async (req, res) => {
+  const data = z
+    .object({
+      character: z.string().min(1).max(4),
+      strokes: z
+        .array(
+          z
+            .array(z.object({ x: z.number().min(0).max(400), y: z.number().min(0).max(400) }))
+            .min(1)
+            .max(3000),
+        )
+        .min(1)
+        .max(100),
+    })
+    .parse(req.body);
+  res
+    .status(201)
+    .json(
+      await db.writing.create({
+        data: {
+          userId: res.locals.user.id,
+          character: data.character,
+          strokes: JSON.stringify(data.strokes),
+        },
+      }),
+    );
+});
+app.use('/api/admin', (_req, res, next) => {
+  if (res.locals.user.role !== 'admin') {
+    res.status(403).json({ error: 'Chỉ quản trị viên có thể xem trang này.' });
+    return;
+  }
+  next();
+});
+app.get('/api/admin/translations/status', async (_req, res) => res.json(await dictionaryStatus()));
+app.get('/api/admin/translations/jobs', async (_req, res) =>
+  res.json(await db.translationJob.findMany({ orderBy: { startedAt: 'desc' }, take: 30 })),
+);
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Không tìm thấy chức năng này.' }));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.resolve('dist')));
+  app.get('/{*path}', (_req, res) => res.sendFile(path.resolve('dist/index.html')));
+}
+app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (error instanceof ZodError) {
+    res
+      .status(400)
+      .json({
+        error: 'Thông tin chưa hợp lệ. Vui lòng kiểm tra các trường đã nhập.',
+        details: error.issues.map((i) => ({ path: i.path, message: i.message })),
+      });
+    return;
+  }
+  const e = error as { status?: number; code?: string; message?: string };
+  if (e.code === 'LIMIT_FILE_SIZE') {
+    res.status(413).json({ error: 'Tệp PDF phải nhỏ hơn 5 MB.' });
+    return;
+  }
+  console.error(error);
+  res
+    .status(e.status || 500)
+    .json({ error: e.status ? e.message : 'Có lỗi xảy ra. Vui lòng thử lại.' });
+});

@@ -1,0 +1,1 @@
+CREATE TABLE "SearchReindex" ("entryId" TEXT NOT NULL PRIMARY KEY);

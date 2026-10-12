@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  password String
+  name String
+  avatar String @default("花")
+  role String @default("user")
+  goal Int @default(20)
+  level String @default("N5")
+  theme String @default("light")
+  createdAt DateTime @default(now())
+  sessions Session[]
+  decks Deck[]
+  reviews Review[]
+  progress GrammarProgress[]
+  attempts Attempt[]
+  writings Writing[]
+  testRuns TestRun[]
+  searches SearchHistory[]
+}
+model Session {
+  token String @id
+  userId String
+  expires DateTime
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+}
+model Deck {
+  id String @id @default(cuid())
+  userId String
+  name String
+  description String @default("")
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  cards Card[]
+}
+model Card {
+  id String @id @default(cuid())
+  deckId String
+  japanese String
+  reading String
+  meaning String
+  english String @default("")
+  note String @default("")
+  example String @default("")
+  entryId String?
+  ease Float @default(2.5)
+  interval Int @default(0)
+  repetitions Int @default(0)
+  due DateTime @default(now())
+  lastReviewed DateTime?
+  deck Deck @relation(fields:[deckId],references:[id],onDelete:Cascade)
+  reviews Review[]
+  @@index([deckId,due])
+}
+model Review {
+  id String @id @default(cuid())
+  userId String
+  cardId String
+  rating Int
+  interval Int
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  card Card @relation(fields:[cardId],references:[id],onDelete:Cascade)
+  @@index([userId,createdAt])
+}
+model Grammar {
+  id String @id
+  pattern String
+  title String
+  level String
+  position Int
+  content String
+  exercises String
+  progress GrammarProgress[]
+}
+model GrammarProgress {
+  id String @id @default(cuid())
+  userId String
+  grammarId String
+  completed Boolean @default(false)
+  bookmarked Boolean @default(false)
+  updatedAt DateTime @updatedAt
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  grammar Grammar @relation(fields:[grammarId],references:[id],onDelete:Cascade)
+  @@unique([userId,grammarId])
+}
+model Attempt {
+  id String @id @default(cuid())
+  userId String
+  testId String
+  score Float
+  answers String
+  duration Int @default(0)
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+}
+model TestRun {
+  id String @id @default(cuid())
+  userId String
+  testId String
+  questions String
+  startedAt DateTime @default(now())
+  submitted Boolean @default(false)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+}
+model SearchHistory {
+  id String @id @default(cuid())
+  userId String
+  query String
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([userId,createdAt])
+}
+model Writing {
+  id String @id @default(cuid())
+  userId String
+  character String
+  strokes String
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+}
+model DictionaryEntry {
+  id String @id
+  common Boolean
+  version String
+  raw String
+  kanji DictionaryKanji[]
+  readings DictionaryReading[]
+  senses DictionarySense[]
+}
+model DictionaryKanji {
+  id String @id
+  entryId String
+  text String
+  normalized String
+  common Boolean
+  information String
+  entry DictionaryEntry @relation(fields:[entryId],references:[id],onDelete:Cascade)
+  @@index([normalized])
+  @@index([entryId])
+}
+model DictionaryReading {
+  id String @id
+  entryId String
+  text String
+  normalized String
+  common Boolean
+  information String
+  restrictions String
+  entry DictionaryEntry @relation(fields:[entryId],references:[id],onDelete:Cascade)
+  @@index([normalized])
+  @@index([entryId])
+}
+model DictionarySense {
+  id String @id
+  entryId String
+  senseIndex Int
+  metadata String
+  entry DictionaryEntry @relation(fields:[entryId],references:[id],onDelete:Cascade)
+  glosses DictionaryGloss[]
+  @@index([entryId])
+}
+model DictionaryGloss {
+  id String @id
+  senseId String
+  glossIndex Int
+  language String
+  originalText String
+  glossType String?
+  sourceHash String
+  sense DictionarySense @relation(fields:[senseId],references:[id],onDelete:Cascade)
+  translation DictionaryTranslation?
+  @@index([senseId])
+}
+model DictionaryTranslation {
+  id String @id @default(cuid())
+  glossId String @unique
+  targetLanguage String @default("vi")
+  translatedText String
+  status String @default("completed")
+  provider String
+  model String
+  sourceHash String
+  translatedAt DateTime @default(now())
+  reviewedAt DateTime?
+  errorMessage String?
+  gloss DictionaryGloss @relation(fields:[glossId],references:[id],onDelete:Cascade)
+  @@index([sourceHash])
+}
+model DictionaryImport {
+  id String @id @default(cuid())
+  version String
+  source String
+  checksum String
+  count Int
+  status String
+  importedAt DateTime @default(now())
+}
+model TranslationJob {
+  id String @id @default(cuid())
+  status String
+  total Int
+  processed Int @default(0)
+  successful Int @default(0)
+  failed Int @default(0)
+  lastError String?
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+}
+model SearchReindex {
+  entryId String @id
+}

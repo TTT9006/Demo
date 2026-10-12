@@ -1,0 +1,15 @@
+node_modules/
+node_modules-pnpm-backup/
+.tools/
+type-resolution.log
+dist/
+dist-api/
+.env
+prisma/*.db*
+data/raw/
+test-results/
+playwright-report/
+
+.recovery/
+npm-audit.json
+.share/
