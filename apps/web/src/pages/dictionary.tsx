@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { toRomaji } from 'wanakana';
+import { SearchHighlight } from '../components/search-highlight';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Copy, ArrowLeft, ArrowRight, BookOpen, Check, Database } from 'lucide-react';
@@ -36,7 +38,15 @@ const labels: Record<string, string> = {
   pref: 'Tiền tố',
 };
 const headword = (entry: Entry) => entry.kanji[0]?.text || entry.readings[0]?.text || '';
-export function WordCard({ entry, detail = false }: { entry: Entry; detail?: boolean }) {
+export function WordCard({
+  entry,
+  detail = false,
+  query = '',
+}: {
+  entry: Entry;
+  detail?: boolean;
+  query?: string;
+}) {
   const [selected, setSelected] = useState<number | null>(null);
   const [deckId, setDeckId] = useState('');
   const [saving, setSaving] = useState(false);
@@ -81,13 +91,32 @@ export function WordCard({ entry, detail = false }: { entry: Entry; detail?: boo
         <div>
           <div className="word-title">
             <Link lang="ja" to={'/dictionary/' + entry.id}>
-              {word}
+              <SearchHighlight text={word} query={query} />
             </Link>
             {entry.common && <span className="tag green">Từ thông dụng</span>}
           </div>
           <p className="reading" lang="ja">
-            {entry.readings.map((r) => r.text).join(' ・ ')}
+            <SearchHighlight text={entry.readings.map((r) => r.text).join(' ・ ')} query={query} />
           </p>
+          <p className="muted small-text">
+            <SearchHighlight
+              text={entry.readings.map((r) => toRomaji(r.text)).join(' ・ ')}
+              query={query}
+            />
+          </p>
+          {detail && (
+            <div className="inline-actions wrap">
+              {[
+                ...new Set(
+                  entry.kanji.flatMap((k) => [...k.text]).filter((c) => /\p{Script=Han}/u.test(c)),
+                ),
+              ].map((c) => (
+                <Link key={c} className="tag" to={'/kanji/' + encodeURIComponent(c)}>
+                  Bộ thủ & cấu tạo: {c}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
         <div className="inline-actions">
           <AudioButton text={word} />
@@ -128,7 +157,7 @@ export function WordCard({ entry, detail = false }: { entry: Entry; detail?: boo
                     <span key={g.id}>
                       {j > 0 ? '; ' : ''}
                       {g.translation?.status === 'completed' ? (
-                        g.translation.translatedText
+                        <SearchHighlight text={g.translation.translatedText} query={query} />
                       ) : (
                         <span className="untranslated">
                           {g.originalText} <small>chưa có bản dịch Việt</small>
@@ -246,14 +275,15 @@ export function Dictionary() {
     if (composing) return;
     const timer = setTimeout(() => {
       if (input !== query) setParams(input ? { q: input } : {});
-    }, 350);
+    }, 250);
     return () => clearTimeout(timer);
   }, [input, composing, query, setParams]);
   const results = useQuery({
     queryKey: ['dictionary', query, page],
-    queryFn: () =>
-      api<{ items: Entry[]; total: number; limit: number }>(
+    queryFn: ({ signal }) =>
+      api<{ items: Entry[]; total: number; limit: number; fuzzy?: boolean }>(
         '/dictionary/search?q=' + encodeURIComponent(query) + '&page=' + page,
+        { signal },
       ),
     enabled: !composing,
   });
@@ -278,7 +308,7 @@ export function Dictionary() {
       <PageHeader
         eyebrow="TRA CỨU & KHÁM PHÁ"
         title="Mỗi từ là một cánh cửa."
-        description="Tìm bằng Kanji, Kana, Romaji, tiếng Việt hoặc tiếng Anh."
+        description="Tìm bằng Kanji, Kana, Romaji, tiếng Việt hoặc tiếng Anh; hỗ trợ cả dạng chia như ikimasu, 食べました."
       />
       <section className="dictionary-search-panel">
         <form
@@ -321,15 +351,36 @@ export function Dictionary() {
             <h2>{query ? `Kết quả cho “${query}”` : 'Khám phá từ thông dụng'}</h2>
             <span>{results.data?.total.toLocaleString('vi') || 0} từ</span>
           </div>
+          {results.isFetching && <p role="status">Đang tìm kiếm…</p>}
+          {results.data?.fuzzy && (
+            <p>Không có kết quả chính xác. Các từ gần giống dưới đây chỉ là gợi ý.</p>
+          )}
           {results.isLoading ? (
             <Loading />
           ) : results.error ? (
             <ErrorState error={results.error} retry={() => void results.refetch()} />
           ) : results.data?.items.length ? (
-            results.data.items.map((e) => <WordCard key={e.id} entry={e} />)
+            results.data.items.map((e) => (
+              <div key={e.id}>
+                {e.inflection && (
+                  <p className="muted small-text">
+                    Dạng gốc: <strong lang="ja">{e.inflection.term}</strong> · Nhận diện:{' '}
+                    {e.inflection.steps.join(' → ')}
+                  </p>
+                )}
+                <WordCard entry={e} query={query} />
+              </div>
+            ))
           ) : (
-            <Empty title="Chưa tìm thấy từ phù hợp">
+            <Empty
+              title={
+                status.data?.entries === 0
+                  ? 'Dữ liệu từ điển chưa được nhập'
+                  : 'Chưa tìm thấy từ phù hợp'
+              }
+            >
               <p>Thử cách viết khác, bỏ dấu cách hoặc dùng Kana.</p>
+              <p>Tra nghĩa tiếng Việt chỉ áp dụng cho những định nghĩa đã có bản dịch.</p>
             </Empty>
           )}
           {results.data && results.data.total > results.data.limit && (

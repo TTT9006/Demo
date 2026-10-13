@@ -16,6 +16,9 @@ Giữ cửa sổ đang chạy và máy tính có Internet, không để máy ng�
 - Lần đầu, công cụ tạo snapshot SQLite nhất quán từ `prisma/learning.db`, giữ từ điển đầy đủ, loại bỏ tài khoản và lịch sử cá nhân **chỉ trên bản sao**, rồi tạo dữ liệu mẫu. Database gốc được mở chỉ đọc.
 - Tài khoản mẫu của bản dùng thử có quyền người dùng thường. Mọi người dùng chung tài khoản mẫu sẽ thấy thay đổi của nhau; hãy đăng ký riêng để thử tiến độ cá nhân.
 - Dữ liệu người thử được giữ lại khi chạy lại lệnh. Database dùng thử không tự đồng bộ với database gốc.
+- Tài khoản đăng ký qua link Internet nằm trong `.share/trial.db`, bảng `User`; tài khoản tạo qua `npm run dev` nằm trong `prisma/learning.db`. Đăng ký ở một bản không tự tạo tài khoản ở bản còn lại.
+- Trang luyện viết tự lưu bản nháp gần nhất vào IndexedDB (`komorebi-drafts`, store `writing`), tách theo ID tài khoản. Nút **Lưu bài viết** lưu vào máy chủ. IndexedDB không lưu mật khẩu hoặc cookie đăng nhập.
+- Bản nháp chỉ thuộc trình duyệt và địa chỉ website hiện tại: đổi link tunnel, đổi trình duyệt hoặc xóa dữ liệu website sẽ không còn truy cập bản nháp cũ. Bài đã lưu vào máy chủ và tài khoản vẫn nằm trong database dùng thử. Đây chưa phải chế độ chạy toàn bộ website offline.
 - Bản dùng thử tắt khóa Gemini và ngân sách dịch. Các chức năng AI cần khóa riêng sẽ báo chưa cấu hình.
 - Chỉ giao diện đã build và API được chia sẻ; thư mục mã nguồn, `.env`, database và backup không được phục vụ như tệp tải xuống.
 

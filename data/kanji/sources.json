@@ -1,0 +1,31 @@
+{
+  "kanjidicVersion": "3.6.2+20261012204142",
+  "kanjivgVersion": "r20260714",
+  "files": [
+    {
+      "url": "https://github.com/scriptin/jmdict-simplified/releases/download/3.6.2%2B20261012204142/kanjidic2-en-3.6.2%2B20261012204142.json.zip",
+      "file": "kanjidic.zip",
+      "sha256": "55e83fe744ca681075ef97772f9cafeab761fabbe3d8d7f1015638136e0ac837"
+    },
+    {
+      "url": "https://github.com/KanjiVG/kanjivg/releases/download/r20260714/kanjivg-20260714-main.zip",
+      "file": "kanjivg.zip",
+      "sha256": "b5df6cd2bc249dd49b8041eb99e38ba9f8dc6b9ea57962a80084b4a315d1a7fc"
+    },
+    {
+      "url": "https://www.unicode.org/Public/17.0.0/ucd/UnicodeData.txt",
+      "file": "UnicodeData.txt",
+      "sha256": "2e1efc1dcb59c575eedf5ccae60f95229f706ee6d031835247d843c11d96470c"
+    },
+    {
+      "url": "https://www.unicode.org/Public/17.0.0/ucd/CJKRadicals.txt",
+      "file": "CJKRadicals.txt",
+      "sha256": "826f83be25cd18fb8a5015a514704504e1982e840ea14d058bf583e1cc620c83"
+    },
+    {
+      "url": "https://www.unicode.org/license.txt",
+      "file": "UNICODE-LICENSE.txt",
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
+    }
+  ]
+}

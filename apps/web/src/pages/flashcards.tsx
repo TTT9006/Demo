@@ -503,12 +503,12 @@ export function Review() {
         <div className="review-session">
           <div className={'review-card ' + (flipped ? 'flipped' : '')}>
             <span className="eyebrow">{flipped ? 'ĐÁP ÁN' : 'BẠN CÒN NHỚ TỪ NÀY KHÔNG?'}</span>
-            <h2 lang="ja">{card.japanese}</h2>
+            <h2 lang="ja"><JapaneseAnnotatedText text={card.japanese} reading={card.reading} disabled={!flipped}/></h2>
             {flipped ? (
               <>
                 <p className="review-reading">{card.reading}</p>
                 <h3>{card.meaning}</h3>
-                {card.example && <p>{card.example}</p>}
+                {card.example && <p><JapaneseAnnotatedText text={card.example}/></p>}
                 {card.note && <small>{card.note}</small>}
               </>
             ) : (
@@ -562,3 +562,4 @@ export function Review() {
     </>
   );
 }
+import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';

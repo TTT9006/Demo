@@ -8,6 +8,8 @@ import multer from 'multer';
 import { z, ZodError } from 'zod';
 import type { User } from '@prisma/client';
 import { db } from './db';
+import { annotate } from './annotation';
+import { kanjiData, kanjiStrokes } from './kanji';
 import { dictionaryStatus, entryInclude, searchDictionary } from './dictionary';
 import { schedule } from '../../../packages/shared/srs';
 import { explainJapanese } from './assistant';
@@ -53,6 +55,7 @@ const safeUser = (u: User) => ({
   goal: u.goal,
   level: u.level,
   theme: u.theme,
+  annotationMode: u.annotationMode,
   role: u.role,
 });
 const digest = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -147,6 +150,81 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 app.get('/api/auth/me', auth, (_req, res) => res.json(safeUser(res.locals.user)));
 app.use('/api', auth);
+app.post(
+  '/api/annotations',
+  rateLimit({ windowMs: 60000, limit: 180, standardHeaders: true, legacyHeaders: false }),
+  async (req, res) => {
+    const { text } = z.object({ text: z.string().min(1).max(2000) }).parse(req.body);
+    res.json({ segments: await annotate(text), version: 'kuromoji-0.1.2-ipadic' });
+  },
+);
+app.get('/api/radicals', async (_req, res) => {
+  const { radicals } = await kanjiData();
+  const progress = await db.radicalProgress.findMany({ where: { userId: res.locals.user.id } });
+  res.json(
+    radicals.map((r) => ({
+      ...r,
+      completed: progress.find((p) => p.radicalId === r.id)?.completed || false,
+    })),
+  );
+});
+app.get('/api/kanji/:character', async (req, res) => {
+  const { characters, radicals } = await kanjiData();
+  const k = characters[String(req.params.character)];
+  if (!k) {
+    res.status(404).json({ error: 'Chưa có dữ liệu Kanji này.' });
+    return;
+  }
+  res.json({ ...k, radical: radicals.find((r) => r.id === k.radicalId) });
+});
+app.get('/api/kanji/:character/strokes', async (req, res) => {
+  const data = await kanjiStrokes(String(req.params.character));
+  if (!data) {
+    res.status(404).json({ error: 'Chưa có minh họa nét cho dạng chữ này.' });
+    return;
+  }
+  res.json(data);
+});
+app.post('/api/radicals/:id/progress', async (req, res) => {
+  const radicalId = z.coerce.number().int().min(1).max(214).parse(req.params.id);
+  const { completed } = z.object({ completed: z.boolean() }).parse(req.body);
+  const userId = res.locals.user.id;
+  res.json(
+    await db.radicalProgress.upsert({
+      where: { userId_radicalId: { userId, radicalId } },
+      create: { userId, radicalId, completed },
+      update: { completed },
+    }),
+  );
+});
+app.post('/api/radicals/:id/srs', async (req, res) => {
+  const radicalId = z.coerce.number().int().min(1).max(214).parse(req.params.id);
+  const { radicals } = await kanjiData(),
+    r = radicals.find((r) => r.id === radicalId)!;
+  const userId = res.locals.user.id;
+  const card = await db.$transaction(async (tx) => {
+    const deck =
+      (await tx.deck.findFirst({ where: { userId, name: 'Bộ thủ Kanji' } })) ||
+      (await tx.deck.create({
+        data: { userId, name: 'Bộ thủ Kanji', description: 'Ôn bộ thủ từ KANJIDIC2 / Unicode' },
+      }));
+    return tx.card.upsert({
+      where: { deckId_radicalId: { deckId: deck.id, radicalId } },
+      create: {
+        deckId: deck.id,
+        radicalId,
+        materialType: 'radical',
+        japanese: r.character,
+        reading: r.readings.join(' / '),
+        meaning: r.name,
+        english: r.meanings.join('; '),
+        note: 'Kangxi ' + radicalId + ' · Tên Hán Việt: ' + r.vietnameseNames.join(', '),
+      },
+      update: {},
+    });
+  });
+  res.json(card);
+});
 app.get('/api/assistant/status', (_req, res) =>
   res.json({ configured: !!(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL) }),
 );
@@ -170,6 +248,7 @@ app.patch('/api/profile', async (req, res) => {
       goal: z.number().int().min(1).max(200).optional(),
       level: z.enum(['N5', 'N4', 'N3', 'N2', 'N1']).optional(),
       theme: z.enum(['light', 'dark', 'system']).optional(),
+      annotationMode: z.enum(['romanized', 'japanese']).optional(),
     })
     .parse(req.body);
   res.json(safeUser(await db.user.update({ where: { id: res.locals.user.id }, data })));
@@ -578,19 +657,28 @@ app.post('/api/tests/:id/start', async (req, res) => {
     questions.push(
       ...chosen.map((c, i): Exercise => ({
         id: 'vocab-' + c.id,
+        readings: Object.fromEntries(
+          cards.filter((x) => x.reading).map((x) => [x.japanese, x.reading]),
+        ),
         type: i % 4 === 1 ? 'fill' : 'choice',
         prompt:
           i % 4 === 1
             ? `Viết từ tiếng Nhật có nghĩa: ${c.meaning}`
-            : i % 4 === 2 ? `Chọn từ tiếng Nhật có nghĩa: ${c.meaning}` : `「${c.japanese}」 có nghĩa là gì?`,
+            : i % 4 === 2
+              ? `Chọn từ tiếng Nhật có nghĩa: ${c.meaning}`
+              : `「${c.japanese}」 có nghĩa là gì?`,
         ...(i % 4 === 1
           ? {}
           : {
               options: [
                 i % 4 === 2 ? c.japanese : c.meaning,
-                ...[...new Set(cards
-                  .filter((x) => x.meaning !== c.meaning && x.japanese !== c.japanese)
-                  .map((x) => i % 4 === 2 ? x.japanese : x.meaning))].slice(0,3),
+                ...[
+                  ...new Set(
+                    cards
+                      .filter((x) => x.meaning !== c.meaning && x.japanese !== c.japanese)
+                      .map((x) => (i % 4 === 2 ? x.japanese : x.meaning)),
+                  ),
+                ].slice(0, 3),
               ].sort(() => Math.random() - 0.5),
             }),
         answer: i % 4 === 1 || i % 4 === 2 ? c.japanese : c.meaning,
@@ -598,9 +686,20 @@ app.post('/api/tests/:id/start', async (req, res) => {
       })),
     );
   }
-  if (['vocabulary','mixed'].includes(id)) {
-    const pairs = await db.card.findMany({where:{deck:{userId:res.locals.user.id}},take:4});
-    questions.push({id:'matching',type:'matching',prompt:'Ghép mỗi từ với nghĩa phù hợp.',rows:pairs.map(c=>c.japanese),options:[...new Set(pairs.map(c=>c.meaning))].sort(()=>Math.random()-0.5),answer:JSON.stringify(pairs.map(c=>c.meaning)),explanation:pairs.map(c=>`${c.japanese}: ${c.meaning}`).join(' · ')});
+  if (['vocabulary', 'mixed'].includes(id)) {
+    const pairs = await db.card.findMany({
+      where: { deck: { userId: res.locals.user.id } },
+      take: 4,
+    });
+    questions.push({
+      id: 'matching',
+      type: 'matching',
+      prompt: 'Ghép mỗi từ với nghĩa phù hợp.',
+      rows: pairs.map((c) => c.japanese),
+      options: [...new Set(pairs.map((c) => c.meaning))].sort(() => Math.random() - 0.5),
+      answer: JSON.stringify(pairs.map((c) => c.meaning)),
+      explanation: pairs.map((c) => `${c.japanese}: ${c.meaning}`).join(' · '),
+    });
   }
   const run = await db.testRun.create({
     data: { userId: res.locals.user.id, testId: id, questions: JSON.stringify(questions) },
@@ -676,17 +775,15 @@ app.post('/api/writing', async (req, res) => {
         .max(100),
     })
     .parse(req.body);
-  res
-    .status(201)
-    .json(
-      await db.writing.create({
-        data: {
-          userId: res.locals.user.id,
-          character: data.character,
-          strokes: JSON.stringify(data.strokes),
-        },
-      }),
-    );
+  res.status(201).json(
+    await db.writing.create({
+      data: {
+        userId: res.locals.user.id,
+        character: data.character,
+        strokes: JSON.stringify(data.strokes),
+      },
+    }),
+  );
 });
 app.use('/api/admin', (_req, res, next) => {
   if (res.locals.user.role !== 'admin') {
@@ -706,12 +803,10 @@ if (process.env.NODE_ENV === 'production') {
 }
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (error instanceof ZodError) {
-    res
-      .status(400)
-      .json({
-        error: 'Thông tin chưa hợp lệ. Vui lòng kiểm tra các trường đã nhập.',
-        details: error.issues.map((i) => ({ path: i.path, message: i.message })),
-      });
+    res.status(400).json({
+      error: 'Thông tin chưa hợp lệ. Vui lòng kiểm tra các trường đã nhập.',
+      details: error.issues.map((i) => ({ path: i.path, message: i.message })),
+    });
     return;
   }
   const e = error as { status?: number; code?: string; message?: string };

@@ -1,3 +1,4 @@
+import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,7 +21,38 @@ export function QuestionInput({
 }) {
   if (q.type === 'matching') {
     const selected: string[] = value ? JSON.parse(value) : [];
-    return <div className="matching-board">{q.rows?.map((row,i)=><label key={row+i}><span lang="ja">{row}</span><select aria-label={'Ghép nghĩa cho '+row} value={selected[i]||''} disabled={disabled} onChange={e=>{const next=[...selected];next[i]=e.target.value;onChange(JSON.stringify(next));}}><option value="">Chọn nghĩa…</option>{q.options?.map(o=><option key={o} value={o}>{o}</option>)}</select></label>)}</div>;
+    return (
+      <div className="matching-board">
+        {q.rows?.map((row, i) => (
+          <label key={row + i}>
+            <span lang="ja">
+              <JapaneseAnnotatedText
+                text={row}
+                disabled={q.annotationDisabled}
+                readings={q.readings}
+              />
+            </span>
+            <select
+              aria-label={'Ghép nghĩa cho ' + row}
+              value={selected[i] || ''}
+              disabled={disabled}
+              onChange={(e) => {
+                const next = [...selected];
+                next[i] = e.target.value;
+                onChange(JSON.stringify(next));
+              }}
+            >
+              <option value="">Chọn nghĩa…</option>
+              {q.options?.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+    );
   }
   if (q.type === 'order')
     return (
@@ -33,7 +65,11 @@ export function QuestionInput({
               variant="secondary"
               onClick={() => onChange(value + o)}
             >
-              {o}
+              <JapaneseAnnotatedText
+                text={o}
+                disabled={q.annotationDisabled}
+                readings={q.readings}
+              />
             </Button>
           ))}
           <Button variant="ghost" disabled={disabled} onClick={() => onChange('')}>
@@ -62,7 +98,7 @@ export function QuestionInput({
             onClick={() => onChange(o)}
           >
             <span>{String.fromCharCode(65 + i)}</span>
-            {o}
+            <JapaneseAnnotatedText text={o} disabled={q.annotationDisabled} readings={q.readings} />
             {value === o && <Check size={17} />}
           </button>
         ))}
@@ -151,11 +187,17 @@ export function Tests() {
           (JSON.parse(review.answers) as Result[]).map((r, i) => (
             <div key={r.id} className={'feedback ' + (r.correct ? 'correct' : 'incorrect')}>
               <strong>
-                {i + 1}. {r.prompt}
+                {i + 1}. <JapaneseAnnotatedText text={r.prompt} />
               </strong>
-              <p>Bạn chọn: {r.given || '(Chưa trả lời)'}</p>
-              <p>Đáp án: {r.answer}</p>
-              <small>{r.explanation}</small>
+              <p>
+                Bạn chọn: <JapaneseAnnotatedText text={r.given || '(Chưa trả lời)'} />
+              </p>
+              <p>
+                Đáp án: <JapaneseAnnotatedText text={r.answer} />
+              </p>
+              <small>
+                <JapaneseAnnotatedText text={r.explanation} />
+              </small>
             </div>
           ))}
       </Modal>
@@ -278,13 +320,19 @@ export function TestSession() {
               key={r.id}
             >
               <h3>
-                {i + 1}. {r.prompt}
+                {i + 1}. <JapaneseAnnotatedText text={r.prompt} />
               </h3>
-              <p>Bạn trả lời: {r.given || '(Chưa trả lời)'}</p>
               <p>
-                <strong>Đáp án: {r.answer}</strong>
+                Bạn trả lời: <JapaneseAnnotatedText text={r.given || '(Chưa trả lời)'} />
               </p>
-              <p>{r.explanation}</p>
+              <p>
+                <strong>
+                  Đáp án: <JapaneseAnnotatedText text={r.answer} />
+                </strong>
+              </p>
+              <p>
+                <JapaneseAnnotatedText text={r.explanation} />
+              </p>
             </div>
           ))}
         </>
@@ -294,7 +342,12 @@ export function TestSession() {
             {run.questions.map((q, i) => (
               <div className="exercise" key={q.id}>
                 <h3>
-                  {i + 1}. {q.prompt}
+                  {i + 1}.{' '}
+                  <JapaneseAnnotatedText
+                    text={q.prompt}
+                    disabled={q.annotationDisabled}
+                    readings={q.readings}
+                  />
                 </h3>
                 <QuestionInput
                   question={q}

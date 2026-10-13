@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
+import { searchTerms } from '../packages/shared/japanese-query';
 import { wordSchema, normalize, hash, type SourceWord } from '../apps/api/src/dictionary';
 // Offline bulk writer. The schema and migrations remain owned by Prisma; bounded
 // SQLite transactions avoid a cross-process round trip for every dictionary row.
@@ -10,6 +11,10 @@ export function createBatchImporter(version: string) {
   const db = new DatabaseSync(path.isAbsolute(file) ? file : path.resolve('prisma', file));
   db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=30000;');
   const get = db.prepare('SELECT raw FROM DictionaryEntry WHERE id=?');
+  const deleteTerms = db.prepare('DELETE FROM DictionarySearchTerm WHERE entryId=?');
+  const insertTerm = db.prepare(
+    'INSERT OR IGNORE INTO DictionarySearchTerm(entryId,kind,term) VALUES(?,?,?)',
+  );
   const entry = db.prepare(
     'INSERT INTO DictionaryEntry(id,common,version,raw) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET common=excluded.common,version=excluded.version,raw=excluded.raw',
   );
@@ -115,6 +120,13 @@ export function createBatchImporter(version: string) {
       deleteGram.run(w.id);
     }
     insertFts.run(w.id, ja, en, vi);
+    deleteTerms.run(w.id);
+    for (const t of searchTerms(
+      w.kanji.map((f) => f.text),
+      w.kana.map((f) => f.text),
+      [vi],
+    ))
+      insertTerm.run(w.id, t.kind, t.term);
     insertTri.run(w.id, normalize(ja + ' ' + en + ' ' + vi));
     const grams = new Set<string>();
     for (const f of [...w.kanji, ...w.kana]) {
@@ -130,16 +142,23 @@ export function createBatchImporter(version: string) {
   return {
     write(inputs: unknown[]) {
       const words = inputs.map((w) => wordSchema.parse(w));
-      let changed = 0;
-      db.exec('BEGIN IMMEDIATE');
-      try {
-        for (const word of words) changed += one(word);
-        db.exec('COMMIT');
-        return changed;
-      } catch (error) {
-        db.exec('ROLLBACK');
-        throw error;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        let changed = 0,
+          started = false;
+        try {
+          db.exec('BEGIN IMMEDIATE');
+          started = true;
+          for (const word of words) changed += one(word);
+          db.exec('COMMIT');
+          return changed;
+        } catch (error) {
+          if (started) db.exec('ROLLBACK');
+          if (attempt === 2 || !/database is (locked|busy)/i.test(String(error))) throw error;
+          console.warn('SQLite busy; retrying dictionary batch', { attempt: attempt + 1 });
+          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250 * (attempt + 1));
+        }
       }
+      throw new Error('Dictionary batch was not committed');
     },
     close: () => db.close(),
   };

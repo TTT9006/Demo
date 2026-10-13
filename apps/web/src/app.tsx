@@ -1,3 +1,4 @@
+import { KanjiDetail } from './pages/radicals';
 import { useEffect, useState } from 'react';
 import {
   Routes,
@@ -25,8 +26,10 @@ import {
   ChevronDown,
   MessageCircle,
   Leaf,
+  X,
 } from 'lucide-react';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
+import * as Dialog from '@radix-ui/react-dialog';
 import { api, post } from './services/api';
 import type { User } from './types';
 import { useUI } from './stores/ui';
@@ -59,6 +62,13 @@ function Layout() {
   const client = useQueryClient();
   const location = useLocation();
   const [mobile, setMobile] = useState(false);
+  const [smallScreen, setSmallScreen] = useState(() => window.matchMedia('(max-width: 760px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 760px)');
+    const update = () => { setSmallScreen(media.matches); if (!media.matches) setMobile(false); };
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [search, setSearch] = useState('');
   const notify = useUI((s) => s.notify);
   useEffect(() => {
@@ -76,9 +86,7 @@ function Layout() {
   }, [user?.theme]);
   if (isLoading) return <Loading />;
   if (!user) return <Navigate to="/login" replace />;
-  return (
-    <div className="app-shell">
-      <aside className={'sidebar ' + (mobile ? 'open' : '')}>
+  const sidebar = <>
         <Link to="/dashboard" className="brand">
           <span className="brand-mark">木</span>
           <span>
@@ -143,25 +151,29 @@ function Layout() {
             </Dropdown.Portal>
           </Dropdown.Root>
         </div>
-      </aside>
-      {mobile && (
-        <button
-          className="mobile-overlay"
-          aria-label="Đóng điều hướng"
-          onClick={() => setMobile(false)}
-        />
-      )}
+  </>;
+  return (
+    <Dialog.Root open={mobile} onOpenChange={setMobile}>
+    <div className="app-shell">
+      {!smallScreen && <aside className="sidebar">{sidebar}</aside>}
+      {smallScreen && <Dialog.Portal>
+        <Dialog.Overlay className="mobile-overlay" />
+        <Dialog.Content className="sidebar open mobile-drawer" aria-describedby={undefined}>
+          <Dialog.Title className="sr-only">Điều hướng học tập</Dialog.Title>
+          <Dialog.Close className="button ghost icon-button drawer-close" aria-label="Đóng điều hướng"><X size={22} /></Dialog.Close>
+          {sidebar}
+        </Dialog.Content>
+      </Dialog.Portal>}
       <div className="main-shell">
         <header className="topbar">
-          <Button
+          <Dialog.Trigger asChild><Button
             variant="ghost"
             size="icon"
             className="mobile-menu"
             aria-label="Mở điều hướng"
-            onClick={() => setMobile(!mobile)}
           >
             <Menu size={22} />
-          </Button>
+          </Button></Dialog.Trigger>
           <div className="breadcrumb">
             Góc học tập <span>/</span>{' '}
             <strong>
@@ -199,7 +211,13 @@ function Layout() {
           </Link>
         </footer>
       </div>
+      {smallScreen && <nav className="mobile-bottom-nav" aria-label="Truy cập nhanh">
+        {[navigation[0], navigation[3], navigation[1], navigation[4]].map(({ to, label, icon: Icon }) =>
+          <NavLink key={to} to={to}><Icon size={21} /><span>{label}</span></NavLink>)}
+        <Dialog.Trigger className="mobile-more"><Menu size={21} /><span>Thêm</span></Dialog.Trigger>
+      </nav>}
     </div>
+    </Dialog.Root>
   );
 }
 function Toast() {
@@ -226,6 +244,7 @@ export function App() {
           <Route path="flashcards/:deckId" element={<DeckDetail />} />
           <Route path="grammar" element={<Grammar />} />
           <Route path="grammar/:id" element={<GrammarLesson />} />
+          <Route path="kanji/:character" element={<KanjiDetail/>}/>
           <Route path="writing" element={<Writing />} />
           <Route path="tests" element={<Tests />} />
           <Route path="tests/:id" element={<TestSession />} />

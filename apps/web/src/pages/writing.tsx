@@ -1,9 +1,14 @@
+import { Link, useSearchParams } from 'react-router-dom';
+import { RadicalLearning } from './radicals';
+import { StrokeOrder } from '../components/stroke-order';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, RotateCcw, Undo2, PenLine } from 'lucide-react';
 import { api, post } from '../services/api';
 import { useUI } from '../stores/ui';
 import { Button, PageHeader, AudioButton } from '../components/ui';
+import { useUser } from '../app';
+import { loadWritingDraft, saveWritingDraft } from '../services/drafts';
 type Point = { x: number; y: number };
 const alphabets: Record<string, string[]> = {
   Hiragana: Array.from(
@@ -15,15 +20,94 @@ const alphabets: Record<string, string[]> = {
   Kanji: Array.from('一二三四五六七八九十日月火水木金土人山川田口目耳手本学'),
 };
 export function Writing() {
+  const { data: user } = useUser();
+  const [params, setParams] = useSearchParams();
+  const radical = params.get('mode') === 'radicals';
+  return user ? (
+    <>
+      <div className="tabs" aria-label="Chế độ luyện viết">
+        <button className={!radical ? 'active' : ''} onClick={() => setParams({})}>
+          Luyện viết Kanji
+        </button>
+        <button className={radical ? 'active' : ''} onClick={() => setParams({ mode: 'radicals' })}>
+          Học bộ thủ
+        </button>
+      </div>
+      {radical ? (
+        <RadicalLearning userId={user.id} />
+      ) : (
+        <WritingWorkspace key={user.id} userId={user.id} />
+      )}
+    </>
+  ) : null;
+}
+export function WritingWorkspace({
+  userId,
+  practiceCharacter,
+}: {
+  userId: string;
+  practiceCharacter?: string;
+}) {
+  const draftKey = practiceCharacter ? userId + ':radical:' + practiceCharacter : userId;
   const [alphabet, setAlphabet] = useState('Hiragana');
-  const [character, setCharacter] = useState('あ');
+  const [character, setCharacter] = useState(practiceCharacter || 'あ');
   const [strokes, setStrokes] = useState<Point[][]>([]);
   const [guide, setGuide] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftStatus, setDraftStatus] = useState('Đang mở bản nháp…');
+  const draftRevision = useRef(0);
   const canvas = useRef<HTMLCanvasElement>(null);
   const current = useRef<Point[] | null>(null);
   const client = useQueryClient();
   const notify = useUI((s) => s.notify);
+  useEffect(() => {
+    let active = true;
+    void loadWritingDraft(draftKey)
+      .then((draft) => {
+        if (!active) return;
+        if (
+          draft &&
+          (practiceCharacter
+            ? draft.character === practiceCharacter
+            : alphabets[draft.alphabet]?.includes(draft.character)) &&
+          Array.isArray(draft.strokes)
+        ) {
+          setAlphabet(draft.alphabet);
+          setCharacter(draft.character);
+          setStrokes(draft.strokes);
+          setGuide(draft.guide);
+        }
+      })
+      .catch(() => {
+        if (active)
+          setDraftStatus(
+            'Không thể lưu bản nháp trên trình duyệt này. Bạn vẫn có thể lưu buổi luyện viết vào tài khoản.',
+          );
+      })
+      .finally(() => {
+        if (active) setDraftReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [draftKey, practiceCharacter]);
+  useEffect(() => {
+    if (!draftReady) return;
+    const revision = ++draftRevision.current;
+    setDraftStatus('Đang lưu bản nháp…');
+    void saveWritingDraft(draftKey, { alphabet, character, strokes, guide })
+      .then(() => {
+        if (draftRevision.current === revision)
+          setDraftStatus('Đã lưu bản nháp trên trình duyệt này.');
+      })
+      .catch(() => {
+        if (draftRevision.current === revision)
+          setDraftStatus(
+            'Không thể lưu bản nháp trên trình duyệt này. Bạn vẫn có thể lưu buổi luyện viết vào tài khoản.',
+          );
+      });
+  }, [draftReady, draftKey, alphabet, character, strokes, guide]);
   const history = useQuery({
     queryKey: ['writing'],
     queryFn: () =>
@@ -50,6 +134,9 @@ export function Writing() {
   }
   useEffect(() => {
     paint();
+    const observer = new MutationObserver(() => paint());
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
   }, [strokes, character]);
   const choose = (c: string) => {
     setCharacter(c);
@@ -70,45 +157,54 @@ export function Writing() {
       setSaving(false);
     }
   };
+  if (!draftReady) return <p role="status">Đang mở bản nháp…</p>;
   return (
     <>
-      <PageHeader
-        eyebrow="ĐỂ BÀN TAY GHI NHỚ"
-        title="Chậm lại cùng một nét chữ."
-        description="Luyện Hiragana, Katakana và Kanji cơ bản theo nhịp của bạn."
-      />
-      <div className="writing-layout">
-        <section className="panel character-picker">
-          <div className="tabs">
-            {Object.keys(alphabets).map((a) => (
-              <button
-                className={alphabet === a ? 'active' : ''}
-                key={a}
-                onClick={() => {
-                  setAlphabet(a);
-                  choose(alphabets[a][0]);
-                }}
-              >
-                {a}
-              </button>
-            ))}
-          </div>
-          <div className="character-grid">
-            {alphabets[alphabet].map((c) => (
-              <button
-                className={character === c ? 'selected' : ''}
-                key={c}
-                onClick={() => choose(c)}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          <div className="writing-tip">
-            <PenLine size={18} />
-            <p>Quan sát hình dạng, khoảng cách và sự cân đối của từng nét.</p>
-          </div>
-        </section>
+      {!practiceCharacter && (
+        <PageHeader
+          eyebrow="ĐỂ BÀN TAY GHI NHỚ"
+          title="Chậm lại cùng một nét chữ."
+          description="Luyện Hiragana, Katakana và Kanji cơ bản theo nhịp của bạn."
+        />
+      )}
+      <p className="muted" role="status">
+        {draftStatus} Nhấn “Lưu bài viết” để lưu vào tài khoản trên máy chủ.
+      </p>
+      <div className={practiceCharacter ? 'radical-writing' : 'writing-layout'}>
+        {!practiceCharacter && (
+          <section className="panel character-picker">
+            <div className="tabs">
+              {Object.keys(alphabets).map((a) => (
+                <button
+                  className={alphabet === a ? 'active' : ''}
+                  key={a}
+                  onClick={() => {
+                    setAlphabet(a);
+                    choose(alphabets[a][0]);
+                  }}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+            <p className="mobile-picker-hint">Vuốt trong bảng để chọn thêm chữ.</p>
+            <div className="character-grid" role="group" aria-label="Chọn chữ luyện viết">
+              {alphabets[alphabet].map((c) => (
+                <button
+                  className={character === c ? 'selected' : ''}
+                  key={c}
+                  onClick={() => choose(c)}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+            <div className="writing-tip">
+              <PenLine size={18} />
+              <p>Quan sát hình dạng, khoảng cách và sự cân đối của từng nét.</p>
+            </div>
+          </section>
+        )}
         <section className="panel canvas-panel">
           <div className="section-heading">
             <h2>Luyện chữ 「{character}」</h2>
@@ -186,22 +282,36 @@ export function Writing() {
           </p>
         </section>
       </div>
+      {!practiceCharacter && /\p{Script=Han}/u.test(character) && (
+        <>
+          <Link className="text-link" to={'/kanji/' + encodeURIComponent(character)}>
+            Bộ thủ & cấu tạo của {character}
+          </Link>
+          <StrokeOrder key={character} character={character} />
+        </>
+      )}
       <section className="panel spaced">
         <h2>Những chữ bạn đã luyện</h2>
         <div className="writing-history">
           {history.data?.length ? (
-            history.data.map((h) => (
-              <button
-                key={h.id}
-                onClick={() => {
-                  setCharacter(h.character);
-                  setStrokes(JSON.parse(h.strokes) as Point[][]);
-                }}
-              >
-                <strong>{h.character}</strong>
-                <small>{new Date(h.createdAt).toLocaleDateString('vi')}</small>
-              </button>
-            ))
+            history.data
+              .filter((h) => !practiceCharacter || h.character === practiceCharacter)
+              .map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => {
+                    const matchingAlphabet = Object.keys(alphabets).find((name) =>
+                      alphabets[name].includes(h.character),
+                    );
+                    if (matchingAlphabet) setAlphabet(matchingAlphabet);
+                    setCharacter(h.character);
+                    setStrokes(JSON.parse(h.strokes) as Point[][]);
+                  }}
+                >
+                  <strong>{h.character}</strong>
+                  <small>{new Date(h.createdAt).toLocaleDateString('vi')}</small>
+                </button>
+              ))
           ) : (
             <p className="muted">Lưu bài viết đầu tiên để bắt đầu nhật ký.</p>
           )}

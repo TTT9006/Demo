@@ -30,6 +30,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         demo ? '/auth/demo' : register ? '/auth/register' : '/auth/login',
         data,
       );
+      client.clear();
       client.setQueryData(['user'], user);
       navigate('/dashboard');
     } catch (e) {
@@ -125,7 +126,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             </Link>
           </p>
           <small className="muted">
-            Tài khoản mẫu dùng chung trên máy này, có sẵn lịch sử học minh họa.
+            Tài khoản mẫu dùng chung trên website này. Đăng ký riêng để lưu tiến độ của bạn.
           </small>
         </div>
       </section>

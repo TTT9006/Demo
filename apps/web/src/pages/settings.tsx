@@ -1,3 +1,5 @@
+import { AnnotationSettings } from '../components/japanese-annotated-text';
+import { SourceNote } from './radicals';
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check, Sun, Moon, Monitor, ArrowUpRight } from 'lucide-react';
@@ -20,7 +22,7 @@ export function SettingsPage() {
       setLevel(user.level);
       setTheme(user.theme);
     }
-  }, [user]);
+  }, [user?.id, user?.goal, user?.level, user?.theme]);
   const save = async () => {
     setBusy(true);
     try {
@@ -41,6 +43,7 @@ export function SettingsPage() {
         title="Học theo cách bạn muốn."
         description="Chọn nhịp độ phù hợp và giữ một thói quen bền vững."
       />
+      <AnnotationSettings />
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -106,6 +109,11 @@ export function SettingsPage() {
       </form>
       <section id="sources" className="panel sources">
         <h2>Nguồn dữ liệu & bản quyền</h2>
+        <SourceNote />
+        <p>
+          Chú thích ngữ cảnh dùng Kuromoji 0.1.2 (Apache 2.0) và IPADIC. Phân tích tự động có thể
+          sai với tên riêng hoặc cách đọc đa nghĩa; cách đọc có sẵn trong bài học được ưu tiên.
+        </p>
         <p>
           Từ điển sử dụng JMdict của Electronic Dictionary Research and Development Group (EDRDG),
           qua bản phân phối JSON của scriptin/jmdict-simplified. Dữ liệu từ điển và các bản dịch
@@ -152,7 +160,7 @@ export function Profile() {
       setName(user.name);
       setAvatar(user.avatar);
     }
-  }, [user]);
+  }, [user?.id, user?.name, user?.avatar]);
   return (
     <>
       <PageHeader
@@ -166,6 +174,7 @@ export function Profile() {
           <p>{user?.email}</p>
           <span className="avatar big-avatar">{avatar}</span>
         </div>
+        <AnnotationSettings />
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -208,6 +217,7 @@ export function Profile() {
           <h2>Đổi mật khẩu</h2>
           <p>Tối thiểu 8 ký tự. Các phiên khác sẽ được đăng xuất.</p>
         </div>
+        <AnnotationSettings />
         <form
           onSubmit={async (e) => {
             e.preventDefault();

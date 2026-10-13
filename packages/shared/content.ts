@@ -1,4 +1,6 @@
 export type Exercise = {
+  annotationDisabled?: boolean;
+  readings?: Record<string,string>;
   id: string;
   type: 'choice' | 'fill' | 'order' | 'complete' | 'match' | 'matching';
   prompt: string;

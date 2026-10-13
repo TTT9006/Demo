@@ -34,6 +34,7 @@ test('demo learner can look up a word, save a card, review, learn grammar and ta
   await expect(page.locator('.score-panel')).toContainText('100');
   await page.goto('/writing');
   const canvas = page.getByLabel('Vùng vẽ chữ あ');
+  await canvas.scrollIntoViewIfNeeded();
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
   if (box) {
@@ -43,7 +44,7 @@ test('demo learner can look up a word, save a card, review, learn grammar and ta
     await page.mouse.up();
   }
   await page.getByRole('button', { name: 'Lưu bài viết' }).click();
-  await expect(page.getByRole('status')).toContainText('Đã lưu buổi luyện viết');
+  await expect(page.locator('.toast')).toContainText('Đã lưu buổi luyện viết');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );

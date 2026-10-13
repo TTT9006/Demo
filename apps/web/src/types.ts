@@ -6,6 +6,7 @@ export type User = {
   goal: number;
   level: string;
   theme: string;
+  annotationMode: 'romanized' | 'japanese';
   role: string;
 };
 export type Card = {
@@ -28,6 +29,7 @@ export type Deck = { id: string; name: string; description: string; cards: Card[
 export type Translation = { translatedText: string; status: string; reviewedAt: string | null };
 export type Gloss = { id: string; originalText: string; translation: Translation | null };
 export type Entry = {
+  inflection?: { term: string; steps: string[] };
   id: string;
   common: boolean;
   version: string;
@@ -87,7 +89,15 @@ export type LessonSummary = {
   position: number;
   progress: { completed: boolean; bookmarked: boolean }[];
 };
-export type Question = { id: string; type: string; prompt: string; options?: string[]; rows?: string[] };
+export type Question = {
+  annotationDisabled?: boolean;
+  readings?: Record<string, string>;
+  id: string;
+  type: string;
+  prompt: string;
+  options?: string[];
+  rows?: string[];
+};
 export type Result = Question & {
   given: string;
   correct: boolean;

@@ -15,6 +15,7 @@ model User {
   goal Int @default(20)
   level String @default("N5")
   theme String @default("light")
+  annotationMode String @default("japanese")
   createdAt DateTime @default(now())
   sessions Session[]
   decks Deck[]
@@ -24,6 +25,7 @@ model User {
   writings Writing[]
   testRuns TestRun[]
   searches SearchHistory[]
+  radicals RadicalProgress[]
 }
 model Session {
   token String @id
@@ -50,6 +52,8 @@ model Card {
   note String @default("")
   example String @default("")
   entryId String?
+  materialType String @default("vocabulary")
+  radicalId Int?
   ease Float @default(2.5)
   interval Int @default(0)
   repetitions Int @default(0)
@@ -58,6 +62,7 @@ model Card {
   deck Deck @relation(fields:[deckId],references:[id],onDelete:Cascade)
   reviews Review[]
   @@index([deckId,due])
+  @@unique([deckId,radicalId])
 }
 model Review {
   id String @id @default(cuid())
@@ -144,6 +149,7 @@ model DictionaryKanji {
   information String
   entry DictionaryEntry @relation(fields:[entryId],references:[id],onDelete:Cascade)
   @@index([normalized])
+  @@index([text,entryId])
   @@index([entryId])
 }
 model DictionaryReading {
@@ -156,6 +162,7 @@ model DictionaryReading {
   restrictions String
   entry DictionaryEntry @relation(fields:[entryId],references:[id],onDelete:Cascade)
   @@index([normalized])
+  @@index([text,entryId])
   @@index([entryId])
 }
 model DictionarySense {
@@ -216,4 +223,12 @@ model TranslationJob {
 }
 model SearchReindex {
   entryId String @id
+}
+model RadicalProgress {
+  userId String
+  radicalId Int
+  completed Boolean @default(false)
+  updatedAt DateTime @updatedAt
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  @@id([userId,radicalId])
 }

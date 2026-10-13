@@ -1,8 +1,14 @@
 import { createHash } from 'node:crypto';
 import { Prisma } from '@prisma/client';
-import { toHiragana, isRomaji } from 'wanakana';
+import { toHiragana } from 'wanakana';
+import {
+  generateSearchVariants,
+  searchTerms,
+  editDistance,
+} from '../../../packages/shared/japanese-query';
 import { z } from 'zod';
 import { db } from './db';
+import { deinflect, matchesPartOfSpeech, type Inflection } from './deinflect';
 const form = z
   .object({ text: z.string(), common: z.boolean(), tags: z.array(z.string()) })
   .passthrough();
@@ -91,11 +97,28 @@ export async function indexEntry(id: string) {
     await db.$executeRaw(
       Prisma.sql`INSERT OR IGNORE INTO DictionaryGram(token,entryId) VALUES ${Prisma.join([...grams].map((t) => Prisma.sql`(${t},${id})`))}`,
     );
-  await db.$executeRaw`DELETE FROM SearchReindex WHERE entryId=${id}`;
+  const terms = searchTerms(
+    e.kanji.map((f) => f.text),
+    e.readings.map((f) => f.text),
+    [vi],
+  );
+  await db.$transaction([
+    db.$executeRaw`DELETE FROM DictionarySearchTerm WHERE entryId=${id}`,
+    ...(terms.length
+      ? [
+          db.$executeRaw(
+            Prisma.sql`INSERT INTO DictionarySearchTerm(entryId,kind,term) VALUES ${Prisma.join(terms.map((t) => Prisma.sql`(${id},${t.kind},${t.term})`))}`,
+          ),
+        ]
+      : []),
+    db.$executeRaw`DELETE FROM SearchReindex WHERE entryId=${id}`,
+  ]);
 }
 export async function recoverSearchIndex() {
   for (;;) {
-    const rows = await db.$queryRaw<{ entryId: string }[]>`SELECT entryId FROM SearchReindex LIMIT 100`;
+    const rows = await db.$queryRaw<
+      { entryId: string }[]
+    >`SELECT entryId FROM SearchReindex LIMIT 100`;
     if (!rows.length) break;
     for (const row of rows) await indexEntry(row.entryId);
   }
@@ -225,8 +248,8 @@ export async function dictionaryStatus() {
   };
 }
 export async function searchDictionary(query: string, page = 1, limit = 15) {
-  const q = normalize(query),
-    kana = isRomaji(q) ? toHiragana(q) : q;
+  const variants = generateSearchVariants(query);
+  const q = variants.normalized;
   if (!q) {
     const [items, total] = await Promise.all([
       db.dictionaryEntry.findMany({
@@ -240,31 +263,108 @@ export async function searchDictionary(query: string, page = 1, limit = 15) {
     return { items, total, page, limit };
   }
   const tokens = q.match(/[\p{L}\p{N}]+/gu) || [];
+  const forms = [q, ...variants.readings].flatMap(deinflect);
+  const terms = [...new Set(forms.map((form) => form.term))];
+  const derived = new Map<string, Inflection>();
+  if (terms.length) {
+    const matchingIds = await db.$queryRaw<{ entryId: string }[]>(Prisma.sql`
+      SELECT entryId FROM DictionaryKanji WHERE normalized IN (${Prisma.join(terms)})
+      UNION SELECT entryId FROM DictionaryReading WHERE normalized IN (${Prisma.join(terms)})`);
+    const entries = await db.dictionaryEntry.findMany({
+      where: { id: { in: matchingIds.map((row) => row.entryId) } },
+      select: {
+        id: true,
+        kanji: { select: { normalized: true } },
+        readings: { select: { normalized: true } },
+        senses: { select: { metadata: true } },
+      },
+    });
+    for (const entry of entries) {
+      const tags = entry.senses.flatMap(
+        (sense) => (JSON.parse(sense.metadata) as { partOfSpeech?: string[] }).partOfSpeech || [],
+      );
+      const match = forms.find(
+        (form) =>
+          matchesPartOfSpeech(form.kind, tags) &&
+          [...entry.kanji, ...entry.readings].some((reading) => reading.normalized === form.term),
+      );
+      if (match) derived.set(entry.id, match);
+    }
+  }
+  const conjugated = derived.size
+    ? Prisma.sql`SELECT id AS entryId, 3 AS rank FROM DictionaryEntry WHERE id IN (${Prisma.join([...derived.keys()])})`
+    : Prisma.sql`SELECT id AS entryId, 3 AS rank FROM DictionaryEntry WHERE 0`;
   const fts = tokens.map((t) => '"' + t.replace(/"/g, '""') + '"*').join(' AND ') || '"___"';
-  const partial =
-    q.length >= 3
-      ? Prisma.sql`SELECT entryId, 5 AS rank FROM DictionaryTrigram WHERE DictionaryTrigram MATCH ${'"' + q.replace(/"/g, '""') + '"'}`
-      : Prisma.sql`SELECT entryId, 5 AS rank FROM DictionaryGram WHERE token=${kana}`;
+  const japanese = [...new Set([q, ...variants.readings])];
+  const partial = Prisma.join(
+    japanese.map((k) =>
+      k.length >= 3
+        ? Prisma.sql`SELECT entryId, 6 AS rank FROM DictionaryTrigram WHERE DictionaryTrigram MATCH ${'"' + k.replace(/"/g, '""') + '"'}`
+        : Prisma.sql`SELECT entryId, 6 AS rank FROM DictionaryGram WHERE token=${k}`,
+    ),
+    ' UNION ALL ',
+  );
+  const prefixes = Prisma.join(
+    japanese.flatMap((k) => [
+      Prisma.sql`SELECT entryId,4 AS rank FROM DictionaryKanji WHERE normalized>=${k} AND normalized<${k + '\uffff'}`,
+      Prisma.sql`SELECT entryId,4 AS rank FROM DictionaryReading WHERE normalized>=${k} AND normalized<${k + '\uffff'}`,
+    ]),
+    ' UNION ALL ',
+  );
   const candidates = Prisma.sql`
   SELECT entryId,0 AS rank FROM DictionaryKanji WHERE text=${query.trim()}
   UNION ALL SELECT entryId,1 FROM DictionaryReading WHERE text=${query.trim()}
   UNION ALL SELECT entryId,2 FROM DictionaryKanji WHERE normalized=${q}
-  UNION ALL SELECT entryId,2 FROM DictionaryReading WHERE normalized=${kana}
-  UNION ALL SELECT entryId,3 FROM DictionaryKanji WHERE normalized>=${q} AND normalized<${q + '\uffff'}
-  UNION ALL SELECT entryId,3 FROM DictionaryReading WHERE normalized>=${kana} AND normalized<${kana + '\uffff'}
-  UNION ALL SELECT entryId,4 FROM DictionaryFts WHERE DictionaryFts MATCH ${'vietnamese: (' + fts + ')'}
-  UNION ALL SELECT entryId,5 FROM DictionaryFts WHERE DictionaryFts MATCH ${fts}
+  UNION ALL SELECT entryId,2 FROM DictionaryReading WHERE normalized IN (${Prisma.join(japanese)})
+  UNION ALL SELECT entryId,3 FROM DictionarySearchTerm WHERE kind='romaji' AND term IN (${Prisma.join(variants.romaji.length ? variants.romaji : [''])})
+  UNION ALL SELECT entryId,5 FROM DictionarySearchTerm WHERE kind='variant' AND term IN (${Prisma.join(japanese)})
+  UNION ALL ${conjugated}
+  UNION ALL ${prefixes}
+  UNION ALL SELECT entryId,7 FROM DictionaryFts WHERE DictionaryFts MATCH ${'vietnamese: (' + fts + ')'}
+  UNION ALL SELECT entryId,7 FROM DictionaryFts WHERE DictionaryFts MATCH ${'english: (' + fts + ')'} AND ${!variants.isVietnamese}
   UNION ALL ${partial}`;
-  const rows = await db.$queryRaw<{ id: string; total: bigint }[]>(
-    Prisma.sql`WITH matches AS (${candidates}), ranked AS (SELECT entryId,MIN(rank) AS rank FROM matches GROUP BY entryId) SELECT e.id,COUNT(*) OVER() AS total FROM ranked r JOIN DictionaryEntry e ON e.id=r.entryId ORDER BY r.rank,e.common DESC,e.id LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
+  let rows = await db.$queryRaw<{ id: string; rank: number; total: bigint }[]>(
+    Prisma.sql`WITH matches AS (${candidates}), ranked AS (SELECT entryId,MIN(rank) AS rank FROM matches GROUP BY entryId) SELECT e.id,r.rank,COUNT(*) OVER() AS total FROM ranked r JOIN DictionaryEntry e ON e.id=r.entryId ORDER BY r.rank,e.common DESC,e.id LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
   );
+  let total = Number(rows[0]?.total || 0);
+  let fuzzy = false;
+  if (!rows.length && page > 1) {
+    const count = await db.$queryRaw<{ n: bigint }[]>(
+      Prisma.sql`WITH matches AS (${candidates}) SELECT COUNT(DISTINCT entryId) n FROM matches`,
+    );
+    total = Number(count[0].n);
+  }
+  if (!total && variants.readings.length && q.length >= 3) {
+    const k = variants.readings[0];
+    const near = await db.$queryRaw<{ entryId: string; term: string }[]>(
+      Prisma.sql`SELECT entryId,term FROM DictionarySearchTerm WHERE kind='kana' AND term>=${k[0]} AND term<${k[0] + '\uffff'} AND length(term) BETWEEN ${k.length - 1} AND ${k.length + 1} LIMIT 400`,
+    );
+    const ids = [
+      ...new Set(
+        near
+          .filter(
+            (t) => editDistance(k, t.term) <= 1 && 1 / Math.max(k.length, t.term.length) <= 0.34,
+          )
+          .map((t) => t.entryId),
+      ),
+    ];
+    total = ids.length;
+    fuzzy = !!total;
+    rows = ids
+      .slice((page - 1) * limit, page * limit)
+      .map((id) => ({ id, rank: 8, total: BigInt(total) }));
+  }
   const data = await db.dictionaryEntry.findMany({
     where: { id: { in: rows.map((r) => r.id) } },
     include: entryInclude,
   });
   return {
-    items: rows.map((r) => data.find((e) => e.id === r.id)!),
-    total: Number(rows[0]?.total || 0),
+    items: rows.map((r) => ({
+      ...data.find((e) => e.id === r.id)!,
+      inflection: Number(r.rank) === 3 ? derived.get(r.id) : undefined,
+    })),
+    total,
+    fuzzy,
     page,
     limit,
   };

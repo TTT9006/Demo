@@ -1,3 +1,4 @@
+import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -159,25 +160,34 @@ export function GrammarLesson() {
         <article className="panel lesson-body">
           <span className="eyebrow">Ý NGHĨA</span>
           <h2>{lesson.content.meaning}</h2>
-          <p>{lesson.content.explanation}</p>
+          <p>
+            <JapaneseAnnotatedText text={lesson.content.explanation} />
+          </p>
           <h3>Cấu trúc</h3>
-          <div className="formation">{lesson.content.formation}</div>
+          <div className="formation">
+            <JapaneseAnnotatedText text={lesson.content.formation} />
+          </div>
           <h3>Trong một cuộc trò chuyện</h3>
           {lesson.content.examples.map((ex) => (
             <div className="example" key={ex.ja}>
               <div>
-                <p lang="ja">{ex.ja}</p>
-                <small>{ex.kana}</small>
+                <p lang="ja">
+                  <JapaneseAnnotatedText text={ex.ja} reading={ex.kana} />
+                </p>
                 <p>{ex.vi}</p>
               </div>
               <AudioButton text={ex.ja} />
             </div>
           ))}
           <h3>Ghi nhớ một chút</h3>
-          <p>{lesson.content.notes}</p>
+          <p>
+            <JapaneseAnnotatedText text={lesson.content.notes} />
+          </p>
           <div className="mistake-note">
             <strong>Lỗi thường gặp</strong>
-            <p>{lesson.content.mistake}</p>
+            <p>
+              <JapaneseAnnotatedText text={lesson.content.mistake} />
+            </p>
           </div>
           <h3>Mẫu câu liên quan</h3>
           <div className="inline-actions wrap">
@@ -223,7 +233,12 @@ export function GrammarLesson() {
         {lesson.exercises.map((q, i) => (
           <div className="exercise" key={q.id}>
             <h3>
-              {i + 1}. {q.prompt}
+              {i + 1}.{' '}
+              <JapaneseAnnotatedText
+                text={q.prompt}
+                disabled={q.annotationDisabled}
+                readings={q.readings}
+              />
             </h3>
             <QuestionInput
               question={q}
@@ -255,8 +270,12 @@ export function GrammarLesson() {
                 <strong>
                   {feedback[q.id].correct ? 'Chính xác!' : 'Thử ghi nhớ cách dùng này nhé.'}
                 </strong>
-                <p>Đáp án: {feedback[q.id].answer}</p>
-                <p>{feedback[q.id].explanation}</p>
+                <p>
+                  Đáp án: <JapaneseAnnotatedText text={feedback[q.id].answer} />
+                </p>
+                <p>
+                  <JapaneseAnnotatedText text={feedback[q.id].explanation} />
+                </p>
               </div>
             )}
           </div>

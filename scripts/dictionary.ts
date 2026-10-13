@@ -9,7 +9,7 @@ import parserStream from 'stream-json';
 import pick from 'stream-json/filters/pick.js';
 import streamArray from 'stream-json/streamers/stream-array.js';
 import { db } from '../apps/api/src/db';
-import { importWord, initSearch, dictionaryStatus } from '../apps/api/src/dictionary';
+import { initSearch, dictionaryStatus } from '../apps/api/src/dictionary';
 import { createBatchImporter } from './import-batch';
 const args = process.argv.slice(2),
   command = args[0];
@@ -114,14 +114,14 @@ async function importFile() {
       .pipe(streamArray.asStream());
     let batch: unknown[] = [];
     for await (const item of stream) {
-      if (limit && count >= limit) {
+      if (limit && count + batch.length >= limit) {
         stream.destroy();
         break;
       }
       batch.push((item as { value: unknown }).value);
-      count++;
       if (batch.length >= 250) {
         changed += importer.write(batch);
+        count += batch.length;
         batch = [];
         if (count % 5000 === 0) {
           await db.dictionaryImport.update({ where: { id: job.id }, data: { count } });
@@ -129,7 +129,10 @@ async function importFile() {
         }
       }
     }
-    if (batch.length) changed += importer.write(batch);
+    if (batch.length) {
+      changed += importer.write(batch);
+      count += batch.length;
+    }
     await db.dictionaryImport.update({
       where: { id: job.id },
       data: { count, status: limit ? 'partial' : 'completed' },
@@ -150,7 +153,7 @@ try {
     console.log(JSON.stringify(await dictionaryStatus(), null, 2));
     const orphan = await db.$queryRaw<
       { n: bigint }[]
-    >`SELECT COUNT(*) AS n FROM DictionaryEntry e WHERE NOT EXISTS(SELECT 1 FROM DictionaryFts f WHERE f.entryId=e.id)`;
+    >`SELECT COUNT(*) AS n FROM (SELECT id FROM DictionaryEntry EXCEPT SELECT entryId FROM DictionaryFts)`;
     if (Number(orphan[0].n)) throw Error('Missing FTS entries');
   } else throw Error('Use download, import, or verify');
 } finally {

@@ -81,6 +81,28 @@ describe.sequential('Authenticated learning workflows', () => {
       ).status,
     ).toBe(403);
   });
+  it('persists annotation preferences and rejects unsupported modes', async()=>{
+    expect((await session.get('/api/auth/me')).body.annotationMode).toBe('japanese');
+    expect((await session.patch('/api/profile').send({annotationMode:'romanized'})).body.annotationMode).toBe('romanized');
+    expect((await session.get('/api/auth/me')).body.annotationMode).toBe('romanized');
+    expect((await session.patch('/api/profile').send({annotationMode:'off'})).status).toBe(400);
+    const annotation=await session.post('/api/annotations').send({text:'今日は学校に行きます。'});
+    expect(annotation.status).toBe(200);expect(annotation.body.segments.map((s:{text:string})=>s.text).join('')).toBe('今日は学校に行きます。');
+  });
+  it('saves radical progress per account and reuses SRS without resetting cards',async()=>{
+    expect((await session.get('/api/radicals')).body).toHaveLength(214);
+    expect((await session.post('/api/radicals/85/progress').send({completed:true})).status).toBe(200);
+    expect((await session.get('/api/radicals')).body.find((r:{id:number})=>r.id===85).completed).toBe(true);
+    const other=request.agent(app);await other.post('/api/auth/register').send({name:'Other',email:'radical-other@example.com',password:'example-password'});
+    expect((await other.get('/api/radicals')).body.find((r:{id:number})=>r.id===85).completed).toBe(false);
+    expect((await session.post('/api/radicals/999/progress').send({completed:true})).status).toBe(400);
+    const first=(await session.post('/api/radicals/85/srs').send({})).body;
+    await db.card.update({where:{id:first.id},data:{interval:7,repetitions:3,due:new Date(Date.now()+7*86400000)}});
+    const again=(await session.post('/api/radicals/85/srs').send({})).body;
+    expect(again.id).toBe(first.id);expect(again.interval).toBe(7);expect(again.materialType).toBe('radical');
+    expect((await session.get('/api/kanji/'+encodeURIComponent('海'))).body.radical.id).toBe(85);
+    expect((await session.get('/api/kanji/'+encodeURIComponent('氵')+'/strokes')).body.paths).toHaveLength(3);
+  });
   it('creates cards and enforces ownership', async () => {
     const deck = await session.post('/api/flashcards/decks').send({ name: 'Từ đầu tiên' });
     expect(deck.status).toBe(201);
@@ -183,6 +205,19 @@ describe.sequential('Dictionary import, search and resumable translation', () =>
       expect(res.body.items[0].id).toBe('1358280');
     }
     expect((await session.get('/api/dictionary/1358280')).body.senses.length).toBeGreaterThan(0);
+  });
+  it('finds conjugated forms and exposes the matched base without changing direct results', async () => {
+    for (const q of ['tabemasu', '食べました', 'タベナカッタ', 'tabeteimashita', '食べさせられませんでした']) {
+      const res = await session.get('/api/dictionary/search').query({ q });
+      expect(res.status).toBe(200);
+      expect(res.body.items[0].id).toBe('1358280');
+      expect(res.body.items[0].inflection.steps.length).toBeGreaterThan(0);
+    }
+    const direct = await session.get('/api/dictionary/search').query({ q: '食べる' });
+    expect(direct.body.items[0].inflection).toBeUndefined();
+    const paged = await session.get('/api/dictionary/search').query({ q: 'tabemasu', limit: 1 });
+    expect(paged.body.total).toBe(1);
+    expect(paged.body.items).toHaveLength(1);
   });
   it('persists Vietnamese and makes it searchable without network', async () => {
     const { runTranslations } = await import('../apps/api/src/translation');
