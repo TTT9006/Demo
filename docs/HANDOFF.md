@@ -1,6 +1,19 @@
-# Bàn giao ngắn — Komorebi (14/10/2026)
+# Bàn giao ngắn — Komorebi (15/10/2026)
+
+## Quy ước làm việc của người dùng
+
+Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
+
+
+## Giao diện — cập nhật ngày 15/10
+
+Đã hoàn tất phần sửa giao diện bị gián đoạn: xử lý tràn Hồ sơ 320 px do khối chú thích bị lồng/lặp, ngắt chữ dài và nhãn nút, căn đều thẻ nội dung, đồng nhất màu sáng/tối; thêm tìm kiếm và phân trang 12 bộ thẻ/trang. 130 kiểm tra layout trên 13 trang/5 độ rộng/2 theme đạt; kiểm tra chữ dài và modal trên 4 độ rộng đạt. Build/TypeScript/lint đạt. Chi tiết: `docs/UI-20261015.md`. Các phần này được commit theo quy ước tự động mới; xem lịch sử Git và đối chiếu origin/main để xác định phần chưa push.
 
 ## Cập nhật cuối ngày — tài khoản dùng chung (ưu tiên thông tin này)
+
+- Quy trình tạo link đã bổ sung kiểm tra bảng tài khoản và thử API đăng nhập qua chính URL mới trước khi công bố link. Mỗi lần chạy vẫn dùng database chung và cấu hình `APP_ORIGINS` bằng URL mới. Trạng thái xác minh lưu `.share/connection.json`; không cần tạo lại tài khoản khi đổi link. Mã: `scripts/lib/share-readiness.ts`, `scripts/share.ts`.
+
+- Sửa tiếp lỗi nguồn truy cập khi Vite chuyển sang cổng 5175: `apps/api/src/origins.ts` cho phép HTTP loopback (`127.0.0.1`, `localhost`, `[::1]`) với cổng thay đổi chỉ ở chế độ phát triển. Production hoặc `TRUST_PROXY_LOOPBACK=1` vẫn dùng danh sách `APP_ORIGINS`. Đã xác minh trực tiếp 5175 hết lỗi chặn nguồn, 28 kiểm thử API/origin đạt. Bản sửa này nằm sau commit `c3342b3`; xem lịch sử Git để xác định commit và trạng thái push.
 
 - Đã sửa lỗi đăng nhập tại cổng 5174 do thiếu trong danh sách nguồn cho phép; cập nhật API, `.env.example` và `.env` local.
 - Theo yêu cầu người dùng, đã hợp nhất tài khoản local/trial vào `prisma/learning.db`. Người dùng xác nhận hai tài khoản trùng email của mình đều là của mình. Local và script chia sẻ nay dùng **cùng database**; `.share/trial.db` chỉ giữ làm đối chiếu, không tiếp tục sử dụng hoặc seed lại.

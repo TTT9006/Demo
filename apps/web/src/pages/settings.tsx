@@ -174,7 +174,6 @@ export function Profile() {
           <p>{user?.email}</p>
           <span className="avatar big-avatar">{avatar}</span>
         </div>
-        <AnnotationSettings />
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -217,7 +216,6 @@ export function Profile() {
           <h2>Đổi mật khẩu</h2>
           <p>Tối thiểu 8 ký tự. Các phiên khác sẽ được đăng xuất.</p>
         </div>
-        <AnnotationSettings />
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -261,6 +259,7 @@ export function Profile() {
           </Button>
         </form>
       </section>
+      <AnnotationSettings />
     </>
   );
 }

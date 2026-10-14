@@ -85,6 +85,15 @@ export function Flashcards() {
     queryFn: () => api<Deck[]>('/flashcards/decks'),
   });
   const [create, setCreate] = useState(false);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const matching = (data || []).filter((deck) =>
+    `${deck.name} ${deck.description}`
+      .toLocaleLowerCase('vi')
+      .includes(query.trim().toLocaleLowerCase('vi')),
+  );
+  const pages = Math.max(1, Math.ceil(matching.length / 12));
+  const currentPage = Math.min(page, pages);
   const due =
     data?.flatMap((d) => d.cards).filter((c) => new Date(c.due) <= new Date()).length || 0;
   return (
@@ -115,13 +124,31 @@ export function Flashcards() {
         <h2>Các bộ thẻ của bạn</h2>
         <span className="muted">{data?.length || 0} bộ thẻ</span>
       </div>
+      <div className="toolbar deck-toolbar">
+        <label className="input-icon">
+          <Search size={17} aria-hidden="true" />
+          <input
+            aria-label="Tìm bộ thẻ"
+            placeholder="Tìm theo tên hoặc mô tả…"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
+          />
+        </label>
+        <span className="muted" role="status">
+          {matching.length} bộ thẻ phù hợp
+        </span>
+      </div>
       {isLoading ? (
         <Loading />
       ) : error ? (
         <ErrorState error={error} />
-      ) : data?.length ? (
+      ) : matching.length ? (
         <div className="deck-grid">
-          {data.map((deck, i) => {
+          {matching.slice((currentPage - 1) * 12, currentPage * 12).map((deck, index) => {
+            const i = (currentPage - 1) * 12 + index;
             const learned = deck.cards.filter((c) => c.repetitions > 0).length;
             const due = deck.cards.filter((c) => new Date(c.due) <= new Date()).length;
             return (
@@ -147,11 +174,39 @@ export function Flashcards() {
             );
           })}
         </div>
+      ) : query.trim() ? (
+        <Empty title="Không tìm thấy bộ thẻ">
+          <p>Thử tên khác hoặc xóa từ khóa tìm kiếm.</p>
+          <Button variant="secondary" onClick={() => setQuery('')}>
+            Xóa tìm kiếm
+          </Button>
+        </Empty>
       ) : (
         <Empty title="Bộ thẻ đầu tiên đang chờ bạn">
           <p>Tạo bộ thẻ hoặc tìm một từ trong từ điển để bắt đầu.</p>
           <Button onClick={() => setCreate(true)}>Tạo bộ thẻ</Button>
         </Empty>
+      )}
+      {pages > 1 && (
+        <nav className="inline-actions deck-pagination" aria-label="Phân trang bộ thẻ">
+          <Button
+            variant="secondary"
+            disabled={currentPage === 1}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Trang trước
+          </Button>
+          <span aria-live="polite">
+            {currentPage} / {pages}
+          </span>
+          <Button
+            variant="secondary"
+            disabled={currentPage === pages}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Trang sau
+          </Button>
+        </nav>
       )}
       <Modal open={create} onOpenChange={setCreate} title="Một bộ thẻ mới">
         <DeckForm close={() => setCreate(false)} />

@@ -9,7 +9,7 @@
   --card: #fff;
   --surface: #f1f3ed;
   --ink: #303831;
-  --muted: #81877f;
+  --muted: #687266;
   --line: #e6e9e1;
   --jade: #58715d;
   --pink: #f1e0da;
@@ -171,7 +171,9 @@ progress::-moz-progress-bar {
   transition:
     background 0.15s,
     transform 0.15s;
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .button:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -3204,6 +3206,39 @@ mark { background: #eee1b9; color: #27271f; border-radius: 2px; }
 @media (prefers-reduced-motion: reduce) { .stroke-active { animation: none; } }
 
 /* Grammar curriculum and personal review */
+/* Shared content sizing: shrink grid children, wrap labels, keep controls usable. */
+main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
+.panel > *, .settings-section > *, .deck-grid > *, .grammar-grid > *, .test-grid > *,
+.page-header > *, .section-heading > *, .review-banner > *, .deck-info { min-width: 0; }
+.button > svg, .inline-actions > svg { flex-shrink: 0; }
+.section-heading, .inline-actions, .avatar-options, .theme-options { flex-wrap: wrap; }
+.avatar-options button { flex: 0 0 44px; height: 44px; }
+.settings-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.settings-section input, .settings-section select, .settings-section textarea { min-width: 0; max-width: 100%; }
+.settings-section .annotation-preview { max-width: 100%; }
+.deck-card { display: flex; flex-direction: column; min-width: 0; }
+.deck-info { display: flex; flex-direction: column; flex: 1; }
+.deck-info p { flex: 1; }
+.deck-info h3 { line-height: 1.6; overflow-wrap: anywhere; }
+.deck-meta, .deck-info > small, .grammar-card-top { gap: 8px; flex-wrap: wrap; }
+.deck-info > small svg { flex-shrink: 0; }
+[data-theme="dark"] .deck-art { background: #323c2c; color: #b5c6a2; }
+[data-theme="dark"] .deck-art.tone-1 { background: #443731; color: #d4b7a5; }
+[data-theme="dark"] .deck-art.tone-2 { background: #2f3c3c; color: #aac5c3; }
+.deck-toolbar .input-icon { margin: 0; min-width: min(220px, 100%); }
+.deck-toolbar input { margin: 0; width: 100%; min-width: 0; }
+.deck-pagination { justify-content: center; gap: 12px; margin-block: 24px; }
+.grammar-card { display: flex; flex-direction: column; min-width: 0; }
+.grammar-card h3 { flex: 1; }
+.grammar-card-bottom { gap: 12px; }
+.grammar-card-bottom svg { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .settings-section { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .theme-options button { flex: 1 1 72px; padding: 16px 12px; }
+  .deck-toolbar > .input-icon { flex-basis: 100%; }
+  .deck-art { height: 112px; }
+  .deck-art > span { font-size: 52px; }
+}
 .grammar-roadmap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .grammar-stage { text-align: left; color: var(--ink); display: grid; gap: 10px; cursor: pointer; min-width: 0; }
 .grammar-stage strong { font-size: 24px; }
