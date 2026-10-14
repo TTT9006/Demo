@@ -7,6 +7,8 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 
 ## Giao diện — cập nhật ngày 15/10
 
+Bổ sung theo ảnh người dùng: sửa lỗi đáp án ngữ pháp xếp dọc/tràn nút. Selector `.answer-options button > span` từng áp khung 25×25 của nhãn A/B/C lên cả `JapaneseAnnotatedText`. Đã thay bằng lớp `.answer-key`, cho nội dung đáp án co giãn độc lập và giữ icon lựa chọn không co méo. Component dùng chung cho ngữ pháp và bài kiểm tra. Script `tests/browser/grammar-answer-layout.mjs` kiểm tra đúng bài `/grammar/janai`: 20 tổ hợp 5 độ rộng × 2 chế độ chú thích × 2 theme, cả trạng thái chọn, kiểm tra khung từng text/ruby nằm trong nút — đạt. Audit tràn ngang trước đó chưa phát hiện lỗi tràn dọc bên trong nút; không coi kết quả cũ là kiểm chứng trường hợp này. Build/TypeScript/lint đạt; commit tự động theo quy ước, chưa push.
+
 Đã hoàn tất phần sửa giao diện bị gián đoạn: xử lý tràn Hồ sơ 320 px do khối chú thích bị lồng/lặp, ngắt chữ dài và nhãn nút, căn đều thẻ nội dung, đồng nhất màu sáng/tối; thêm tìm kiếm và phân trang 12 bộ thẻ/trang. 130 kiểm tra layout trên 13 trang/5 độ rộng/2 theme đạt; kiểm tra chữ dài và modal trên 4 độ rộng đạt. Build/TypeScript/lint đạt. Chi tiết: `docs/UI-20261015.md`. Các phần này được commit theo quy ước tự động mới; xem lịch sử Git và đối chiếu origin/main để xác định phần chưa push.
 
 ## Cập nhật cuối ngày — tài khoản dùng chung (ưu tiên thông tin này)

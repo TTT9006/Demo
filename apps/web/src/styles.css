@@ -1759,12 +1759,13 @@ main {
 }
 .answer-options {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 18px;
 }
 .answer-options button {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 13px;
   text-align: left;
@@ -1775,21 +1776,28 @@ main {
   color: var(--ink);
   font-size: 12px;
 }
-.answer-options button > span {
+.answer-options .answer-key {
   background: var(--surface);
   color: #98a08f;
   border-radius: 4px;
   width: 25px;
   height: 25px;
+  flex: 0 0 25px;
   display: grid;
   place-items: center;
   font-size: 10px;
+}
+.answer-options button > .japanese-annotated {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
 }
 .answer-options button.selected {
   border-color: #94a781;
   background: #f0f4ea;
 }
 .answer-options button > svg {
+  flex-shrink: 0;
   margin-left: auto;
   color: var(--jade);
 }

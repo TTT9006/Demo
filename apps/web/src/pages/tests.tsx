@@ -97,7 +97,7 @@ export function QuestionInput({
             className={value === o ? 'selected' : ''}
             onClick={() => onChange(o)}
           >
-            <span>{String.fromCharCode(65 + i)}</span>
+            <span className="answer-key" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
             <JapaneseAnnotatedText text={o} disabled={q.annotationDisabled} readings={q.readings} />
             {value === o && <Check size={17} />}
           </button>
