@@ -1,12 +1,46 @@
 # Bàn giao ngắn — Komorebi (14/10/2026)
 
-## Cập nhật mới nhất — ngữ pháp
+Đọc file này trước khi tiếp tục. Đây là trạng thái đã kiểm chứng và các việc cần lưu ý, không phải yêu cầu viết lại dự án. Báo cáo chi tiết: `docs/DEFAULT-DECKS.md`, `docs/GRAMMAR-20261014.md`, `docs/UPGRADE-20261013.md`.
 
-Đã bổ sung lộ trình N5–N2, ôn câu sai/đến hạn, lưu kết quả từng câu và 98 bài tự biên soạn (tổng 106 bài). Đã migration và đồng bộ local/trial, giữ nguyên dữ liệu người học. Chi tiết phạm vi, nguồn tham khảo, backup và kiểm chứng: `docs/GRAMMAR-20261014.md`. Nội dung chưa được xác nhận bao phủ đầy đủ mọi mẫu trong sách; bài tập mới không trích nguyên văn sách. Khi tiếp tục, kiểm tra Git và tiến trình trước; xem lịch sử Git để xác định commit cập nhật ngữ pháp và trạng thái đồng bộ với origin/main.
+## Các thay đổi ngày 14/10/2026
 
-Phần thẻ mặc định trước đó đã commit `1dbb5d8`, merge fast-forward nhánh `codex/handoff-conjugation` vào `main` và push GitHub. Ghi chú Git cuối tài liệu mô tả thời điểm bàn giao cũ.
+### Bộ thẻ mặc định cho mọi tài khoản
 
-Đọc file này trước khi tiếp tục; chi tiết kỹ thuật: `docs/UPGRADE-20261013.md`. Đây là tóm tắt lịch sử và trạng thái đã kiểm chứng, không phải yêu cầu viết lại dự án.
+- Thêm 8 bộ, tổng 286 thẻ: Hiragana 104, Katakana 104, Kanji 78 chia thành 6 chủ đề (thiên nhiên; số đếm; con người và cơ thể; trường học; thời gian và phương hướng; động vật và cây cối).
+- Thẻ Kanji có nghĩa, cách đọc và bộ thủ tra cứu từ dữ liệu có nguồn. Chú thích theo cài đặt `japanese`/`romanized`; mặt câu hỏi giấu đáp án đến khi lật.
+- Mỗi tài khoản nhận bản riêng một lần; tiến độ ôn độc lập. Có kiểm soát cấp trùng; người học sửa/xóa bộ không bị tự tạo lại. Đã cấp bộ cho tài khoản có sẵn trong cả local/trial; tài khoản mới hoặc chưa được cấp nhận tự động khi gửi yêu cầu đã xác thực.
+- Migration `20261014000000_default_decks` đã áp dụng local/trial. Mã chính: `apps/api/src/default-decks.ts`; script cấp trước: `scripts/default-decks.ts`. Chi tiết và nguồn: `docs/DEFAULT-DECKS.md`.
+
+### Ngữ pháp, lộ trình và ôn tập
+
+- Giữ 8 bài cũ cùng ID/tiến độ; thêm 98 bài, thành 106 bài: N5 33, N4 25, N3 24, N2 24. Nội dung mới gồm 50 bài theo trình tự chủ điểm sơ cấp Minna và 48 nhóm bổ sung N3–N2; có 196 ví dụ, 294 câu luyện mới (điền mẫu, chọn nghĩa, sắp xếp).
+- Lộ trình 4 cấp có tìm kiếm, phân trang, lọc đánh dấu/câu sai/đến hạn/đã làm đúng hết; gợi ý ưu tiên đến hạn → câu sai → bài đang làm → bài tiếp theo. Điều hướng bài trước/sau xuyên cấp, dashboard dùng gợi ý mới.
+- Tách “đã đọc” khỏi kết quả bài tập. Máy chủ chấm và lưu từng câu theo tài khoản; không gửi sẵn đáp án trong câu hỏi. Mã lần nộp chống ghi nhận hai lần khi gửi lại.
+- Ôn câu sai hoặc đến hạn tối đa 20 câu/lượt; sai hẹn ôn lại sau 10 phút, đúng lên lịch theo SRS hiện có. Đổi chú thích không mất câu đang trả lời. Ví dụ hỗ trợ Japanese/Romaji.
+- Mã nội dung: `packages/shared/grammar-beginner.ts`, `grammar-intermediate.ts`, `grammar-curriculum.ts`; API: `apps/api/src/grammar.ts`; giao diện: `apps/web/src/pages/grammar.tsx`.
+- **Giới hạn cần giữ rõ:** người dùng muốn đầy đủ theo giáo trình và trích ví dụ sách, nhưng bản hiện tại dùng giải thích/ví dụ/bài tập tự biên soạn, tham khảo trình tự từ 3A Network và VNJPClub do người dùng cung cấp. Chưa đối chiếu hết từng mẫu trong sách; không được báo đã hoàn thành toàn bộ giáo trình. N3–N2 là nhóm bổ sung, không tương ứng chương Minna trung cấp. Phân cấp JLPT chỉ định hướng; 3 câu mỗi bài chưa luyện riêng mọi mẫu. Nguồn và phạm vi chi tiết trong `docs/GRAMMAR-20261014.md`.
+
+### Dữ liệu và kiểm chứng hôm nay
+
+- Migration `20261014010000_grammar_review` thêm `GrammarExerciseProgress` và `GrammarAnswer`, đã áp dụng local/trial. Nội dung được đồng bộ theo ID khi API khởi động; script riêng `scripts/grammar-content.ts`. Không reset DB, không nhập lại từ điển.
+- Backup trước cập nhật ngữ pháp: `.recovery/grammar-1791991973313/`. Đối chiếu lúc migration giữ nguyên local: 2 tài khoản/604 thẻ/86 lượt ôn thẻ/10 tiến độ ngữ pháp; trial: 3 tài khoản/890 thẻ/88 lượt ôn thẻ/2 tiến độ ngữ pháp. Đây là số liệu tại thời điểm kiểm tra, có thể tăng khi tiếp tục học.
+- Bộ thẻ: 94/94 kiểm thử lúc hoàn thành; browser smoke sáng/tối, 390/1440 px, chú thích và giấu đáp án. Lượt cuối sau cập nhật ngữ pháp: **100/100 unit/integration đạt; build kèm TypeScript đạt; lint 0 lỗi, 0 cảnh báo**.
+- Smoke ngữ pháp chạy trên bản build cuối và DB thử riêng: **16 tổ hợp layout đạt** (390/1440 px × 4 cấp × sáng/tối), cùng tìm bài, chấm bài, lưu qua tải lại, ôn sai/đến hạn, đổi chú thích và giữ câu trả lời. Script `tests/browser/grammar-smoke.mjs`; bằng chứng `test-results/grammar/`. Chưa kiểm tra thiết bị thật/Safari hoặc thẩm định toàn bộ nội dung bởi giáo viên. Bundle còn cảnh báo dung lượng (~428 KB gzip).
+
+### Git và trạng thái chạy
+
+- `1dbb5d8` — bộ thẻ mặc định; đã push `codex/handoff-conjugation`, sau đó merge fast-forward vào `main` và push theo yêu cầu người dùng.
+- `6fe1067` — ngữ pháp N5–N2 và ôn tập; đã commit và push `origin/main` tại `https://github.com/TTT9006/Demo`. Sau push, HEAD và origin/main đều là `6fe1067ba8d04ecb95fdb5857c4b790fbaee4a62`, thư mục làm việc sạch trước lần sửa tài liệu bàn giao này.
+- Lần sửa handoff hiện tại là thay đổi tài liệu sau commit trên; chưa commit/push riêng. Luôn kiểm tra lại Git khi tiếp tục, không mặc định trạng thái này còn nguyên.
+- Đã build mã mới và khởi động lại dev trong phiên. Không mặc định các tiến trình còn chạy ở phiên sau; kiểm tra cổng 5173/3001 trước khi mở thêm. Chưa xác minh công khai bản ngữ pháp mới; trial DB đã cập nhật nhưng máy chủ chia sẻ cần chạy bản build mới.
+- Web local/Quick Tunnel cần máy chủ đang bật và tiến trình đang chạy; người khác không truy cập được khi máy này tắt. Chưa triển khai hosting hoạt động 24/7.
+
+## Hướng tiếp tục cho phiên sau
+
+1. Đọc trạng thái Git, kiểm tra tiến trình và chọn đúng DB local/trial. Giữ mọi thay đổi mới của người dùng; không reset dữ liệu hoặc ghi đè bằng backup cũ.
+2. Nếu cần phục vụ bản mới qua link chia sẻ, kiểm tra tiến trình hiện có, chạy lại quy trình `npm run share`, lấy URL từ `.share/url.txt` và xác minh đăng nhập/ngữ pháp. Không coi link cũ bên dưới là còn hoạt động.
+3. Nếu tiếp tục yêu cầu “đầy đủ giáo trình”, đối chiếu từng chủ điểm/mẫu còn thiếu và bổ sung bài luyện riêng; không chỉ tăng số bài rồi tuyên bố đầy đủ. Giữ ID bài/câu ổn định để bảo toàn lịch sử. Không thu thập hàng loạt ví dụ nguyên văn có bản quyền; có thể xử lý nội dung người dùng cung cấp hoặc viết ví dụ mới.
+4. Chỉ thay đổi tài liệu ở lần bàn giao này; không chạy lại toàn bộ kiểm thử nếu chưa sửa mã. Các kết quả nêu trên là kiểm chứng của bản tính năng đã commit.
 
 ## Dự án và quy tắc
 - Website tự học tiếng Nhật, giao diện Việt; repository `D:\Demo`, GitHub `TTT9006/Demo`. Người dùng muốn giao diện gọn, không gradient/thiết kế kiểu AI, tốt trên mobile, desktop và dark mode.
@@ -22,14 +56,14 @@ Phần thẻ mặc định trước đó đã commit `1dbb5d8`, merge fast-forwa
 6. **Chú thích:** `JapaneseAnnotatedText`, setting đúng hai giá trị `japanese` (mặc định)/`romanized`; ruby trên Kanji, tách okurigana, giữ câu gốc. Ưu tiên reading có sẵn rồi Kuromoji local, không chắc thì để nguyên. Tích hợp bài tập/quiz/grammar/review; bảo vệ bài kiểm tra cách đọc khỏi lộ đáp án. Đổi setting không reset bài/timer; có preview và preference theo tài khoản.
 7. **Mobile:** đã chỉnh responsive và kiểm tra nhiều độ rộng, sáng/tối, canvas touch; chưa kiểm chứng đầy đủ thiết bị thật/Safari/screen reader.
 
-## Phần dở tối hôm trước — đã chốt
+## Lịch sử bàn giao ngày 13/10 — đã chốt
 Phần thuật toán suy ra từ gốc đã viết xong; việc còn lại là khởi động bản dùng thử và xác minh công khai. Ngày 13/10 đã build lại, chạy bằng trial.db hiện có, kiểm tra đăng nhập cùng API/UI và nhãn “Dạng gốc” **4/4 pass**:
 `ikimasu→行く`, `tabemashita→食べる`, `benkyoushimashita→勉強`, `食べさせられませんでした→食べる`.
 
 Script: `tests/browser/conjugation-smoke.mjs`; bằng chứng: `test-results/handoff/conjugation-smoke.json` (10:41:46 UTC). Link lúc kiểm tra: https://sega-followed-spas-having.trycloudflare.com — luôn kiểm tra lại `.share/url.txt`, không mặc định link còn sống. Không cần viết lại engine để hoàn thành việc bàn giao này.
 
-## Kiểm thử, migration và giới hạn
-- Lượt nâng cấp trước: 92/92 unit/integration, 6/6 E2E, 40 kiểm tra layout tính năng mới; build/typecheck pass, lint 0 lỗi/2 cảnh báo imports cũ. Lượt bàn giao này chạy lại build và smoke công khai 4 truy vấn, không chạy lại toàn bộ suite.
+## Kiểm thử, migration và giới hạn từ ngày 13/10
+- Lượt nâng cấp ngày 13/10: 92/92 unit/integration, 6/6 E2E, 40 kiểm tra layout tính năng mới; build/typecheck pass, lint 0 lỗi/2 cảnh báo imports cũ. Lượt bàn giao ngày 13/10 chạy lại build và smoke công khai 4 truy vấn, không chạy lại toàn bộ suite. Kết quả mới nhất ngày 14/10 nằm ở đầu tài liệu.
 - Benchmark 35 query: 30 query Nhật/romaji đạt; Việt 4/5 có dữ liệu, “sách” thiếu bản dịch. Median warm 46,59→2,42ms, không phải benchmark tải đồng thời.
 - Hai migration thêm: `20261013000000_learning_upgrade`, `20261013010000_exact_search_indexes`, đã áp dụng local/trial. Backup `.recovery/upgrade-20261013/`; đối chiếu nâng cấp giữ nguyên tài khoản/tiến độ, SQLite kiểm tra toàn vẹn đạt. Rollback ưu tiên code cũ với schema bổ sung; không reset/ghi đè DB đang có dữ liệu mới.
 - Giới hạn: reading theo ngữ cảnh chưa hoàn hảo; dữ liệu Việt ít; một số bộ thủ thiếu nét/animation có fallback; không bao phủ mọi tiếng Nhật cổ/phương ngữ/dạng chia. Bundle còn lớn (~425KB gzip), Node có cảnh báo deprecated. Chi tiết nguồn/license, benchmark và file đổi trong báo cáo nâng cấp.
@@ -37,4 +71,4 @@ Script: `tests/browser/conjugation-smoke.mjs`; bằng chứng: `test-results/han
 ## Cách chạy và Git
 Tại `D:\Demo`: `npm run dev` (web 127.0.0.1:5173, API 3001); `npm run share` (build + server 3010 + tunnel). Kiểm tra tiến trình/cổng trước khi mở thêm. Kiểm thử: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:e2e`; E2E dùng DB thử riêng. Smoke link hiện tại: `node tests/browser/conjugation-smoke.mjs` (cần Edge và mạng). Không tải/import lại từ điển hay chạy setup/reset chỉ để khởi động.
 
-Git cập nhật sau bàn giao: phần nâng cấp đã nằm trong commit `1325324` (`update`). Người dùng yêu cầu commit tiếp phần smoke test và tài liệu bàn giao; commit này được tạo trên nhánh `codex/handoff-conjugation` để tránh bỏ lại commit ở detached HEAD. Chưa xác nhận push phần nâng cấp; lượt commit bàn giao không thực hiện push. Khi tiếp tục phải kiểm tra Git lại và giữ thay đổi của người dùng. Không đưa `.env`, database, backup hoặc dữ liệu riêng vào commit.
+Lịch sử Git: `1325324` (`update`) và `f0d467c` (smoke từ điển/bàn giao) đã được đưa vào `main` cùng phần thẻ mặc định ngày 14/10. Trạng thái Git mới nhất xem đầu tài liệu. Không đưa `.env`, database, backup hoặc dữ liệu riêng vào commit.
