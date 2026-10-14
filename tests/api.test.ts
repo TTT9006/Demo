@@ -71,17 +71,17 @@ describe.sequential('Authenticated learning workflows', () => {
       ).status,
     ).toBe(200);
   });
-  it('allows login from both local Vite ports and honors an explicit origin restriction', async () => {
+  it('allows login from changing local Vite ports and rejects untrusted websites', async () => {
     const previous = process.env.APP_ORIGINS;
     try {
       delete process.env.APP_ORIGINS;
-      for (const origin of ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:5174', 'http://localhost:5174']) {
+      for (const origin of ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:5174', 'http://localhost:5174', 'http://127.0.0.1:5175']) {
         const agent = request.agent(app);
         expect((await agent.post('/api/auth/login').set('Origin', origin).send({ email: 'learner@example.com', password: 'example-password' })).status).toBe(200);
         expect((await agent.get('/api/auth/me')).status).toBe(200);
       }
       process.env.APP_ORIGINS = 'https://example.com';
-      expect((await request(app).post('/api/auth/login').set('Origin', 'http://127.0.0.1:5174').send({ email: 'learner@example.com', password: 'example-password' })).status).toBe(403);
+      expect((await request(app).post('/api/auth/login').set('Origin', 'http://localhost.attacker.example:5175').send({ email: 'learner@example.com', password: 'example-password' })).status).toBe(403);
     } finally {
       if (previous === undefined) delete process.env.APP_ORIGINS;
       else process.env.APP_ORIGINS = previous;

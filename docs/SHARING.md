@@ -8,6 +8,8 @@ npm run share
 
 Lệnh này build website, dùng chung database với local và in ra **LINK DÙNG THỬ** dạng `https://…trycloudflare.com`. Gửi link đó cho người thử hoặc mở trên điện thoại. Họ có thể chọn **Dùng tài khoản mẫu**, hoặc đăng nhập/đăng ký tài khoản riêng để lưu tiến độ độc lập.
 
+Mỗi lần tạo link, script lấy cùng đường dẫn database tuyệt đối với local, gán địa chỉ link mới vào `APP_ORIGINS`, kiểm tra các bảng tài khoản và thử tuyến đăng nhập qua chính link mới. Chỉ ghi `.share/url.txt` và báo link sẵn sàng khi kiểm tra đạt; kết quả lưu riêng tại `.share/connection.json`. Không tạo lại tài khoản hoặc database. Đổi link chỉ cần đăng nhập lại bằng tài khoản cũ; máy phải tiếp tục bật.
+
 Giữ cửa sổ đang chạy và máy tính có Internet, không để máy ngủ. Nhấn **Ctrl+C** để dừng chia sẻ. Link thay đổi mỗi lần khởi động; link gần nhất nằm trong `.share/url.txt` và chỉ dùng được khi tiến trình còn chạy. Không cần mở cổng router hoặc chạy thêm `npm run dev`.
 
 ## Dữ liệu

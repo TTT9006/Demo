@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { verifySharedLogin } from '../../scripts/lib/share-readiness.ts';
 
 const directory = path.resolve('test-results/shared-accounts');
 mkdirSync(directory, { recursive: true });
@@ -28,6 +29,7 @@ try {
       await new Promise(resolve => setTimeout(resolve, 250));
     }
     assert.ok(healthy);
+    await verifySharedLogin(`http://127.0.0.1:${port}`);
   }
   browser = await chromium.launch({ channel: 'msedge', headless: true });
   const desktopContext = await browser.newContext();

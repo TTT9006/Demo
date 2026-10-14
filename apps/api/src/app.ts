@@ -1,4 +1,5 @@
 import { grammarRouter, normalizeGrammarAnswer, grammarRoadmap } from './grammar';
+import { allowedOrigin } from './origins';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
@@ -38,11 +39,7 @@ app.use((_req, res, next) => {
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin) {
-    const allowed = (
-      process.env.APP_ORIGINS ||
-      'http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:5174,http://localhost:5174,http://127.0.0.1:3001,http://localhost:3001'
-    ).split(',');
-    if (!allowed.includes(req.headers.origin)) {
+    if (!allowedOrigin(req.headers.origin)) {
       res.status(403).json({ error: 'Nguồn yêu cầu không hợp lệ.' });
       return;
     }

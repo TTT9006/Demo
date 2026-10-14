@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import 'dotenv/config';
 import { DatabaseSync } from 'node:sqlite';
 import { databaseLocation } from '../packages/shared/database-location';
+import { verifySharedLogin } from './lib/share-readiness';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
@@ -34,6 +35,13 @@ try {
     probe.listen(port, '127.0.0.1', () => probe.close(() => resolve()));
   });
   mkdirSync(directory, { recursive: true });
+  // Fail before exposing a link if account tables/migrations are missing.
+  const accountDatabase = new DatabaseSync(source, { readOnly: true });
+  try {
+    accountDatabase.prepare('SELECT id FROM User LIMIT 1').get();
+    accountDatabase.prepare('SELECT token FROM Session LIMIT 1').get();
+    accountDatabase.prepare('SELECT id FROM UserPasswordCredential LIMIT 1').get();
+  } finally { accountDatabase.close(); }
   const env = {
     ...process.env,
     DATABASE_URL: databaseLocation(process.env.DATABASE_URL).url,
@@ -113,7 +121,7 @@ try {
   let healthy = false;
   for (let attempt = 0; attempt < 60 && !stopping; attempt++) {
     try {
-      healthy = (await fetch(`http://127.0.0.1:${port}/api/health`)).ok;
+      healthy = (await fetch(`http://127.0.0.1:${port}/api/health`, { signal: AbortSignal.timeout(3000) })).ok;
       if (healthy) break;
     } catch {
       /* Server is starting. */
@@ -121,8 +129,20 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   if (!healthy) throw new Error('Bản dùng thử chưa khởi động được.');
+  let verified = false;
+  for (let attempt = 0; attempt < 8 && !stopping; attempt++) {
+    try {
+      await verifySharedLogin(url);
+      verified = true;
+      break;
+    } catch {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  if (!verified) throw new Error('Link mới chưa kết nối được tới đăng nhập. Không công bố link; hãy kiểm tra mạng và chạy lại.');
+  writeFileSync(path.join(directory, 'connection.json'), JSON.stringify({ url, database: source, verifiedAt: new Date().toISOString() }, null, 2));
   writeFileSync(path.join(directory, 'url.txt'), url + '\n');
-  console.log(`\nLINK DÙNG THỬ: ${url}\nGiữ máy bật và cửa sổ này mở. Nhấn Ctrl+C để dừng.\n`);
+  console.log(`\nLINK DÙNG THỬ: ${url}\nĐã kiểm tra đăng nhập; dùng chung tài khoản và tiến độ với local.\nGiữ máy bật và cửa sổ này mở. Nhấn Ctrl+C để dừng.\n`);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   stop(1);
