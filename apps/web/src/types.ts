@@ -76,7 +76,7 @@ export type DashboardData = {
   accuracy: number | null;
   weekly: { date: string; label: string; reviews: number; activities: number }[];
   recent: Card[];
-  nextLesson: { id: string; pattern: string; title: string } | null;
+  nextLesson: { id: string; pattern: string; title: string; level?: string } | null;
   attempts: Attempt[];
   upcoming: { date: string; count: number }[];
   activeDays: string[];
@@ -88,6 +88,8 @@ export type LessonSummary = {
   level: string;
   position: number;
   progress: { completed: boolean; bookmarked: boolean }[];
+  curriculum?: { track: string; chapter?: number; topic: string; sourceUrl: string; sourceLabel: string; original: boolean };
+  practice?: { total: number; answered: number; correct: number; mastered: boolean; due: number; weak: number; nextDue: string | null };
 };
 export type Question = {
   annotationDisabled?: boolean;

@@ -1,3 +1,4 @@
+import { grammarRouter, normalizeGrammarAnswer, grammarRoadmap } from './grammar';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
@@ -282,18 +283,21 @@ const localDay = (d: Date) =>
   }).format(d);
 app.get('/api/dashboard', async (_req, res) => {
   const userId = res.locals.user.id;
-  const [cards, reviews, progress, attempts, writings] = await Promise.all([
+  const [cards, reviews, progress, attempts, writings, grammarAnswers, roadmap] = await Promise.all([
     db.card.findMany({ where: { deck: { userId } }, orderBy: { lastReviewed: 'desc' } }),
     db.review.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
     db.grammarProgress.findMany({ where: { userId, completed: true }, include: { grammar: true } }),
     db.attempt.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 30 }),
     db.writing.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 90 }),
+    db.grammarAnswer.findMany({ where: { userId }, select: { createdAt: true } }),
+    grammarRoadmap(userId, ['N5', 'N4', 'N3', 'N2'].includes(res.locals.user.level) ? res.locals.user.level : undefined),
   ]);
   const activity = [
     ...reviews.map((r) => ({ date: r.createdAt, type: 'review' })),
     ...progress.map((p) => ({ date: p.updatedAt, type: 'grammar' })),
     ...attempts.map((a) => ({ date: a.createdAt, type: 'test' })),
     ...writings.map((w) => ({ date: w.createdAt, type: 'writing' })),
+    ...grammarAnswers.map((a) => ({ date: a.createdAt, type: 'grammar-review' })),
   ];
   const days = new Set(activity.map((a) => localDay(a.date)));
   let streak = 0;
@@ -331,10 +335,7 @@ app.get('/api/dashboard', async (_req, res) => {
       : null,
     weekly,
     recent: cards.filter((c) => c.lastReviewed).slice(0, 5),
-    nextLesson: await db.grammar.findFirst({
-      where: { id: { notIn: progress.map((p) => p.grammarId) } },
-      orderBy: { position: 'asc' },
-    }),
+    nextLesson: roadmap.recommendation,
     attempts,
     upcoming: Array.from({ length: 7 }, (_, i) => {
       const date = localDay(new Date(now.getTime() + i * 86400000));
@@ -533,75 +534,8 @@ app.post('/api/flashcards/pdf', upload.single('file'), async (req, res) => {
     await parser.destroy();
   }
 });
-app.get('/api/grammar', async (req, res) => {
-  const level = typeof req.query.level === 'string' ? req.query.level : undefined;
-  const q = String(req.query.q || '');
-  res.json(
-    await db.grammar.findMany({
-      where: {
-        ...(level ? { level } : {}),
-        OR: [{ title: { contains: q } }, { pattern: { contains: q } }],
-      },
-      include: { progress: { where: { userId: res.locals.user.id } } },
-      orderBy: { position: 'asc' },
-    }),
-  );
-});
-app.get('/api/grammar/:id', async (req, res) => {
-  const lesson = await db.grammar.findUnique({
-    where: { id: String(req.params.id) },
-    include: { progress: { where: { userId: res.locals.user.id } } },
-  });
-  if (!lesson) {
-    res.status(404).json({ error: 'Không tìm thấy bài học.' });
-    return;
-  }
-  res.json({
-    ...lesson,
-    content: JSON.parse(lesson.content),
-    exercises: (JSON.parse(lesson.exercises) as Exercise[]).map(
-      ({ answer: _, explanation: __, ...q }) => q,
-    ),
-  });
-});
-app.post('/api/grammar/:id/progress', async (req, res) => {
-  const data = z
-    .object({ completed: z.boolean().optional(), bookmarked: z.boolean().optional() })
-    .parse(req.body);
-  const grammarId = String(req.params.id);
-  if (!(await db.grammar.findUnique({ where: { id: grammarId } }))) {
-    res.status(404).json({ error: 'Không tìm thấy bài học.' });
-    return;
-  }
-  res.json(
-    await db.grammarProgress.upsert({
-      where: { userId_grammarId: { userId: res.locals.user.id, grammarId } },
-      create: { userId: res.locals.user.id, grammarId, ...data },
-      update: data,
-    }),
-  );
-});
-const normalizeAnswer = (s: string) =>
-  s
-    .normalize('NFKC')
-    .replace(/[\s。.!！?？]/g, '')
-    .toLowerCase();
-app.post('/api/grammar/:id/exercise', async (req, res) => {
-  const { exerciseId, answer } = z
-    .object({ exerciseId: z.string(), answer: z.string().max(1000) })
-    .parse(req.body);
-  const lesson = await db.grammar.findUniqueOrThrow({ where: { id: String(req.params.id) } });
-  const exercise = (JSON.parse(lesson.exercises) as Exercise[]).find((e) => e.id === exerciseId);
-  if (!exercise) {
-    res.status(404).json({ error: 'Không tìm thấy câu hỏi.' });
-    return;
-  }
-  res.json({
-    correct: normalizeAnswer(answer) === normalizeAnswer(exercise.answer),
-    answer: exercise.answer,
-    explanation: exercise.explanation,
-  });
-});
+app.use('/api/grammar', grammarRouter);
+const normalizeAnswer = normalizeGrammarAnswer;
 app.get('/api/tests', async (_req, res) =>
   res.json([
     ...testDefinitions,

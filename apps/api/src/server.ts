@@ -1,9 +1,11 @@
 import { app } from './app';
 import { db } from './db';
 import { initSearch, recoverSearchIndex } from './dictionary';
+import { syncGrammarContent } from './grammar';
 await db.$queryRawUnsafe('PRAGMA journal_mode=WAL');
 await initSearch();
 await recoverSearchIndex();
+await syncGrammarContent();
 const port = Number(process.env.PORT || 3001);
 const server = app.listen(port, '127.0.0.1', () =>
   console.log(process.env.NODE_ENV === 'production'

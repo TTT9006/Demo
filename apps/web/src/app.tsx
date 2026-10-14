@@ -38,7 +38,7 @@ import { AuthPage } from './pages/auth';
 import { Dashboard, Progress } from './pages/dashboard';
 import { Dictionary, DictionaryDetail, DictionaryAdmin } from './pages/dictionary';
 import { Flashcards, DeckDetail, Review } from './pages/flashcards';
-import { Grammar, GrammarLesson } from './pages/grammar';
+import { Grammar, GrammarLesson, GrammarReview } from './pages/grammar';
 import { Tests, TestSession } from './pages/tests';
 import { Writing } from './pages/writing';
 import { SettingsPage, Profile } from './pages/settings';
@@ -243,6 +243,7 @@ export function App() {
           <Route path="flashcards/review" element={<Review />} />
           <Route path="flashcards/:deckId" element={<DeckDetail />} />
           <Route path="grammar" element={<Grammar />} />
+          <Route path="grammar/review" element={<GrammarReview />} />
           <Route path="grammar/:id" element={<GrammarLesson />} />
           <Route path="kanji/:character" element={<KanjiDetail/>}/>
           <Route path="writing" element={<Writing />} />

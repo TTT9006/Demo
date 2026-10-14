@@ -1,15 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import {
-  ArrowUpRight,
-  ArrowRight,
-  Flame,
-  BookOpen,
-  Layers,
-  PenLine,
-  Check,
-  Clock3,
-} from 'lucide-react';
+import { ArrowUpRight, ArrowRight, Flame, Layers, PenLine, Check, Clock3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
 import { api } from '../services/api';
@@ -129,7 +120,7 @@ export function Dashboard() {
           },
           { label: 'Đến hạn ôn tập', value: data.due, meta: 'Củng cố trí nhớ hôm nay', icon: '復' },
           {
-            label: 'Ngữ pháp hoàn thành',
+            label: 'Bài ngữ pháp đã đọc',
             value: data.grammarCompleted,
             meta: `trong ${data.grammarTotal} bài học`,
             icon: '文',
@@ -171,7 +162,9 @@ export function Dashboard() {
                 <small>NGỮ PHÁP</small>
               </div>
               <div className="lesson-copy">
-                <span className="eyebrow">N5 · BÀI HỌC TIẾP THEO</span>
+                <span className="eyebrow">
+                  {data.nextLesson?.level || 'NGỮ PHÁP'} · BÀI HỌC GỢI Ý
+                </span>
                 <h3>{data.nextLesson?.pattern || 'Ôn lại kiến thức'}</h3>
                 <p>{data.nextLesson?.title || 'Giới thiệu bản thân'}</p>
                 <span className="lesson-duration">Đọc hiểu · Ví dụ · Thực hành</span>

@@ -1,4 +1,10 @@
-# Bàn giao ngắn — Komorebi (13/10/2026)
+# Bàn giao ngắn — Komorebi (14/10/2026)
+
+## Cập nhật mới nhất — ngữ pháp
+
+Đã bổ sung lộ trình N5–N2, ôn câu sai/đến hạn, lưu kết quả từng câu và 98 bài tự biên soạn (tổng 106 bài). Đã migration và đồng bộ local/trial, giữ nguyên dữ liệu người học. Chi tiết phạm vi, nguồn tham khảo, backup và kiểm chứng: `docs/GRAMMAR-20261014.md`. Nội dung chưa được xác nhận bao phủ đầy đủ mọi mẫu trong sách; bài tập mới không trích nguyên văn sách. Khi tiếp tục, kiểm tra Git và tiến trình trước; xem lịch sử Git để xác định commit cập nhật ngữ pháp và trạng thái đồng bộ với origin/main.
+
+Phần thẻ mặc định trước đó đã commit `1dbb5d8`, merge fast-forward nhánh `codex/handoff-conjugation` vào `main` và push GitHub. Ghi chú Git cuối tài liệu mô tả thời điểm bàn giao cũ.
 
 Đọc file này trước khi tiếp tục; chi tiết kỹ thuật: `docs/UPGRADE-20261013.md`. Đây là tóm tắt lịch sử và trạng thái đã kiểm chứng, không phải yêu cầu viết lại dự án.
 

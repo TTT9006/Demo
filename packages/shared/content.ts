@@ -1,4 +1,6 @@
+import { curriculumLessons } from './grammar-curriculum';
 export type Exercise = {
+  acceptedAnswers?: string[];
   annotationDisabled?: boolean;
   readings?: Record<string,string>;
   id: string;
@@ -10,13 +12,14 @@ export type Exercise = {
   explanation: string;
 };
 export type LessonContent = {
+  curriculum?: { track: string; chapter?: number; topic: string; sourceUrl: string; sourceLabel: string; original: boolean };
   meaning: string;
   formation: string;
   explanation: string;
   notes: string;
   mistake: string;
   related: string[];
-  examples: { ja: string; kana: string; vi: string }[];
+  examples: { ja: string; kana: string; vi: string; readings?: Record<string, string> }[];
 };
 export const lessons: {
   id: string;
@@ -342,6 +345,7 @@ export const lessons: {
       },
     ],
   },
+  ...curriculumLessons,
 ];
 export const testDefinitions = [
   {

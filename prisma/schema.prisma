@@ -27,6 +27,8 @@ model User {
   testRuns TestRun[]
   searches SearchHistory[]
   radicals RadicalProgress[]
+  grammarExercises GrammarExerciseProgress[]
+  grammarAnswers GrammarAnswer[]
 }
 model Session {
   token String @id
@@ -85,6 +87,38 @@ model Grammar {
   content String
   exercises String
   progress GrammarProgress[]
+  exerciseProgress GrammarExerciseProgress[]
+  answers GrammarAnswer[]
+}
+model GrammarExerciseProgress {
+  id String @id @default(cuid())
+  userId String
+  grammarId String
+  exerciseId String
+  attempts Int @default(0)
+  correctCount Int @default(0)
+  lastCorrect Boolean @default(false)
+  ease Float @default(2.5)
+  interval Int @default(0)
+  repetitions Int @default(0)
+  due DateTime @default(now())
+  lastReviewed DateTime?
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  grammar Grammar @relation(fields:[grammarId],references:[id],onDelete:Cascade)
+  @@unique([userId,grammarId,exerciseId])
+  @@index([userId,due])
+}
+model GrammarAnswer {
+  id String @id
+  userId String
+  grammarId String
+  exerciseId String
+  answer String
+  correct Boolean
+  createdAt DateTime @default(now())
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  grammar Grammar @relation(fields:[grammarId],references:[id],onDelete:Cascade)
+  @@index([userId,createdAt])
 }
 model GrammarProgress {
   id String @id @default(cuid())
