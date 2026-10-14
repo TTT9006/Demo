@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { toRomaji } from 'wanakana';
+import { JapaneseAnnotatedText, useAnnotationMode } from '../components/japanese-annotated-text';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -12,7 +14,6 @@ import {
   RotateCcw,
   Check,
   Upload,
-  Volume2,
 } from 'lucide-react';
 import { api, post, patch, remove } from '../services/api';
 import { useUI } from '../stores/ui';
@@ -91,7 +92,7 @@ export function Flashcards() {
       <PageHeader
         eyebrow="TỪ VỰNG CỦA BẠN"
         title="Gặp lại để nhớ lâu hơn."
-        description="Gom những từ bạn yêu thích. Ôn đúng lúc, nhớ tự nhiên."
+        description="Học ngay với Hiragana, Katakana và Kanji theo chủ đề, hoặc tạo bộ thẻ của riêng bạn."
         action={
           <Button onClick={() => setCreate(true)}>
             <Plus size={17} />
@@ -234,6 +235,7 @@ function CardForm({
   );
 }
 export function DeckDetail() {
+  const annotationMode = useAnnotationMode();
   const { deckId } = useParams();
   const navigate = useNavigate();
   const client = useQueryClient();
@@ -354,8 +356,12 @@ export function DeckDetail() {
           cards.map((card) => (
             <div className="card-list-row" key={card.id}>
               <div>
-                <strong lang="ja">{card.japanese}</strong>
-                <small>{card.reading}</small>
+                <strong lang="ja">
+                  <JapaneseAnnotatedText text={card.japanese} reading={card.reading} />
+                </strong>
+                <small>
+                  {annotationMode === 'romanized' ? toRomaji(card.reading) : card.reading}
+                </small>
               </div>
               <div>
                 <span>{card.meaning}</span>
@@ -462,6 +468,7 @@ export function DeckDetail() {
   );
 }
 export function Review() {
+  const annotationMode = useAnnotationMode();
   const [params] = useSearchParams();
   const deck = params.get('deck');
   const client = useQueryClient();
@@ -503,12 +510,24 @@ export function Review() {
         <div className="review-session">
           <div className={'review-card ' + (flipped ? 'flipped' : '')}>
             <span className="eyebrow">{flipped ? 'ĐÁP ÁN' : 'BẠN CÒN NHỚ TỪ NÀY KHÔNG?'}</span>
-            <h2 lang="ja"><JapaneseAnnotatedText text={card.japanese} reading={card.reading} disabled={!flipped}/></h2>
+            <h2 lang="ja">
+              <JapaneseAnnotatedText
+                text={card.japanese}
+                reading={card.reading}
+                disabled={!flipped}
+              />
+            </h2>
             {flipped ? (
               <>
-                <p className="review-reading">{card.reading}</p>
+                <p className="review-reading">
+                  {annotationMode === 'romanized' ? toRomaji(card.reading) : card.reading}
+                </p>
                 <h3>{card.meaning}</h3>
-                {card.example && <p><JapaneseAnnotatedText text={card.example}/></p>}
+                {card.example && (
+                  <p>
+                    <JapaneseAnnotatedText text={card.example} />
+                  </p>
+                )}
                 {card.note && <small>{card.note}</small>}
               </>
             ) : (
@@ -562,4 +581,3 @@ export function Review() {
     </>
   );
 }
-import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';

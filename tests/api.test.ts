@@ -71,6 +71,34 @@ describe.sequential('Authenticated learning workflows', () => {
       ).status,
     ).toBe(200);
   });
+  it('adds defaults once for existing accounts and preserves edits, deletions and private progress', async () => {
+    // Registration has not initialized defaults yet: the first authenticated request
+    // also covers pre-existing accounts with the migration's version-zero default.
+    const first = await session.get('/api/flashcards/decks');
+    expect(first.status).toBe(200);
+    const decks = first.body as { id: string; name: string; cards: { id: string; japanese: string; note: string }[] }[];
+    expect(decks.find((d) => d.name === 'Hiragana')?.cards).toHaveLength(104);
+    expect(decks.find((d) => d.name === 'Katakana')?.cards).toHaveLength(104);
+    expect(decks.filter((d) => d.name.startsWith('Kanji ·'))).toHaveLength(6);
+    const nature = decks.find((d) => d.name === 'Kanji · Thiên nhiên')!;
+    expect(nature.cards.find((c) => c.japanese === '山')?.note).toContain('#46');
+    const card = nature.cards[0];
+    await db.card.update({ where: { id: card.id }, data: { repetitions: 4, interval: 10, note: 'Ghi chú riêng' } });
+    const kana = decks.find((d) => d.name === 'Katakana')!;
+    await session.delete('/api/flashcards/decks/' + kana.id);
+    await Promise.all([session.get('/api/flashcards/decks'), session.get('/api/flashcards/decks')]);
+    expect(await db.deck.count({ where: { userId } })).toBe(decks.length - 1);
+    expect(await db.card.findUnique({ where: { id: card.id } })).toMatchObject({ repetitions: 4, interval: 10, note: 'Ghi chú riêng' });
+    const other = request.agent(app);
+    await other.post('/api/auth/register').send({ name: 'Defaults', email: 'defaults@example.com', password: 'example-password' });
+    const [a, b] = await Promise.all([other.get('/api/flashcards/decks'), other.get('/api/flashcards/decks')]);
+    expect(a.status).toBe(200); expect(b.status).toBe(200);
+    expect(a.body).toHaveLength(9);
+    const otherNature = a.body.find((d: { name: string }) => d.name === nature.name);
+    expect(otherNature.id).not.toBe(nature.id);
+    expect(otherNature.cards.every((c: { repetitions: number }) => c.repetitions === 0)).toBe(true);
+    expect((await other.get('/api/flashcards/decks/' + nature.id)).status).toBe(404);
+  });
   it('rejects cross-origin writes', async () => {
     expect(
       (
@@ -122,11 +150,11 @@ describe.sequential('Authenticated learning workflows', () => {
     expect((await outsider.get('/api/admin/translations/status')).status).toBe(403);
   });
   it('saves review history, moves due date, and rejects duplicate reviews', async () => {
-    expect((await session.get('/api/flashcards/review/due')).body).toHaveLength(1);
+    expect((await session.get('/api/flashcards/review/due').query({ deck: deckId })).body).toHaveLength(1);
     const res = await session.post('/api/flashcards/review').send({ cardId, rating: 2 });
     expect(res.status).toBe(200);
     expect(res.body.interval).toBe(1);
-    expect((await session.get('/api/flashcards/review/due')).body).toHaveLength(0);
+    expect((await session.get('/api/flashcards/review/due').query({ deck: deckId })).body).toHaveLength(0);
     expect((await session.post('/api/flashcards/review').send({ cardId, rating: 2 })).status).toBe(
       409,
     );

@@ -10,6 +10,7 @@ import type { User } from '@prisma/client';
 import { db } from './db';
 import { annotate } from './annotation';
 import { kanjiData, kanjiStrokes } from './kanji';
+import { ensureDefaultDecks } from './default-decks';
 import { dictionaryStatus, entryInclude, searchDictionary } from './dictionary';
 import { schedule } from '../../../packages/shared/srs';
 import { explainJapanese } from './assistant';
@@ -87,6 +88,7 @@ async function auth(req: Request, res: Response, next: NextFunction) {
     return;
   }
   res.locals.user = s.user;
+  if (s.user.defaultDeckVersion < 1) await ensureDefaultDecks(s.user.id);
   next();
 }
 const credentials = z.object({

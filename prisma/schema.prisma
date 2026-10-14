@@ -16,6 +16,7 @@ model User {
   level String @default("N5")
   theme String @default("light")
   annotationMode String @default("japanese")
+  defaultDeckVersion Int @default(0)
   createdAt DateTime @default(now())
   sessions Session[]
   decks Deck[]

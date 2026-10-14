@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "defaultDeckVersion" INTEGER NOT NULL DEFAULT 0;
