@@ -40,7 +40,7 @@ app.use('/api', (req, res, next) => {
   if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin) {
     const allowed = (
       process.env.APP_ORIGINS ||
-      'http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:3001,http://localhost:3001'
+      'http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:5174,http://localhost:5174,http://127.0.0.1:3001,http://localhost:3001'
     ).split(',');
     if (!allowed.includes(req.headers.origin)) {
       res.status(403).json({ error: 'Nguồn yêu cầu không hợp lệ.' });
@@ -61,6 +61,10 @@ const safeUser = (u: User) => ({
   role: u.role,
 });
 const digest = (s: string) => createHash('sha256').update(s).digest('hex');
+async function matchesPassword(password: string, hashes: string[]) {
+  for (const hash of hashes) if (await bcrypt.compare(password, hash)) return true;
+  return false;
+}
 async function session(res: Response, userId: string) {
   const token = randomBytes(32).toString('hex');
   await db.session.create({
@@ -128,8 +132,9 @@ app.post('/api/auth/register', sensitive, async (req, res) => {
 });
 app.post('/api/auth/login', sensitive, async (req, res) => {
   const data = credentials.parse(req.body);
-  const user = await db.user.findUnique({ where: { email: data.email } });
-  if (!user || !(await bcrypt.compare(data.password, user.password))) {
+  const user = await db.user.findUnique({ where: { email: data.email }, include: { passwordCredentials: true } });
+  const valid = user && await matchesPassword(data.password, [user.password, ...user.passwordCredentials.map(credential => credential.password)]);
+  if (!user || !valid) {
     res.status(401).json({ error: 'Email hoặc mật khẩu chưa đúng.' });
     return;
   }
@@ -140,6 +145,10 @@ app.post('/api/auth/demo', sensitive, async (_req, res) => {
   const user = await db.user.findUnique({ where: { email: 'demo@komorebi.local' } });
   if (!user) {
     res.status(503).json({ error: 'Chưa có tài khoản mẫu. Hãy chạy db:setup.' });
+    return;
+  }
+  if (user.role !== 'user') {
+    res.status(503).json({ error: 'Tài khoản mẫu cần được cấu hình quyền người dùng thường.' });
     return;
   }
   await session(res, user.id);
@@ -260,7 +269,8 @@ app.post('/api/profile/password', sensitive, async (req, res) => {
   const { currentPassword, password } = z
     .object({ currentPassword: z.string().max(128), password: z.string().min(8).max(128) })
     .parse(req.body);
-  if (!(await bcrypt.compare(currentPassword, res.locals.user.password))) {
+  const credentials = await db.userPasswordCredential.findMany({ where: { userId: res.locals.user.id } });
+  if (!(await matchesPassword(currentPassword, [res.locals.user.password, ...credentials.map(c => c.password)]))) {
     res.status(400).json({ error: 'Mật khẩu hiện tại chưa đúng.' });
     return;
   }
@@ -270,6 +280,7 @@ app.post('/api/profile/password', sensitive, async (req, res) => {
       data: { password: await bcrypt.hash(password, 12) },
     }),
     db.session.deleteMany({ where: { userId: res.locals.user.id } }),
+    db.userPasswordCredential.deleteMany({ where: { userId: res.locals.user.id } }),
   ]);
   await session(res, res.locals.user.id);
   res.json({ ok: true });

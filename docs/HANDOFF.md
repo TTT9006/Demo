@@ -1,5 +1,16 @@
 # Bàn giao ngắn — Komorebi (14/10/2026)
 
+## Cập nhật cuối ngày — tài khoản dùng chung (ưu tiên thông tin này)
+
+- Đã sửa lỗi đăng nhập tại cổng 5174 do thiếu trong danh sách nguồn cho phép; cập nhật API, `.env.example` và `.env` local.
+- Theo yêu cầu người dùng, đã hợp nhất tài khoản local/trial vào `prisma/learning.db`. Người dùng xác nhận hai tài khoản trùng email của mình đều là của mình. Local và script chia sẻ nay dùng **cùng database**; `.share/trial.db` chỉ giữ làm đối chiếu, không tiếp tục sử dụng hoặc seed lại.
+- Giữ 3 tài khoản, 52 bộ, 1.494 thẻ, 174 lượt ôn thẻ. Hai mật khẩu cũ của tài khoản gộp đều đăng nhập được; đổi mật khẩu sẽ thu hồi cả hai. Tài khoản mẫu chỉ có quyền `user`, không còn quyền quản trị local. Các bộ cùng tên được giữ riêng để tránh mất chỉnh sửa/lịch sử.
+- Migration mới `20261014020000_unified_accounts` đã áp dụng database chính. Backup `.recovery/unified-before-1791993794332/` và `.recovery/unified-1791993837150/`. Kiểm tra toàn vẹn/khóa ngoại đạt. **Không khôi phục trial đè lên database chính.**
+- 106/106 kiểm thử đạt; build/TypeScript/lint đạt. Smoke hai máy chủ và trình duyệt desktop/mobile cùng DB đạt. Link Internet thật và local 5173/5174 đã xác minh cùng tài khoản. Chi tiết mã, cách chạy và giới hạn: `docs/UNIFIED-ACCOUNTS.md`.
+- Link tại thời điểm kiểm tra: https://cotton-receive-obligation-dean.trycloudflare.com; dùng `.share/url.txt` để lấy link hiện tại. Mobile dùng link HTTPS, không dùng địa chỉ 127.0.0.1 của máy tính. Cần máy chủ bật; chưa có hosting 24/7.
+- Commit tài liệu bàn giao trước đó là `893ff40` trên `main`. Các sửa lỗi đăng nhập/hợp nhất dữ liệu và tài liệu được đưa vào commit tiếp theo theo yêu cầu người dùng. Xem lịch sử Git và đối chiếu `origin/main` để xác nhận trạng thái push khi tiếp tục.
+- Các đoạn dưới đây ghi nhận mốc trước hợp nhất trong cùng ngày; mọi mô tả local/trial tách tài khoản đã được thay thế bởi kiến trúc dùng chung ở trên.
+
 Đọc file này trước khi tiếp tục. Đây là trạng thái đã kiểm chứng và các việc cần lưu ý, không phải yêu cầu viết lại dự án. Báo cáo chi tiết: `docs/DEFAULT-DECKS.md`, `docs/GRAMMAR-20261014.md`, `docs/UPGRADE-20261013.md`.
 
 ## Các thay đổi ngày 14/10/2026
@@ -49,7 +60,7 @@
 
 ## Lịch sử và phần đã hoàn thành
 1. **Khôi phục dự án:** từng thiếu package.json gây ENOENT; phục hồi cấu hình/mã nguồn dựa trên lịch sử patch, imports và dependency thực tế. Build và dev hoạt động. Báo cáo nguồn phục hồi: `docs/RECOVERY.md`.
-2. **Tài khoản/dữ liệu:** tài khoản, mật khẩu băm và tiến độ lưu SQLite máy chủ; IndexedDB `komorebi-drafts` chỉ lưu bản nháp luyện viết theo người dùng, không lưu mật khẩu/token. DB local `prisma/learning.db`; DB dùng thử `.share/trial.db` riêng biệt, nên tài khoản giữa hai DB không tự đồng bộ.
+2. **Tài khoản/dữ liệu:** tài khoản, mật khẩu băm và tiến độ lưu SQLite máy chủ; IndexedDB `komorebi-drafts` chỉ lưu bản nháp luyện viết theo người dùng, không lưu mật khẩu/token. Hiện local và chia sẻ dùng chung `prisma/learning.db`; trial cũ đã hợp nhất, xem cập nhật cuối ngày phía trên.
 3. **Chia sẻ miễn phí:** Cloudflare Quick Tunnel qua `npm run share`; máy phải bật và tiến trình phải chạy. URL thay đổi sau khởi động lại; lấy từ `.share/url.txt`. Giữ `.share/ready.json` và trial.db để giữ dữ liệu. Từng kiểm tra các đường dẫn file riêng trả HTML ứng dụng, không lộ nội dung file; đây không phải kiểm toán bảo mật toàn diện. Không triển khai hosting 24/7.
 4. **Từ điển:** giữ 218.863 mục JMdict, mọi dạng kanji/reading/sense; chỉ có 97 bản dịch Việt thật. Normalizer dùng WanaKana xử lý kana/romaji/macron/Unicode; tìm nhiều tầng, ưu tiên chính xác, có suy ra từ gốc, fuzzy giới hạn, phân trang backend. Bảng search có 868.356 terms, version `jp-search-3`, thêm index; sửa tìm Việt lẫn nghĩa Anh. UI debounce 250ms, IME, hủy request cũ, highlight và nhãn “Dạng gốc”. Không đưa JMdict nguyên khối vào frontend.
 5. **Bộ thủ/luyện viết:** 214 Kangxi, 10.384 Kanji metadata, 1.314 assets nét tải khi cần; hai chế độ Kanji/bộ thủ, biến thể, liên kết Kanji↔bộ thủ, animation, touch, tiến độ tài khoản và SRS. Dữ liệu KANJIDIC2/Unicode/KanjiVG có nguồn và license; không suy đoán cấu tạo. Canvas chưa chấm đúng/sai thứ tự nét.

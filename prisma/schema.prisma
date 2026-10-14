@@ -29,6 +29,18 @@ model User {
   radicals RadicalProgress[]
   grammarExercises GrammarExerciseProgress[]
   grammarAnswers GrammarAnswer[]
+  passwordCredentials UserPasswordCredential[]
+}
+model UserPasswordCredential {
+  id String @id @default(cuid())
+  userId String
+  password String
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@unique([userId,password])
+}
+model AccountImport {
+  source String @id
+  completedAt DateTime @default(now())
 }
 model Session {
   token String @id

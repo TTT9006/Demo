@@ -71,6 +71,36 @@ describe.sequential('Authenticated learning workflows', () => {
       ).status,
     ).toBe(200);
   });
+  it('allows login from both local Vite ports and honors an explicit origin restriction', async () => {
+    const previous = process.env.APP_ORIGINS;
+    try {
+      delete process.env.APP_ORIGINS;
+      for (const origin of ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:5174', 'http://localhost:5174']) {
+        const agent = request.agent(app);
+        expect((await agent.post('/api/auth/login').set('Origin', origin).send({ email: 'learner@example.com', password: 'example-password' })).status).toBe(200);
+        expect((await agent.get('/api/auth/me')).status).toBe(200);
+      }
+      process.env.APP_ORIGINS = 'https://example.com';
+      expect((await request(app).post('/api/auth/login').set('Origin', 'http://127.0.0.1:5174').send({ email: 'learner@example.com', password: 'example-password' })).status).toBe(403);
+    } finally {
+      if (previous === undefined) delete process.env.APP_ORIGINS;
+      else process.env.APP_ORIGINS = previous;
+    }
+  });
+  it('accepts merged passwords, then revokes both old passwords on password change', async () => {
+    const bcrypt = (await import('bcryptjs')).default;
+    const alias = 'previous-trial-password';
+    await db.userPasswordCredential.create({ data: { userId, password: await bcrypt.hash(alias, 4) } });
+    const alternate = request.agent(app);
+    const login = await alternate.post('/api/auth/login').send({ email: 'learner@example.com', password: alias });
+    expect(login.status).toBe(200);
+    expect(login.body.passwordCredentials).toBeUndefined();
+    expect((await alternate.post('/api/profile/password').send({ currentPassword: alias, password: 'unified-new-password' })).status).toBe(200);
+    expect(await db.userPasswordCredential.count({ where: { userId } })).toBe(0);
+    for (const password of [alias, 'example-password']) expect((await request(app).post('/api/auth/login').send({ email: 'learner@example.com', password })).status).toBe(401);
+    expect((await session.get('/api/auth/me')).status).toBe(401);
+    expect((await session.post('/api/auth/login').send({ email: 'learner@example.com', password: 'unified-new-password' })).status).toBe(200);
+  });
   it('adds defaults once for existing accounts and preserves edits, deletions and private progress', async () => {
     // Registration has not initialized defaults yet: the first authenticated request
     // also covers pre-existing accounts with the migration's version-zero default.
