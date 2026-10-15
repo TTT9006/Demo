@@ -48,13 +48,6 @@ for (const [u, i, a, e, o, te, past, kind] of rows) {
   add(e, u, kind, 'mệnh lệnh');
   add(o + 'う', u, kind, 'ý chí');
 }
-stemForms('', 'る', 'v1');
-negative('', 'る', 'v1');
-tePast('て', 'た', 'る', 'v1');
-add('られる', 'る', 'v1', 'khả năng / bị động', 'v1');
-add('れる', 'る', 'v1', 'khả năng rút gọn', 'v1');
-add('させる', 'る', 'v1', 'sai khiến', 'v1');
-for (const [suffix, label] of [['れば', 'điều kiện ば'], ['ろ', 'mệnh lệnh'], ['よ', 'mệnh lệnh'], ['よう', 'ý chí']]) add(suffix, 'る', 'v1', label);
 stemForms('し', 'する', 'vs');
 negative('し', 'する', 'vs');
 add('せず', 'する', 'vs', 'phủ định');
@@ -74,6 +67,13 @@ for (const [ki, ko, ku] of [['き', 'こ', 'く'], ['来', '来', '来']]) {
   add(ko + 'い', ku + 'る', 'vk', 'mệnh lệnh');
   add(ko + 'よう', ku + 'る', 'vk', 'ý chí');
 }
+stemForms('', 'る', 'v1');
+negative('', 'る', 'v1');
+tePast('て', 'た', 'る', 'v1');
+add('られる', 'る', 'v1', 'khả năng / bị động', 'v1');
+add('れる', 'る', 'v1', 'khả năng rút gọn', 'v1');
+add('させる', 'る', 'v1', 'sai khiến', 'v1');
+for (const [suffix, label] of [['れば', 'điều kiện ば'], ['ろ', 'mệnh lệnh'], ['よ', 'mệnh lệnh'], ['よう', 'ý chí']]) add(suffix, 'る', 'v1', label);
 add('ない', 'ある', 'v5r-i', 'phủ định', 'adj-i');
 for (const [from, label] of [['かった', 'quá khứ'], ['くない', 'phủ định'], ['くて', 'thể て'], ['ければ', 'điều kiện ば'], ['かったら', 'điều kiện たら']]) add(from, 'い', 'adj-i', label, 'adj-i');
 add('です', '', 'adj-i', 'lịch sự');

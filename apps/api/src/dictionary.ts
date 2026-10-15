@@ -283,17 +283,27 @@ export async function searchDictionary(query: string, page = 1, limit = 15) {
       const tags = entry.senses.flatMap(
         (sense) => (JSON.parse(sense.metadata) as { partOfSpeech?: string[] }).partOfSpeech || [],
       );
-      const match = forms.find(
-        (form) =>
+      for (let i = 0; i < forms.length; i++) {
+        const form = forms[i];
+        if (
           matchesPartOfSpeech(form.kind, tags) &&
-          [...entry.kanji, ...entry.readings].some((reading) => reading.normalized === form.term),
-      );
-      if (match) derived.set(entry.id, match);
+          [...entry.kanji, ...entry.readings].some((reading) => reading.normalized === form.term)
+        ) {
+          derived.set(entry.id, { ...form, priority: i } as Inflection & { priority?: number });
+          break;
+        }
+      }
     }
   }
   const conjugated = derived.size
-    ? Prisma.sql`SELECT id AS entryId, 3 AS rank FROM DictionaryEntry WHERE id IN (${Prisma.join([...derived.keys()])})`
-    : Prisma.sql`SELECT id AS entryId, 3 AS rank FROM DictionaryEntry WHERE 0`;
+    ? Prisma.join(
+        [...derived.entries()].map(
+          ([id, match]) =>
+            Prisma.sql`SELECT ${id} AS entryId, ${3 + Math.min((match as any).priority ?? 0, 99) * 0.01} AS rank`,
+        ),
+        ' UNION ALL ',
+      )
+    : Prisma.sql`SELECT '' AS entryId, 3.0 AS rank WHERE 0`;
   const fts = tokens.map((t) => '"' + t.replace(/"/g, '""') + '"*').join(' AND ') || '"___"';
   const japanese = [...new Set([q, ...variants.readings])];
   const partial = Prisma.join(
@@ -361,7 +371,7 @@ export async function searchDictionary(query: string, page = 1, limit = 15) {
   return {
     items: rows.map((r) => ({
       ...data.find((e) => e.id === r.id)!,
-      inflection: Number(r.rank) === 3 ? derived.get(r.id) : undefined,
+      inflection: Math.floor(Number(r.rank)) === 3 ? derived.get(r.id) : undefined,
     })),
     total,
     fuzzy,

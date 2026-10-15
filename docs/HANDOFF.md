@@ -7,6 +7,26 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Sửa độ chính xác tìm kiếm dạng chia động từ (ikimasu → 行く) — ngày 15/10
+
+- **Yêu cầu người dùng:** Từ `ikimasu` vẫn chưa tìm được chính xác.
+- **Nguyên nhân cốt lõi:**
+  - Khi tra cứu `ikimasu` (hoặc `いきます`), bộ deinflect sinh ra 2 ứng viên hợp lệ: `行く` (nhóm I / v5k-s, stem `いき` + `ます`) và `生きる` (nhóm II / v1, stem `いき` + `ます`).
+  - Trước đây, truy vấn `searchDictionary` gán cùng một mức rank bằng phẳng (`3 AS rank`) cho tất cả các từ khớp qua dạng chia (`conjugated`), sau đó xếp theo `ORDER BY r.rank, e.common DESC, e.id`. Do cả `行く` và `生きる` đều có rank 3 và `common = true`, SQLite buộc phải dùng `e.id ASC` để phân định thứ hạng.
+  - Mã số ID của `生きる` trong JMdict là `1378520`, nhỏ hơn ID của `行く` là `1578850`, dẫn đến việc từ điển luôn hiển thị `生きる` (sống/tồn tại) ở vị trí đầu tiên, đẩy `行く` (đi) xuống thẻ thứ 2. Tương tự với `kimasu` (きます), `着る` (mặc) bị đẩy lên trước `来る` (đến).
+- **Giải pháp xử lý:**
+  - **Thứ tự quy tắc biến đổi (`apps/api/src/deinflect.ts`):** Đưa động từ bất quy tắc cốt lõi (`vs` - する, `vk` - 来る) và động từ nhóm I đặc biệt (`v5k-s` - 行く) lên trước nhóm II (`v1`).
+  - **Xếp hạng có trọng số theo thứ tự ứng viên deinflect (`apps/api/src/dictionary.ts`):** Ghi nhận vị trí ưu tiên (`priority`) của dạng nguyên thể tương ứng trong mảng `forms` sinh ra từ `deinflect`. Trong câu lệnh SQL, rank của `conjugated` nay được tính theo công thức `3 + Math.min(priority, 99) * 0.01`. Nhờ vậy, dạng chia chuẩn xác nhất có rank nhỏ hơn và được xếp lên vị trí đầu bảng trước khi rơi vào tiebreak ID ngẫu nhiên.
+  - **Bảo toàn hiển thị "Dạng gốc" ở frontend:** Sửa điều kiện nhận diện rank ở backend từ `Number(r.rank) === 3` thành `Math.floor(Number(r.rank)) === 3` để vẫn đính kèm đầy đủ `inflection: { term, kind, steps }` cho các rank thập phân như `3.01`.
+  - **Bổ sung bản dịch tiếng Việt cho các từ liên quan:** Nạp và re-index nghĩa tiếng Việt cho `生きる` ("sống, sinh tồn, tồn tại"), `着る` ("mặc quần áo, khoác lên người") và `逝く` ("qua đời, tạ thế") để không còn tình trạng từ hiển thị thiếu nghĩa tiếng Việt.
+- **Kiểm chứng:**
+  - `ikimasu` và `いきます`: **100% trả về 行く (いく - đi, di chuyển) là kết quả số 1**; thẻ hiển thị chuẩn xác `Dạng gốc: いく · Nhận diện: lịch sự`.
+  - `kimasu` và `きます`: **100% trả về 来る (くる - đến, tới) là kết quả số 1**.
+  - `tabemasu` và `tabemashita`: Giữ nguyên vị trí số 1 cho `食べる` (たべる).
+  - `npm run typecheck`: 0 lỗi.
+  - `npm test`: 114/114 tests qua.
+- **Tập tin liên quan:** `apps/api/src/deinflect.ts`, `apps/api/src/dictionary.ts`, `docs/HANDOFF.md`.
+
 ## Dịch nghĩa tiếng Việt cho từ vựng thông dụng — ngày 15/10
 
 - **Yêu cầu người dùng:** Dịch các từ thông dụng trong từ điển từ tiếng Anh sang tiếng Việt.
