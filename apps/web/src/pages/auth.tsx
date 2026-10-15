@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Brand } from '../components/brand';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -43,8 +44,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
     <div className="auth-page">
       <section className="auth-art">
         <Link to="/" className="brand">
-          <span className="brand-mark">木</span>
-          <span>komorebi</span>
+          <Brand />
         </Link>
         <div>
           <span className="eyebrow">MỘT HÀNH TRÌNH, TỪNG NGÀY</span>
@@ -62,9 +62,9 @@ export function AuthPage({ register = false }: { register?: boolean }) {
           </p>
         </div>
         <span className="auth-japanese" lang="ja">
-          木漏れ日
+          若葉
         </span>
-        <small>Ánh nắng xuyên qua kẽ lá.</small>
+        <small>Lá non · Học từng chút, lớn mỗi ngày.</small>
       </section>
       <section className="auth-form">
         <div>

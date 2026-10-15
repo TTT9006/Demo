@@ -252,7 +252,7 @@ export function Grammar() {
         <p>
           Các mức N là gợi ý học tập. Nội dung sơ cấp được nhóm theo mạch bài Minna; N3–N2 là các
           nhóm bổ sung, không gán số bài trung cấp của sách khi chưa đối chiếu. Ví dụ và bài tập do
-          Komorebi biên soạn, không phải trích nguyên văn. Danh mục này không được xem là danh sách
+          Wakaba biên soạn, không phải trích nguyên văn. Danh mục này không được xem là danh sách
           đầy đủ mọi mục của giáo trình hoặc JLPT.
         </p>
         <p>

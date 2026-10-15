@@ -44,6 +44,21 @@ try {
     errors = [],
     checks = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(base + '/login');
+  assert.match(await page.title(), /^Wakaba/);
+  await page.locator('.brand-logo').waitFor();
+  assert.ok(await page.locator('.brand-logo').evaluate(img => img.complete && img.naturalWidth > 0));
+  assert.equal(await page.locator('.brand-name').textContent(), 'wakaba');
+  const favicon = await context.request.get(base + '/brand/wakaba-logo.png');
+  assert.equal(favicon.status(),200);
+  assert.ok(favicon.headers()['content-type'].includes('image/png'));
+  for (const width of [320,390,768,1440]) for (const theme of ['light','dark']) {
+    await page.setViewportSize({width,height:1000});
+    await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+    checks.push(`brand-login/${width}/${theme}`);
+    if(width===390||width===1440) await page.screenshot({path:path.join(directory,`brand-login-${width}-${theme}.png`),fullPage:true});
+  }
   const result = await context.request.post(base + '/api/auth/register', {
     data: {
       name: 'Người học có tên dài để kiểm tra bố cục giao diện',
@@ -55,6 +70,7 @@ try {
   const user = await result.json();
   await page.goto(base + '/dashboard');
   await page.locator('.sidebar').waitFor();
+  assert.match(await page.locator('.sidebar .brand').textContent(), /wakaba/);
   // Prepare only this isolated learner's formerly studied cards before their first page load.
   const decks = sqlite
     .prepare(
@@ -82,6 +98,7 @@ try {
       for (const theme of ['light', 'dark']) {
         await page.setViewportSize({ width, height: 900 });
         await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme);
+        assert.ok(await page.locator('.login-review-top .brand-logo').evaluate(img=>img.complete&&img.naturalWidth>0));
         assert.equal(
           await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
           false,

@@ -1,4 +1,4 @@
-# Komorebi · Học tiếng Nhật mỗi ngày
+# Wakaba · Học từng chút, lớn mỗi ngày
 
 **Đã phục hồi cấu hình npm và mã nguồn ngày 12/10/2026.** Với database hiện có trong `D:\Demo`, chỉ cần chạy `npm run dev`, rồi mở http://127.0.0.1:5173. Không cần khởi tạo lại database hoặc nhập lại JMdict. Xem [báo cáo phục hồi và kiểm tra](docs/RECOVERY.md).
 

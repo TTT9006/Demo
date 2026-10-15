@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Brand } from '../components/brand';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toRomaji } from 'wanakana';
@@ -52,8 +53,7 @@ export function LoginReview({
       <div className="login-review-frame">
         <header className="login-review-top">
           <span className="brand">
-            <span className="brand-mark">木</span>
-            <span>komorebi</span>
+            <Brand />
           </span>
           <div className="login-review-top-actions">
             <span className="login-review-day">

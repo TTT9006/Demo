@@ -7,6 +7,15 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Nhận diện thương hiệu và Logo Wakaba — ngày 15/10
+
+- Đã cập nhật logo và nhận diện thương hiệu từ Komorebi sang **Wakaba** (若葉 · Học từng chút, lớn mỗi ngày) theo hình ảnh logo biểu tượng mầm lá/cuốn sách mở xanh sage người dùng cung cấp.
+- Lưu trữ logo tại `public/brand/wakaba-logo.png` (tự động build ra `dist/brand/wakaba-logo.png`), cấu hình làm favicon và apple-touch-icon trong `index.html`.
+- Tạo component dùng chung `Brand` (`apps/web/src/components/brand.tsx`), cập nhật đồng bộ ở sidebar (`apps/web/src/app.tsx`), trang đăng nhập/đăng ký (`apps/web/src/pages/auth.tsx`), và màn hình ôn tập đầu ngày (`apps/web/src/pages/login-review.tsx`).
+- Tinh chỉnh CSS `.brand-logo` (44px desktop, 38px mobile) và `.brand-name` đảm bảo không tràn khung ở mọi kích thước màn hình.
+- Kiểm thử: `typecheck` đạt; `lint` đạt; 114/114 unit/integration tests đạt; `npm run build` đạt; script kiểm tra trình duyệt `tests/browser/login-review-smoke.mjs` chạy 40/40 kiểm tra đạt (xác minh favicon HTTP 200 image/png, ảnh logo nạp thành công `naturalWidth > 0`, kiểm tra 4 độ rộng 320/390/768/1440 px × sáng/tối). Ảnh chụp thực tế: `test-results/login-review/brand-login-*.png`, `welcome-preview-*.png`.
+- Không thay đổi database, API hay logic học tập.
+
 ## Ôn flashcard sau đăng nhập — ngày 15/10
 
 Cập nhật mới nhất: có nút nhỏ **Ôn tập vào lần sau** ở góc dưới màn hình chọn bộ và đang ôn. `POST /api/login-review/defer` chỉ đánh dấu phiên hiện tại đã được vào web; không thay đổi hạn thẻ hoặc ghi lượt ôn. Lượt đang làm được giữ nguyên để tiếp tục khi đăng nhập lần sau. Thao tác không hoãn phiên trên thiết bị khác. Quy tắc này thay thế mô tả “không có nút bỏ qua” bên dưới. Không cần migration mới.

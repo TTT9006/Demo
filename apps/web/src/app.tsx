@@ -1,4 +1,5 @@
 import { KanjiDetail } from './pages/radicals';
+import { Brand } from './components/brand';
 import { LoginReview } from './pages/login-review';
 import type { LoginReviewView } from '../../../packages/shared/login-review';
 import { useEffect, useState } from 'react';
@@ -91,10 +92,7 @@ function Layout() {
   if (loginReview.data && !loginReview.data.ready) return <LoginReview key={user.id} initial={loginReview.data} name={user.name} complete={() => {client.setQueryData(['login-review', user.id], {ready:true,active:false,total:0,done:0,decks:[]});navigate('/dashboard');}}/>;
   const sidebar = <>
         <Link to="/dashboard" className="brand">
-          <span className="brand-mark">木</span>
-          <span>
-            komorebi<small>HỌC TIẾNG NHẬT MỖI NGÀY</small>
-          </span>
+          <Brand tagline />
         </Link>
         <div className="sidebar-label">GÓC HỌC TẬP</div>
         <nav aria-label="Điều hướng chính">
@@ -208,7 +206,7 @@ function Layout() {
           <Outlet />
         </main>
         <footer className="footer">
-          <span>木漏れ日 · Từng chút một, mỗi ngày.</span>
+          <span>若葉 · Học từng chút, lớn mỗi ngày.</span>
           <Link to="/settings#sources">
             Nguồn dữ liệu & bản quyền <ArrowUpRight size={12} />
           </Link>
