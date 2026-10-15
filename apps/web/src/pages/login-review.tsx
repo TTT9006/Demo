@@ -6,6 +6,7 @@ import { toRomaji } from 'wanakana';
 import { ArrowRight, Check, Layers, Leaf, Sun, CalendarCheck } from 'lucide-react';
 import { JapaneseAnnotatedText, useAnnotationMode } from '../components/japanese-annotated-text';
 import { AudioButton, Button } from '../components/ui';
+import { ReviewCardInteractive } from '../components/review-card-interactive';
 import { api, post } from '../services/api';
 import type { LoginReviewView } from '../../../../packages/shared/login-review';
 
@@ -220,36 +221,27 @@ export function LoginReview({
           ) : card ? (
             <>
               <p className="login-review-deck-title">{card.deckName}</p>
-              <p role="status">
-                {state.done}/{state.total} thẻ đã hoàn thành
-              </p>
-              <progress aria-label="Tiến độ lượt ôn" max={state.total || 1} value={state.done} />
-              <div className="review-session">
-                <div className={'review-card ' + (flipped ? 'flipped' : '')}>
-                  <span className="eyebrow">{flipped ? 'ĐÁP ÁN' : 'BẠN CÒN NHỚ KHÔNG?'}</span>
-                  <h2 lang="ja">
-                    <JapaneseAnnotatedText
-                      text={card.japanese}
-                      reading={card.reading}
-                      disabled={!flipped}
-                    />
-                  </h2>
-                  {flipped ? (
-                    <>
-                      <p>{mode === 'romanized' ? toRomaji(card.reading) : card.reading}</p>
-                      <h3>{card.meaning}</h3>
-                      {card.example && (
-                        <p>
-                          <JapaneseAnnotatedText text={card.example} />
-                        </p>
-                      )}
-                      {card.note && <p>{card.note}</p>}
-                    </>
-                  ) : (
-                    <p>Thử nhớ nghĩa trước khi lật thẻ.</p>
-                  )}
-                  <AudioButton text={card.japanese} />
+              <div className="review-progress-wrap">
+                <div className="review-progress-header">
+                  <span role="status">
+                    {state.done}/{state.total} thẻ đã hoàn thành
+                  </span>
+                  <strong>{Math.round((state.done / (state.total || 1)) * 100)}%</strong>
                 </div>
+                <progress aria-label="Tiến độ lượt ôn" max={state.total || 1} value={state.done} />
+              </div>
+              <div className="review-session">
+                <ReviewCardInteractive
+                  card={card}
+                  flipped={flipped}
+                  onFlip={() => setFlipped(!flipped)}
+                  onSwipe={(dir) => {
+                    void send('answer', { cardId: card.id, rating: dir === 'left' ? 0 : 2 });
+                  }}
+                  mode={mode}
+                  eyebrowFront="BẠN CÒN NHỚ KHÔNG?"
+                  eyebrowBack="ĐÁP ÁN"
+                />
                 {!flipped ? (
                   <Button disabled={busy} className="flip-button" onClick={() => setFlipped(true)}>
                     Lật thẻ

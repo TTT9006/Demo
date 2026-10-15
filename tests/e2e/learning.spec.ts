@@ -14,7 +14,14 @@ test('demo learner can look up a word, save a card, review, learn grammar and ta
   await expect(page.getByRole('status')).toContainText('Đã thêm từ');
   await page.goto('/flashcards/review');
   await page.getByRole('button', { name: 'Lật thẻ' }).click();
-  await page.getByRole('button', { name: 'Tốt Nhớ được' }).click();
+  const card = page.locator('.review-card-wrapper');
+  const cardBox = await card.boundingBox();
+  if (cardBox) {
+    await page.mouse.move(cardBox.x + cardBox.width / 2, cardBox.y + cardBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(cardBox.x + cardBox.width / 2 + 150, cardBox.y + cardBox.height / 2, { steps: 5 });
+    await page.mouse.up();
+  }
   await expect(page.getByText(/1 từ đã ôn trong phiên này/)).toBeVisible();
   await page.goto('/grammar/desu');
   const exercise = page.locator('.exercise').first();

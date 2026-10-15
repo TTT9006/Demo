@@ -7,6 +7,42 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Tích hợp 4 hiệu ứng tương tác & animation (Zen Flow + Modern Tactile) — ngày 15/10
+
+- **Yêu cầu người dùng:** Cập nhật 4 hiệu ứng tương tác đã chọn lên trang web:
+  1. *Chọn đáp án (Zen Flow):* Sóng lan tỏa nhẹ nhàng (`@keyframes zen-pulse`), viền chuyển sắc êm dịu (`#688a59`), biểu tượng tick xoay bung nhẹ (`@keyframes zen-check`).
+  2. *Lật thẻ 3D Washi (Zen Flow):* Lật 3D theo trục Y (`rotateY(180deg)`), bảo toàn phối cảnh thực (`perspective: 1200px`), bóng đổ mở rộng mềm mại như chất liệu giấy Washi.
+  3. *Vuốt thẻ (Swipe) của Modern Tactile:* Kéo thẻ bằng chuột hoặc cảm ứng di động (Pointer Events + Pointer Capture), xoay động theo góc vật lý, hiển thị huy hiệu phản hồi tức thời (`✓ NHỚ` xanh lá khi kéo sang phải, `✕ QUÊN` đỏ đất khi kéo sang trái), kích hoạt đánh giá tương ứng khi kéo vượt ngưỡng 85px kèm hiệu ứng văng thẻ (fly-out).
+  4. *Thanh tiến trình của Modern Tactile:* Thiết kế dạng viên nang (capsule pill), bo tròn 9999px, dải chuyển màu ngọc bích sang jade, hiệu ứng lò xo co giãn đàn hồi mượt mà (`cubic-bezier(0.34, 1.56, 0.64, 1)`), hiển thị tỷ lệ % trực quan.
+- **Thực hiện kỹ thuật:**
+  - **Component tương tác đa chạm (`apps/web/src/components/review-card-interactive.tsx`):**
+    - Đóng gói toàn bộ cơ chế lật 3D hai mặt (`.review-card-front`, `.review-card-back`) và cử chỉ kéo vuốt đa nền tảng (chuột/cảm ứng) không phụ thuộc thư viện nặng ngoài.
+    - Điều kiện render mặt sau được tinh chỉnh để mặt trước không chứa các thẻ DOM đáp án/bộ thủ khi chưa lật, giữ trọn vẹn độ chính xác của các test assertions Playwright cũ.
+    - Chống co cụm flexbox (`shrink-to-fit`) trên nội dung thẻ bằng `box-sizing: border-box` và `width: 100%` cho các tiêu đề/văn bản.
+  - **Trang ôn thẻ (`apps/web/src/pages/flashcards.tsx`):**
+    - Thay thế khối thẻ cũ bằng `ReviewCardInteractive` và thanh tiến trình Modern Tactile có header hiển thị tỷ lệ hoàn thành.
+    - Hỗ trợ vuốt trái (rating 0 - Quên) và vuốt phải (rating 2 - Nhớ).
+    - Theo yêu cầu người dùng, đã gỡ bỏ hoàn toàn khối 4 nút đánh giá (Quên / Khó / Tốt / Dễ) bên dưới thẻ để tối ưu cho thao tác vuốt thẻ (Swipe) và giữ giao diện tinh gọn, thoáng đãng.
+  - **Trang ôn tập khi đăng nhập (`apps/web/src/pages/login-review.tsx`):**
+    - Đồng bộ `ReviewCardInteractive` và thanh tiến trình Modern Tactile vào luồng ôn tập đầu ngày.
+    - Tinh chỉnh CSS `.login-review-content .review-card-face` để mặt thẻ nhận diện đúng nền `var(--surface)` mà không phá vỡ khung 3D container.
+  - **Giao diện & Micro-interactions (`apps/web/src/styles.css`):**
+    - Thêm keyframes `@keyframes zen-pulse` và `@keyframes zen-check` cho `.answer-options button.selected`.
+    - Thêm phản hồi nhún nảy tactile (`:active { transform: translateY(2px) scale(0.96); }`) cho các nút lật thẻ và nút đánh giá.
+    - Tương thích 100% dark mode với viền tinh chỉnh và nền rêu trầm `#1b211a` / `#20271f`.
+- **Kiểm chứng & Bằng chứng:**
+  - `npm run typecheck`: 0 lỗi.
+  - `npm test`: 114/114 tests qua (10 suites đạt 100%).
+  - `npm run build`: Build thành công cả frontend Vite và backend esbuild.
+  - `tests/browser/login-review-smoke.mjs`: Chạy 40/40 kiểm tra thành công trên 4 kích thước màn hình (320px, 390px, 768px, 1440px) trên cả 2 theme Light & Dark.
+  - Ảnh chụp thực tế:
+    - `test-results/animation-verify/01-flashcard-front.png`: Giao diện mặt trước thẻ với thanh tiến trình capsule Modern Tactile và thẻ 3D Washi.
+    - `test-results/animation-verify/02-flashcard-flipped-3d.png`: Mặt sau thẻ lật 3D Washi hoàn chỉnh, các nút bấm đánh giá nhún nảy tactile.
+    - `test-results/animation-verify/03-flashcard-swiping-right.png`: Cử chỉ vuốt thẻ (Swipe) với góc xoay vật lý và badge `✓ NHỚ` xanh ngọc nổi bật.
+    - `test-results/login-review/answer-dark.png`: Hoạt động ổn định trên Dark mode và màn hình hẹp di động 390px.
+- **Trạng thái Git:** Đã commit theo yêu cầu của người dùng.
+- **Tập tin liên quan:** `apps/web/src/components/review-card-interactive.tsx`, `apps/web/src/pages/flashcards.tsx`, `apps/web/src/pages/login-review.tsx`, `apps/web/src/styles.css`, `tests/e2e/learning.spec.ts`, `docs/HANDOFF.md`.
+
 ## Sửa độ chính xác tìm kiếm dạng chia động từ (ikimasu → 行く) — ngày 15/10
 
 - **Yêu cầu người dùng:** Từ `ikimasu` vẫn chưa tìm được chính xác.

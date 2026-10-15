@@ -18,6 +18,7 @@ import {
 import { api, post, patch, remove } from '../services/api';
 import { useUI } from '../stores/ui';
 import type { Card, Deck } from '../types';
+import { ReviewCardInteractive } from '../components/review-card-interactive';
 import {
   AudioButton,
   Button,
@@ -563,65 +564,37 @@ export function Review() {
         <ErrorState error={error} />
       ) : card ? (
         <div className="review-session">
-          <div className={'review-card ' + (flipped ? 'flipped' : '')}>
-            <span className="eyebrow">{flipped ? 'ĐÁP ÁN' : 'BẠN CÒN NHỚ TỪ NÀY KHÔNG?'}</span>
-            <h2 lang="ja">
-              <JapaneseAnnotatedText
-                text={card.japanese}
-                reading={card.reading}
-                disabled={!flipped}
-              />
-            </h2>
-            {flipped ? (
-              <>
-                <p className="review-reading">
-                  {annotationMode === 'romanized' ? toRomaji(card.reading) : card.reading}
-                </p>
-                <h3>{card.meaning}</h3>
-                {card.example && (
-                  <p>
-                    <JapaneseAnnotatedText text={card.example} />
-                  </p>
-                )}
-                {card.note && <small>{card.note}</small>}
-              </>
-            ) : (
-              <p className="muted">Thử nhớ nghĩa trước khi lật thẻ.</p>
-            )}
-            <AudioButton text={card.japanese} />
+          <div className="review-progress-wrap">
+            <div className="review-progress-header">
+              <span>Tiến độ phiên ôn</span>
+              <strong>{done} / {done + (data?.length || 0)} thẻ</strong>
+            </div>
+            <progress
+              max={Math.max(1, done + (data?.length || 0))}
+              value={done}
+              aria-label="Tiến độ lượt ôn"
+            />
           </div>
+          <ReviewCardInteractive
+            card={card}
+            flipped={flipped}
+            onFlip={() => setFlipped(!flipped)}
+            onSwipe={(dir) => {
+              mutation.mutate(dir === 'left' ? 0 : 2);
+            }}
+            mode={annotationMode}
+          />
           {mutation.error && (
             <p className="error-text" role="alert">
               {mutation.error.message}
             </p>
           )}
-          {!flipped ? (
-            <Button className="flip-button" onClick={() => setFlipped(true)}>
-              <RotateCcw size={17} />
-              Lật thẻ
-            </Button>
-          ) : (
-            <div className="rating-buttons">
-              {[
-                { label: 'Quên', hint: '10 phút' },
-                { label: 'Khó', hint: 'Cần cố gắng' },
-                { label: 'Tốt', hint: 'Nhớ được' },
-                { label: 'Dễ', hint: 'Rất chắc chắn' },
-              ].map((r, i) => (
-                <Button
-                  key={r.label}
-                  variant="secondary"
-                  disabled={mutation.isPending}
-                  onClick={() => mutation.mutate(i)}
-                >
-                  <strong>{r.label}</strong>
-                  <small>{r.hint}</small>
-                </Button>
-              ))}
-            </div>
-          )}
+          <Button className="flip-button" onClick={() => setFlipped(!flipped)}>
+            <RotateCcw size={17} />
+            {flipped ? 'Lật lại mặt trước' : 'Lật thẻ'}
+          </Button>
           <p className="review-footnote">
-            Chọn đúng cảm nhận của bạn. Lịch ôn SM-2 sẽ điều chỉnh theo từng thẻ.
+            Vuốt phải để Nhớ · Vuốt trái nếu Quên. Lịch ôn SM-2 sẽ tự động điều chỉnh.
           </p>
         </div>
       ) : (

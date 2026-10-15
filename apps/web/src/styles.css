@@ -140,21 +140,27 @@ label textarea {
 progress {
   appearance: none;
   width: 100%;
-  height: 5px;
+  height: 8px;
   border: 0;
-  border-radius: 20px;
+  border-radius: 9999px;
   overflow: hidden;
   background: var(--line);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 progress::-webkit-progress-bar {
   background: var(--line);
+  border-radius: 9999px;
 }
 progress::-webkit-progress-value {
-  background: var(--jade);
-  border-radius: 20px;
+  background: linear-gradient(90deg, #608653, var(--jade));
+  border-radius: 9999px;
+  transition: width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 10px rgba(99, 133, 85, 0.35);
 }
 progress::-moz-progress-bar {
-  background: var(--jade);
+  background: linear-gradient(90deg, #608653, var(--jade));
+  border-radius: 9999px;
+  transition: width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .button {
   display: inline-flex;
@@ -1560,26 +1566,163 @@ main {
   margin: auto;
   text-align: center;
 }
+/* 3D Washi Flip & Swipe Review Container */
+.review-progress-wrap {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+.review-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.review-progress-header strong {
+  font-family: var(--mono, monospace);
+  color: var(--jade);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.review-3d-scene {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+  touch-action: pan-y;
+}
+.review-card-wrapper {
+  position: relative;
+  width: 100%;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.review-card-wrapper.is-dragging {
+  cursor: grabbing;
+  transition: none;
+}
+.review-card-wrapper.swiping-out {
+  transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.26s ease;
+}
+
+/* 3D Flip Card Container */
 .review-card {
-  background: var(--card);
+  position: relative;
+  width: 100%;
+  min-height: 380px;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.55s cubic-bezier(0.25, 1, 0.5, 1);
+  border-radius: 18px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+.review-card:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+.review-card.flipped {
+  transform: rotateY(180deg);
+  box-shadow: 0 16px 36px -4px rgba(40, 60, 35, 0.12), 0 4px 12px -2px rgba(40, 60, 35, 0.06);
+}
+
+/* Card Faces */
+.review-card-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 18px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  min-height: 370px;
-  padding: 40px 35px;
+  padding: clamp(20px, 4vw, 36px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow-y: auto;
+}
+.review-card-face > * {
+  max-width: 100%;
+}
+.review-card-face h2,
+.review-card-face h3,
+.review-card-face p,
+.review-card-face .review-reading,
+.review-card-face .review-example,
+.review-card-face .review-note {
+  width: 100%;
+  box-sizing: border-box;
+}
+.review-card-front {
+  background: var(--card);
+  z-index: 2;
+  transform: rotateY(0deg);
+}
+.review-card-back {
+  background: var(--card);
+  transform: rotateY(180deg);
+}
+[data-theme='dark'] .review-card-front {
+  background: #1b211a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme='dark'] .review-card-back {
+  background: #20271f;
+  border-color: rgba(148, 167, 129, 0.25);
+}
+
+/* Swipe Badges */
+.swipe-hint-badge {
+  position: absolute;
+  top: 18px;
+  z-index: 10;
   display: flex;
   align-items: center;
-  flex-direction: column;
-  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
+.swipe-hint-right {
+  right: 18px;
+  background: #2e683b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.swipe-hint-left {
+  left: 18px;
+  background: #a84232;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
 .review-card .eyebrow {
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 1.5px;
 }
 .review-card h2 {
   font-family: var(--serif);
   font-size: 70px;
   font-weight: 400;
-  margin: 20px 0;
+  margin: 16px 0;
 }
 .review-card.flipped h2 {
   font-size: 45px;
@@ -1588,20 +1731,36 @@ main {
 .review-card h3 {
   font-size: 20px;
   font-weight: 500;
+  margin: 8px 0;
 }
 .review-card p {
-  font-size: 12px;
+  font-size: 13px;
 }
 .review-card .review-reading {
   color: #9da88f;
   letter-spacing: 2px;
 }
-.review-card .button {
-  margin-top: 12px;
+.review-card .card-actions-row {
+  margin-top: 14px;
 }
+.review-card .review-example {
+  margin-top: 8px;
+  font-size: 13px;
+}
+.review-card .review-note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Tactile Buttons */
 .flip-button {
   margin-top: 22px;
   min-width: 180px;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s ease;
+}
+.flip-button:active {
+  transform: translateY(2px) scale(0.96);
 }
 .rating-buttons {
   display: grid;
@@ -1613,6 +1772,10 @@ main {
   flex-direction: column;
   gap: 5px;
   padding: 14px 10px;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s ease;
+}
+.rating-buttons .button:active {
+  transform: translateY(2px) scale(0.96);
 }
 .rating-buttons small {
   font-size: 9px;
@@ -1626,8 +1789,9 @@ main {
   color: var(--jade);
 }
 .review-footnote {
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 25px;
+  color: var(--muted);
 }
 .grammar-grid {
   display: grid;
@@ -1763,6 +1927,17 @@ main {
   gap: 10px;
   margin-bottom: 18px;
 }
+@keyframes zen-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(100, 138, 86, 0.5); }
+  60% { box-shadow: 0 0 0 6px rgba(100, 138, 86, 0); }
+  100% { box-shadow: 0 0 0 3px rgba(100, 138, 86, 0.22); }
+}
+@keyframes zen-check {
+  0% { transform: scale(0.6) rotate(-20deg); opacity: 0; }
+  70% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
 .answer-options button {
   display: flex;
   min-width: 0;
@@ -1770,22 +1945,37 @@ main {
   gap: 13px;
   text-align: left;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 9px;
   background: var(--card);
-  padding: 14px;
+  padding: 14px 16px;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.26s cubic-bezier(0.25, 1, 0.5, 1),
+              background-color 0.26s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.26s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.answer-options button:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  border-color: #92a783;
+  box-shadow: 0 4px 14px rgba(40, 60, 35, 0.05);
+}
+.answer-options button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
 }
 .answer-options .answer-key {
   background: var(--surface);
-  color: #98a08f;
-  border-radius: 4px;
-  width: 25px;
-  height: 25px;
-  flex: 0 0 25px;
+  color: #88967e;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
   display: grid;
   place-items: center;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.26s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .answer-options button > .japanese-annotated {
   flex: 1;
@@ -1793,13 +1983,20 @@ main {
   text-align: left;
 }
 .answer-options button.selected {
-  border-color: #94a781;
-  background: #f0f4ea;
+  border-color: #688a59;
+  background: #edf4e8;
+  box-shadow: 0 0 0 3px rgba(104, 138, 89, 0.24);
+  animation: zen-pulse 1.3s ease-out 1;
+}
+.answer-options button.selected .answer-key {
+  background: var(--jade);
+  color: #ffffff;
 }
 .answer-options button > svg {
   flex-shrink: 0;
   margin-left: auto;
   color: var(--jade);
+  animation: zen-check 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 .answer-input {
   margin-bottom: 18px;
@@ -2285,11 +2482,16 @@ canvas {
 [data-theme='dark'] .hero-study,
 [data-theme='dark'] .dictionary-search-panel,
 [data-theme='dark'] .score-panel,
-[data-theme='dark'] .answer-options button.selected,
 [data-theme='dark'] .character-grid button.selected {
   background: #374331;
   border-color: #46523d;
   color: #b7cba5;
+}
+[data-theme='dark'] .answer-options button.selected {
+  background: #232e20;
+  border-color: #6d965e;
+  color: #dce7d4;
+  box-shadow: 0 0 0 3px rgba(109, 150, 94, 0.32);
 }
 [data-theme='dark'] .continue-lesson,
 [data-theme='dark'] .sidebar-note {
@@ -3381,7 +3583,8 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .login-review-decks h2, .login-review-deck-title { overflow-wrap: anywhere; font-size: 20px; line-height: 1.6; }
 .login-review-content progress { width: 100%; accent-color: var(--jade); }
 .login-review-content .review-session { width: 100%; max-width: 100%; margin-block: 20px; }
-.login-review-content .review-card { height: auto; min-height: 260px; padding: clamp(18px, 4vw, 40px); overflow-wrap: anywhere; }
+.login-review-content .review-card { height: auto; min-height: 320px; padding: 0; background: transparent; overflow-wrap: anywhere; }
+.login-review-content .review-card-face { padding: clamp(18px, 4vw, 36px); background: var(--surface); }
 .login-review-content .review-card h2 { font-size: clamp(28px, 6vw, 52px); overflow-wrap: anywhere; }
 .login-review-content .review-card h3 { overflow-wrap: anywhere; }
 .login-review-content .rating-buttons { grid-template-columns: repeat(4,minmax(0,1fr)); }
@@ -3431,7 +3634,8 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .login-review-next-icon { color: var(--jade); padding: 10px; background: var(--card); border-radius: 12px; flex-shrink: 0; }
 .login-review-next h2 { font-size: 17px; line-height: 1.6; margin: 0; }
 .login-review-next p { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
-.login-review-content .review-card { border-radius: 18px; background: var(--surface); box-shadow: none; }
+.login-review-content .review-card { border-radius: 18px; box-shadow: none; }
+[data-theme=dark] .login-review-content .review-card-face { background: #1c221a; }
 .login-review-content .rating-buttons button { border-radius: 12px; min-height: 66px; }
 [data-theme=dark] .login-review-deck-icon.tone-1 { background: #3e3d2f; }
 [data-theme=dark] .login-review-deck-icon.tone-2 { background: #433638; }
