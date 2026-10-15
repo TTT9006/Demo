@@ -119,6 +119,17 @@ try {
     await page.evaluate(()=>document.documentElement.dataset.theme='light');
     await page.screenshot({path:path.join(directory,`welcome-preview-${width}.png`),fullPage:true});
   }
+  await page.getByRole('button', { name: 'Ôn tập vào lần sau', exact: true }).click();
+  await page.locator('.sidebar').waitFor();
+  await page.reload();
+  await page.locator('.sidebar').waitFor();
+  const loginStatus = await page.evaluate(async () => (await fetch('/api/auth/login', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({email:'gate@example.com',password:'Test-password-2026!'}),
+  })).status);
+  assert.equal(loginStatus,200);
+  await page.reload();
+  await page.getByRole('button', { name: '3 bộ', exact: true }).click();
   await page.getByRole('button', { name: 'Bắt đầu ôn 3 bộ', exact: true }).click();
   await page.getByRole('button', { name: 'Lật thẻ', exact: true }).waitFor();
   await layout('question');

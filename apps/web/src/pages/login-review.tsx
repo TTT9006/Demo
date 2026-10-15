@@ -281,6 +281,28 @@ export function LoginReview({
         <footer className="login-review-footer">
           <Leaf size={18} aria-hidden="true" />
           <span>Một chút mỗi ngày giúp nhớ lâu hơn.</span>
+          {!state.ready && (
+            <Button
+              className="login-review-defer"
+              variant="ghost"
+              disabled={busy}
+              onClick={async () => {
+                if (busy) return;
+                setBusy(true);
+                setError('');
+                try {
+                  await post('/login-review/defer');
+                  complete();
+                } catch (e) {
+                  setError((e as Error).message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Ôn tập vào lần sau
+            </Button>
+          )}
         </footer>
       </div>
     </main>

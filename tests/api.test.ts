@@ -424,6 +424,13 @@ describe.sequential('Dictionary import, search and resumable translation', () =>
     expect((await agent.post('/api/login-review/start').send({count:2})).status).toBe(400);
     let run=(await agent.post('/api/login-review/start').send({count:3})).body;
     expect(run.total).toBe(3);expect(run.card.id).toBe(ids[0]);
+    const untouched=await db.card.findUniqueOrThrow({where:{id:ids[0]}});
+    expect((await agent.post('/api/login-review/defer')).status).toBe(200);
+    expect((await agent.get('/api/login-review')).body.ready).toBe(true);
+    expect(await db.card.findUniqueOrThrow({where:{id:ids[0]}})).toEqual(untouched);
+    expect(await db.review.count({where:{userId:uid}})).toBe(0);
+    await agent.post('/api/auth/login').send(credentials);
+    expect((await agent.get('/api/login-review')).body.card.id).toBe(ids[0]);
     const second=request.agent(app);await second.post('/api/auth/login').send(credentials);
     expect((await second.get('/api/login-review')).body.card.id).toBe(ids[0]);
     const other=await session.get('/api/login-review');
@@ -433,6 +440,9 @@ describe.sequential('Dictionary import, search and resumable translation', () =>
     expect(run.done).toBe(1);expect(run.card.id).toBe(ids[1]);
     await agent.post('/api/login-review/answer').send({cardId:ids[0],rating:0});
     expect(await db.review.count({where:{userId:uid,cardId:ids[0]}})).toBe(1);
+    expect((await second.get('/api/login-review')).body.done).toBe(1);
+    await agent.post('/api/login-review/defer');
+    expect((await agent.get('/api/login-review')).body.ready).toBe(true);
     expect((await second.get('/api/login-review')).body.done).toBe(1);
     await second.post('/api/login-review/answer').send({cardId:ids[1],rating:2});
     run=(await second.post('/api/login-review/answer').send({cardId:ids[2],rating:3})).body;

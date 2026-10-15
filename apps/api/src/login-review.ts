@@ -20,6 +20,8 @@ async function view(
   token: string,
 ): Promise<LoginReviewView> {
   const session = await tx.session.findUniqueOrThrow({ where: { token } });
+  // Deferral belongs to this login only; keep an unfinished account queue for the next login.
+  if (session.reviewReady) return { ready: true, active: false, total: 0, done: 0, decks: [] };
   const stored = await tx.loginReview.findUnique({ where: { userId } });
   const state = stored ? (JSON.parse(stored.state) as State) : null;
   if (state) {
@@ -61,7 +63,6 @@ async function view(
       decks: state.decks,
     };
   }
-  if (session.reviewReady) return { ready: true, active: false, total: 0, done: 0, decks: [] };
   const due = await tx.card.findMany({
     where: { deck: { userId }, lastReviewed: { not: null }, due: { lte: new Date() } },
     include: { deck: true },
@@ -80,6 +81,13 @@ async function view(
 loginReviewRouter.get('/', async (_req, res) =>
   res.json(await db.$transaction((tx) => view(tx, res.locals.user.id, res.locals.sessionToken))),
 );
+loginReviewRouter.post('/defer', async (_req, res) => {
+  await db.session.updateMany({
+    where: { token: res.locals.sessionToken, userId: res.locals.user.id },
+    data: { reviewReady: true },
+  });
+  res.json({ ok: true });
+});
 loginReviewRouter.post('/start', async (req, res) => {
   const { count } = z.object({ count: z.number().int().min(1).max(5) }).parse(req.body);
   const userId = res.locals.user.id,

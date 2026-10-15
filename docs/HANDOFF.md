@@ -7,6 +7,8 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 
 ## Ôn flashcard sau đăng nhập — ngày 15/10
 
+Cập nhật mới nhất: có nút nhỏ **Ôn tập vào lần sau** ở góc dưới màn hình chọn bộ và đang ôn. `POST /api/login-review/defer` chỉ đánh dấu phiên hiện tại đã được vào web; không thay đổi hạn thẻ hoặc ghi lượt ôn. Lượt đang làm được giữ nguyên để tiếp tục khi đăng nhập lần sau. Thao tác không hoãn phiên trên thiết bị khác. Quy tắc này thay thế mô tả “không có nút bỏ qua” bên dưới. Không cần migration mới.
+
 Giao diện đã chỉnh tiếp theo bản ý tưởng đầu tiên: khung bo góc nền sáng/xanh sage, tiêu đề căn giữa, lời chào cá nhân, lựa chọn 1/3/5 bộ, hàng bộ thẻ có biểu tượng chữ Nhật và thứ tự ưu tiên, nút bắt đầu lớn, footer nhẹ. Màn hình hoàn tất có dấu tích và thống kê số thẻ/bộ cùng trạng thái lịch ôn (không giả lập thời gian thực tế). Giữ luồng ôn bắt buộc lượt đã chọn. Build/TypeScript/lint đạt; 32 kiểm tra bố cục sáng/tối 320–1440 px và luồng ôn đạt. Ảnh bản thật với dữ liệu thử: `test-results/login-review/welcome-preview-1440.png`, `welcome-preview-390.png`; đã xem trực tiếp cả hai. Không thay đổi API, SRS hoặc database trong lần chỉnh giao diện này.
 
 Đã thêm màn hình ôn ưu tiên trước giao diện chính, cá nhân hóa theo tài khoản. Chỉ lấy thẻ có `lastReviewed` và đã đến hạn (kể cả thẻ quên có repetitions=0), sắp bộ theo hạn cũ nhất. Chọn 1/3/5 bộ, giới hạn theo số bộ hiện có; chỉ ôn thẻ đến hạn trong các bộ đã chọn. Không có thẻ cần ôn thì vào thẳng web. Hoàn thành lượt đã chọn mở web bình thường; bộ chưa chọn vẫn đến hạn. Không có nút bỏ qua lượt đã bắt đầu; có đăng xuất.

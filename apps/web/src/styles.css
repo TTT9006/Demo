@@ -3381,3 +3381,6 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
  .login-review-next { padding: 16px; gap: 12px; }
  .login-review-content .login-review-cta { font-size: 15px; }
 }
+.login-review-footer { flex-wrap: wrap; }
+.login-review-footer .login-review-defer { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--muted); text-decoration: underline; text-underline-offset: 4px; min-height: 44px; white-space: normal; }
+@media(max-width:560px) { .login-review-footer .login-review-defer { flex-basis: 100%; justify-content: flex-end; } }
