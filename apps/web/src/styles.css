@@ -1566,6 +1566,41 @@ main {
   margin: auto;
   text-align: center;
 }
+/* Review Mode Switcher Tabs */
+.review-mode-tabs {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 4px;
+  margin: 0 auto 24px;
+}
+.review-mode-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.review-mode-tab:hover {
+  color: var(--ink);
+}
+.review-mode-tab.active {
+  background: var(--card);
+  color: var(--jade);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+[data-theme='dark'] .review-mode-tab.active {
+  background: #252e22;
+  color: #a4c995;
+}
+
 /* 3D Washi Flip & Swipe Review Container */
 .review-progress-wrap {
   width: 100%;

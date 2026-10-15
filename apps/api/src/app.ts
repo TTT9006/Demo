@@ -466,27 +466,34 @@ app.delete('/api/flashcards/cards/:id', async (req, res) => {
   await db.card.delete({ where: { id: String(req.params.id) } });
   res.json({ ok: true });
 });
-app.get('/api/flashcards/review/due', async (req, res) =>
-  res.json(
+app.get('/api/flashcards/review/due', async (req, res) => {
+  const isAll = req.query.mode === 'all' || req.query.mode === 'anytime';
+  const cardId = typeof req.query.card === 'string' ? req.query.card : undefined;
+  return res.json(
     await db.card.findMany({
       where: {
+        ...(cardId ? { id: cardId } : {}),
         deck: {
           userId: res.locals.user.id,
           ...(typeof req.query.deck === 'string' ? { id: req.query.deck } : {}),
         },
-        due: { lte: new Date() },
+        ...(isAll || cardId ? {} : { due: { lte: new Date() } }),
       },
       orderBy: { due: 'asc' },
       take: 100,
     }),
-  ),
-);
+  );
+});
 app.post('/api/flashcards/review', async (req, res) => {
-  const { cardId, rating } = z
-    .object({ cardId: z.string(), rating: z.number().int().min(0).max(3) })
+  const { cardId, rating, allowEarly } = z
+    .object({
+      cardId: z.string(),
+      rating: z.number().int().min(0).max(3),
+      allowEarly: z.boolean().optional(),
+    })
     .parse(req.body);
   const card = await ownedCard(cardId, res.locals.user.id);
-  if (card.due > new Date()) {
+  if (card.due > new Date() && !allowEarly) {
     res.status(409).json({ error: 'Thẻ này đã được ôn. Vui lòng tải lại hàng đợi.' });
     return;
   }

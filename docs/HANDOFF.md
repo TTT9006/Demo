@@ -7,6 +7,29 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Bổ sung chế độ Ôn lại tự do bất cứ lúc nào cho thẻ nhớ (Anytime Review) — ngày 16/10
+
+- **Yêu cầu người dùng:** Thêm lựa chọn ôn lại cho thẻ nhớ để muốn ôn lại lúc nào cũng được, cơ chế ôn tập dài hạn sẽ điều chỉnh theo lần ôn mới nhất.
+- **Thực hiện kỹ thuật:**
+  - **Backend (`apps/api/src/app.ts`):**
+    - `GET /api/flashcards/review/due`: Bổ sung hỗ trợ truy vấn `mode=all` (hoặc `mode=anytime`) để lấy toàn bộ thẻ của bộ thẻ / người học mà không bị giới hạn bởi điều kiện `due <= now`, ưu tiên theo hạn ôn gần nhất `orderBy: { due: 'asc' }`. Hỗ trợ thêm tham số `card=:id` để lấy đúng một thẻ cụ thể khi cần ôn ngay một từ.
+    - `POST /api/flashcards/review`: Bổ sung cờ `allowEarly?: boolean`. Khi cờ này được bật (hoặc khi thẻ đã đến hạn), API cho phép tiến hành ôn tập, chạy thuật toán SM-2 (`schedule(card, rating, now)`), cập nhật `lastReviewed: now`, tính toán lại `interval`, `repetitions`, `ease` và dời mốc `due` mới tính từ lần ôn mới nhất này. Nếu không có cờ `allowEarly`, API vẫn giữ mã lỗi 409 khi thẻ chưa đến hạn để bảo toàn hành vi ngăn chặn gửi trùng lặp.
+  - **Frontend (`apps/web/src/pages/flashcards.tsx`):**
+    - **Màn hình ôn tập (`Review`):** Bổ sung thanh tab chuyển đổi chế độ ôn (`.review-mode-tabs`) giữa **"Thẻ đến hạn"** và **"Ôn lại tự do (Tất cả thẻ)"**. Gửi `allowEarly: true` khi ôn. Khi màn hình đạt trạng thái hoàn thành hoặc chưa có thẻ đến hạn, hiển thị nút bấm hành động trực quan **"Ôn lại tất cả thẻ ngay"** thay vì rơi vào trạng thái cụt.
+    - **Banner tổng (`/flashcards`):** Bổ sung lựa chọn **"Ôn lại tự do"** bên cạnh "Ôn thẻ đến hạn" trong `.review-banner`. Khi không còn thẻ đến hạn, banner chuyển thông điệp khuyến khích ôn lại tự do thay vì đóng luồng học.
+    - **Chi tiết bộ thẻ (`/flashcards/:id`):** Bổ sung nút **"Ôn lại tự do"** trong thanh công cụ bộ thẻ và thêm nút icon **"Ôn lại thẻ này ngay"** trên từng dòng thẻ từ vựng (`.card-list-row`).
+  - **Giao diện & Styling (`apps/web/src/styles.css`):**
+    - Tạo kiểu dáng capsule tab `.review-mode-tabs` và `.review-mode-tab` thanh thoát, có hiệu ứng chuyển trạng thái mượt mà, hỗ trợ tương phản chuẩn trên cả theme Sáng và Tối (`[data-theme='dark'] .review-mode-tab.active`).
+  - **Kiểm thử tự động (`tests/api.test.ts`):**
+    - Bổ sung ca kiểm thử: `allows anytime review and adjusts SRS schedule based on the latest session`. Xác minh `mode=all` trả về thẻ chưa đến hạn, kiểm tra `allowEarly: true` cập nhật đúng lịch SM-2 và dời `due` mới tính từ mốc thời gian ôn hiện tại.
+- **Kiểm chứng:**
+  - `npm run typecheck`: 0 lỗi.
+  - `npm test`: 28/28 tests trong `api.test.ts` và toàn bộ 114 tests hệ thống đều vượt qua.
+  - `npm run build`: Build production hoàn tất thành công (Vite + esbuild).
+  - `tests/browser/login-review-smoke.mjs`: Chạy 40/40 kiểm tra trình duyệt qua thành công.
+- **Trạng thái Git:** Đã commit theo quy ước tự động.
+- **Tập tin liên quan:** `apps/api/src/app.ts`, `apps/web/src/pages/flashcards.tsx`, `apps/web/src/styles.css`, `tests/api.test.ts`, `docs/HANDOFF.md`.
+
 ## Tích hợp 4 hiệu ứng tương tác & animation (Zen Flow + Modern Tactile) — ngày 15/10
 
 - **Yêu cầu người dùng:** Cập nhật 4 hiệu ứng tương tác đã chọn lên trang web:

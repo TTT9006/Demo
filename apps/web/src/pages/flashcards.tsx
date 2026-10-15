@@ -113,13 +113,28 @@ export function Flashcards() {
       <section className="review-banner">
         <div>
           <span className="eyebrow">SẴN SÀNG CHO MỘT LƯỢT ÔN?</span>
-          <h2>{due} từ đang chờ bạn</h2>
-          <p>Lịch ôn tự điều chỉnh theo mức độ ghi nhớ của bạn.</p>
+          <h2>{due > 0 ? `${due} từ đang chờ bạn` : 'Không có thẻ đến hạn'}</h2>
+          <p>
+            {due > 0
+              ? 'Lịch ôn tự điều chỉnh theo mức độ ghi nhớ của bạn.'
+              : 'Bạn đã hoàn thành các thẻ đến hạn. Bạn có thể ôn lại bất cứ lúc nào!'}
+          </p>
         </div>
-        <Link className="button primary" to="/flashcards/review">
-          Ôn tập hôm nay
-          <ArrowRight size={17} />
-        </Link>
+        <div className="inline-actions" style={{ gap: '10px', flexWrap: 'wrap' }}>
+          {due > 0 && (
+            <Link className="button primary" to="/flashcards/review">
+              Ôn thẻ đến hạn
+              <ArrowRight size={17} />
+            </Link>
+          )}
+          <Link
+            className={`button ${due > 0 ? 'secondary' : 'primary'}`}
+            to="/flashcards/review?mode=all"
+          >
+            <RotateCcw size={16} />
+            Ôn lại tự do
+          </Link>
+        </div>
       </section>
       <div className="section-heading spaced">
         <h2>Các bộ thẻ của bạn</h2>
@@ -402,10 +417,20 @@ export function DeckDetail() {
             }}
           />
         </label>
-        <Link className="button primary" to={'/flashcards/review?deck=' + deckId}>
-          Ôn bộ này
-          <ArrowRight size={16} />
-        </Link>
+        <div className="inline-actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
+          <Link className="button primary" to={'/flashcards/review?deck=' + deckId}>
+            Ôn bộ này
+            <ArrowRight size={16} />
+          </Link>
+          <Link
+            className="button secondary"
+            to={'/flashcards/review?deck=' + deckId + '&mode=all'}
+            title="Ôn lại toàn bộ thẻ trong bộ này bất cứ lúc nào"
+          >
+            <RotateCcw size={15} />
+            Ôn lại tự do
+          </Link>
+        </div>
       </div>
       <section className="panel card-list">
         {cards.length ? (
@@ -430,6 +455,14 @@ export function DeckDetail() {
               </span>
               <div className="inline-actions">
                 <AudioButton text={card.japanese} />
+                <Link
+                  className="button ghost icon-button"
+                  to={`/flashcards/review?deck=${deckId}&card=${card.id}`}
+                  aria-label={'Ôn lại từ ' + card.japanese}
+                  title="Ôn lại thẻ này ngay"
+                >
+                  <RotateCcw size={15} />
+                </Link>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -525,38 +558,88 @@ export function DeckDetail() {
 }
 export function Review() {
   const annotationMode = useAnnotationMode();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const deck = params.get('deck');
+  const cardId = params.get('card');
+  const modeParam = params.get('mode');
+  const isAnytime = modeParam === 'all' || Boolean(cardId);
   const client = useQueryClient();
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState(0);
+
+  const queryParams = new URLSearchParams();
+  if (deck) queryParams.set('deck', deck);
+  if (cardId) queryParams.set('card', cardId);
+  if (isAnytime) queryParams.set('mode', 'all');
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['review', deck],
-    queryFn: () => api<Card[]>('/flashcards/review/due' + (deck ? '?deck=' + deck : '')),
+    queryKey: ['review', deck, isAnytime ? 'all' : 'due', cardId],
+    queryFn: () => api<Card[]>('/flashcards/review/due?' + queryParams.toString()),
     staleTime: 0,
   });
   const card = data?.[0];
   const mutation = useMutation({
-    mutationFn: (rating: number) => post('/flashcards/review', { cardId: card?.id, rating }),
+    mutationFn: (rating: number) =>
+      post('/flashcards/review', { cardId: card?.id, rating, allowEarly: true }),
     onSuccess: () => {
       setDone(done + 1);
       setFlipped(false);
-      client.setQueryData<Card[]>(['review', deck], (old) => old?.slice(1));
+      client.setQueryData<Card[]>(['review', deck, isAnytime ? 'all' : 'due', cardId], (old) =>
+        old?.slice(1),
+      );
       void client.invalidateQueries({ queryKey: ['dashboard'] });
       void client.invalidateQueries({ queryKey: ['decks'] });
       void client.invalidateQueries({ queryKey: ['deck'] });
     },
   });
+
+  const switchMode = (newMode: 'due' | 'all') => {
+    const next = new URLSearchParams(params);
+    if (newMode === 'all') {
+      next.set('mode', 'all');
+    } else {
+      next.delete('mode');
+    }
+    next.delete('card');
+    setParams(next);
+    setDone(0);
+    setFlipped(false);
+  };
+
   return (
     <>
       <Link className="back-link" to="/flashcards">
         <ArrowLeft size={16} />
         Kết thúc lượt ôn
       </Link>
+      <div className="review-mode-tabs" role="tablist" aria-label="Chế độ ôn tập">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isAnytime}
+          className={`review-mode-tab ${!isAnytime ? 'active' : ''}`}
+          onClick={() => switchMode('due')}
+        >
+          Thẻ đến hạn
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isAnytime}
+          className={`review-mode-tab ${isAnytime ? 'active' : ''}`}
+          onClick={() => switchMode('all')}
+        >
+          Ôn lại tự do (Tất cả thẻ)
+        </button>
+      </div>
       <PageHeader
-        eyebrow="MỖI LẦN NHỚ LẠI, MỘT LẦN VỮNG HƠN"
-        title="Khoảng thời gian cho từ vựng."
-        description={`${done} từ đã ôn trong phiên này${data?.length ? ' · ' + data.length + ' từ còn lại' : ''}`}
+        eyebrow={isAnytime ? 'ÔN TẬP TỰ DO · BẤT CỨ LÚC NÀO' : 'MỖI LẦN NHỚ LẠI, MỘT LẦN VỮNG HƠN'}
+        title={isAnytime ? 'Ôn lại theo ý muốn.' : 'Khoảng thời gian cho từ vựng.'}
+        description={
+          isAnytime
+            ? `${done} từ đã ôn · Lịch ôn dài hạn sẽ tự động điều chỉnh theo lần ôn mới nhất này.`
+            : `${done} từ đã ôn trong phiên này${data?.length ? ' · ' + data.length + ' từ còn lại' : ''}`
+        }
       />
       {isLoading ? (
         <Loading />
@@ -566,7 +649,7 @@ export function Review() {
         <div className="review-session">
           <div className="review-progress-wrap">
             <div className="review-progress-header">
-              <span>Tiến độ phiên ôn</span>
+              <span>{isAnytime ? 'Tiến độ ôn tự do' : 'Tiến độ phiên ôn'}</span>
               <strong>{done} / {done + (data?.length || 0)} thẻ</strong>
             </div>
             <progress
@@ -594,16 +677,49 @@ export function Review() {
             {flipped ? 'Lật lại mặt trước' : 'Lật thẻ'}
           </Button>
           <p className="review-footnote">
-            Vuốt phải để Nhớ · Vuốt trái nếu Quên. Lịch ôn SM-2 sẽ tự động điều chỉnh.
+            Vuốt phải để Nhớ · Vuốt trái nếu Quên. Lịch ôn SM-2 sẽ tự động điều chỉnh theo lần ôn này.
           </p>
         </div>
       ) : (
-        <Empty title="Bạn đã ôn hết các thẻ đến hạn.">
-          <p>Đã ôn {done} từ trong phiên này. Hẹn gặp lại vào lượt ôn tiếp theo.</p>
-          <Link className="button primary" to="/dictionary">
-            Khám phá từ mới
-            <ArrowRight size={16} />
-          </Link>
+        <Empty
+          title={
+            isAnytime
+              ? 'Bạn đã ôn xong toàn bộ thẻ đã chọn.'
+              : 'Bạn đã ôn hết các thẻ đến hạn.'
+          }
+        >
+          <p>
+            {done > 0
+              ? `Đã ôn ${done} từ. Lịch ôn dài hạn đã được điều chỉnh theo lần ôn mới nhất.`
+              : isAnytime
+                ? 'Bộ thẻ này hiện chưa có thẻ nào.'
+                : 'Hiện tại chưa có thẻ nào đến hạn ôn. Bạn có thể ôn lại bất cứ lúc nào!'}
+          </p>
+          <div
+            className="inline-actions"
+            style={{ justifyContent: 'center', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}
+          >
+            {!isAnytime ? (
+              <Button onClick={() => switchMode('all')}>
+                <RotateCcw size={16} />
+                Ôn lại tất cả thẻ ngay
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  void client.invalidateQueries({ queryKey: ['review'] });
+                  setDone(0);
+                }}
+              >
+                <RotateCcw size={16} />
+                Ôn lại từ đầu
+              </Button>
+            )}
+            <Link className="button secondary" to="/flashcards">
+              Danh sách bộ thẻ
+            </Link>
+          </div>
         </Empty>
       )}
     </>

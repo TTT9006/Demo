@@ -190,6 +190,21 @@ describe.sequential('Authenticated learning workflows', () => {
     );
     expect(await db.review.count({ where: { userId } })).toBe(1);
   });
+  it('allows anytime review and adjusts SRS schedule based on the latest session', async () => {
+    const allCards = await session.get('/api/flashcards/review/due').query({ deck: deckId, mode: 'all' });
+    expect(allCards.body).toHaveLength(1);
+    expect(allCards.body[0].id).toBe(cardId);
+
+    const earlyReview = await session.post('/api/flashcards/review').send({ cardId, rating: 2, allowEarly: true });
+    expect(earlyReview.status).toBe(200);
+    expect(earlyReview.body.repetitions).toBe(2);
+    expect(earlyReview.body.interval).toBe(6);
+
+    const cardInDb = await db.card.findUniqueOrThrow({ where: { id: cardId } });
+    expect(cardInDb.interval).toBe(6);
+    expect(cardInDb.repetitions).toBe(2);
+    expect(cardInDb.due.getTime()).toBeGreaterThan(Date.now() + 5 * 86400000);
+  });
   it('evaluates grammar exercises and persists completion', async () => {
     const lesson = await session.get('/api/grammar/desu');
     expect(lesson.body.exercises[0].answer).toBeUndefined();
