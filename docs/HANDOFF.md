@@ -5,6 +5,16 @@
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Ôn flashcard sau đăng nhập — ngày 15/10
+
+Đã thêm màn hình ôn ưu tiên trước giao diện chính, cá nhân hóa theo tài khoản. Chỉ lấy thẻ có `lastReviewed` và đã đến hạn (kể cả thẻ quên có repetitions=0), sắp bộ theo hạn cũ nhất. Chọn 1/3/5 bộ, giới hạn theo số bộ hiện có; chỉ ôn thẻ đến hạn trong các bộ đã chọn. Không có thẻ cần ôn thì vào thẳng web. Hoàn thành lượt đã chọn mở web bình thường; bộ chưa chọn vẫn đến hạn. Không có nút bỏ qua lượt đã bắt đầu; có đăng xuất.
+
+Lượt đang làm lưu trong `LoginReview` theo user, tiếp tục sau tải lại/đăng nhập và trên thiết bị khác. `Session.reviewReady` đánh dấu phiên đã hoàn thành/không có thẻ; không nhắc lại liên tục trong cùng phiên. Phiên đăng nhập mới kiểm tra lại hạn; không đặt cờ hoàn thành vĩnh viễn cho bộ thẻ. Lịch dùng SRS hiện có: Quên 10 phút, các lần nhớ đầu 1 ngày/6 ngày, sau đó điều chỉnh theo độ khó. Không dùng lịch minh họa 1–3–7 cố định của bản ý tưởng. Nếu giữ phiên đăng nhập lâu ngày, không tự chặn lại khi đang sử dụng; đăng nhập mới sẽ kiểm tra lại.
+
+Migration `20261015010000_login_review` đã áp dụng database chính sau backup `.recovery/before-login-review-1792073163476.db`; giữ nguyên 3 tài khoản/1494 thẻ/174 lượt ôn, integrity OK. API local 3001 đã khởi động lại. Các máy chủ khác cần migrate deploy và khởi động lại API trước khi phục vụ bản frontend mới. Không reset/seed DB.
+
+Mã: `apps/api/src/login-review.ts`, `apps/web/src/pages/login-review.tsx`, `packages/shared/login-review.ts`. Giao diện được chặn tại Layout, không phải quyền truy cập bảo mật cho các API học tập khác; mọi dữ liệu lượt ôn được kiểm tra user ở máy chủ. Thẻ đã ôn ở nơi khác hoặc đã xóa không gây kẹt lượt. 114 kiểm thử đạt; build/TypeScript/lint đạt. Script `tests/browser/login-review-smoke.mjs`: 32 tổ hợp 4 độ rộng 320/390/768/1440 × sáng/tối × chọn bộ/thẻ/đáp án/hoàn tất, chữ rất dài, tải lại giữa chừng và vào web sau khi xong đều đạt. Chưa kiểm tra Safari/thiết bị thật. Commit tự động, chưa push.
+
 ## Gỡ hỏi đáp AI — ngày 15/10
 
 Theo yêu cầu người dùng, đã gỡ mục Góc hỏi đáp AI, trang `/assistant` và API hỏi đáp/status cùng mã gọi mô hình tương ứng. Liên kết trang cũ hiển thị trang không tồn tại với liên kết về góc học tập. Đã cập nhật danh sách trang kiểm tra giao diện và README. Cấu hình Gemini vẫn phục vụ công cụ dịch từ điển riêng, không xóa phần dịch này. Không thay đổi database người học.

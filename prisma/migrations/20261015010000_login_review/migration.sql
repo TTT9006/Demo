@@ -1,0 +1,6 @@
+ALTER TABLE "Session" ADD COLUMN "reviewReady" BOOLEAN NOT NULL DEFAULT false;
+CREATE TABLE "LoginReview" (
+  "userId" TEXT NOT NULL PRIMARY KEY,
+  "state" TEXT NOT NULL,
+  CONSTRAINT "LoginReview_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);

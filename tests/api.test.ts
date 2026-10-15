@@ -406,6 +406,52 @@ describe.sequential('Dictionary import, search and resumable translation', () =>
     expect(translation.translatedText).toBe('ăn (đã duyệt)');
     expect(translation.status).toBe('stale');
   });
+  it('personalizes recurring login review, resumes across sessions and releases only the chosen decks', async () => {
+    const agent=request.agent(app);
+    const credentials={name:'Review login',email:'review-login@example.com',password:'Review-login-2026!'};
+    const registered=await agent.post('/api/auth/register').send(credentials);
+    const uid=registered.body.id;
+    expect(registered.status).toBe(201);
+    expect((await agent.get('/api/login-review')).body.ready).toBe(true); // New cards never force a review.
+    const ids:string[]=[];
+    for(let i=0;i<5;i++) {
+      const deck=await db.deck.create({data:{userId:uid,name:`Review ${i}`,cards:{create:{japanese:'日',reading:'ひ',meaning:'Ngày',lastReviewed:new Date(Date.now()-10*86400000),due:new Date(Date.now()-(5-i)*86400000)}}},include:{cards:true}});
+      ids.push(deck.cards[0].id);
+    }
+    await agent.post('/api/auth/login').send(credentials);
+    const welcome=await agent.get('/api/login-review');
+    expect(welcome.body.decks).toHaveLength(5);expect(welcome.body.decks[0].name).toBe('Review 0');
+    expect((await agent.post('/api/login-review/start').send({count:2})).status).toBe(400);
+    let run=(await agent.post('/api/login-review/start').send({count:3})).body;
+    expect(run.total).toBe(3);expect(run.card.id).toBe(ids[0]);
+    const second=request.agent(app);await second.post('/api/auth/login').send(credentials);
+    expect((await second.get('/api/login-review')).body.card.id).toBe(ids[0]);
+    const other=await session.get('/api/login-review');
+    expect(JSON.stringify(other.body)).not.toContain('Review 0');
+    expect((await agent.post('/api/login-review/answer').send({cardId:ids[4],rating:2})).body.card.id).toBe(ids[0]);
+    run=(await agent.post('/api/login-review/answer').send({cardId:ids[0],rating:0})).body;
+    expect(run.done).toBe(1);expect(run.card.id).toBe(ids[1]);
+    await agent.post('/api/login-review/answer').send({cardId:ids[0],rating:0});
+    expect(await db.review.count({where:{userId:uid,cardId:ids[0]}})).toBe(1);
+    expect((await second.get('/api/login-review')).body.done).toBe(1);
+    await second.post('/api/login-review/answer').send({cardId:ids[1],rating:2});
+    run=(await second.post('/api/login-review/answer').send({cardId:ids[2],rating:3})).body;
+    expect(run.ready).toBe(true);expect(run.done).toBe(3);
+    expect((await agent.get('/api/login-review')).body.ready).toBe(true);
+    expect((await db.card.findUniqueOrThrow({where:{id:ids[4]}})).lastReviewed!.getTime()).toBeLessThan(Date.now()-86400000);
+    const forgotten=await db.card.findUniqueOrThrow({where:{id:ids[0]}});
+    expect(forgotten.due.getTime()-forgotten.lastReviewed!.getTime()).toBe(600000);
+    // The same reviewed deck returns at its next due date, including cards whose repetitions reset to zero.
+    await db.card.update({where:{id:ids[0]},data:{due:new Date(Date.now()-9*86400000)}});
+    await agent.post('/api/auth/login').send(credentials);
+    run=(await agent.get('/api/login-review')).body;
+    expect(run.ready).toBe(false);expect(run.decks[0].name).toBe('Review 0');
+    run=(await agent.post('/api/login-review/start').send({count:1})).body;
+    expect(run.total).toBe(1);
+    // Deleting a queued card cannot permanently lock the account.
+    await db.card.delete({where:{id:ids[0]}});
+    expect((await agent.get('/api/login-review')).body.ready).toBe(true);
+  });
   it('persists JLPT answers, enforces section deadlines and saves one private result', async () => {
     const { jlptPapers } = await import('../packages/shared/jlpt-papers');
     const paper = jlptPapers[0];

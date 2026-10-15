@@ -1,4 +1,6 @@
 import { KanjiDetail } from './pages/radicals';
+import { LoginReview } from './pages/login-review';
+import type { LoginReviewView } from '../../../packages/shared/login-review';
 import { useEffect, useState } from 'react';
 import {
   Routes,
@@ -55,6 +57,7 @@ export function useUser() {
 }
 function Layout() {
   const { data: user, isLoading } = useUser();
+  const loginReview = useQuery({ queryKey: ['login-review', user?.id], queryFn: () => api<LoginReviewView>('/login-review'), enabled: !!user, refetchOnWindowFocus: false });
   const navigate = useNavigate();
   const client = useQueryClient();
   const location = useLocation();
@@ -83,6 +86,9 @@ function Layout() {
   }, [user?.theme]);
   if (isLoading) return <Loading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (loginReview.isLoading) return <Loading />;
+  if (loginReview.error) return <main className="login-review-shell"><p role="alert">Không tải được lịch ôn. Vui lòng thử lại.</p><Button onClick={() => void loginReview.refetch()}>Thử lại</Button><Button variant="secondary" onClick={async()=>{await post('/auth/logout');client.clear();navigate('/login');}}>Đăng xuất</Button></main>;
+  if (loginReview.data && !loginReview.data.ready) return <LoginReview key={user.id} initial={loginReview.data} name={user.name} complete={() => {client.setQueryData(['login-review', user.id], {ready:true,active:false,total:0,done:0,decks:[]});navigate('/dashboard');}}/>;
   const sidebar = <>
         <Link to="/dashboard" className="brand">
           <span className="brand-mark">木</span>

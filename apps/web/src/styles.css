@@ -3297,3 +3297,24 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   .grammar-pagination { flex-wrap: wrap; }
   .grammar-review-session .exercise h3 { line-height: 2; }
 }
+
+/* Focused, account-specific login review on desktop and mobile. */
+.login-review-shell { min-height: 100dvh; padding: clamp(16px, 4vw, 48px); color: var(--ink); background: var(--bg); }
+.login-review-top { max-width: 1100px; margin: 0 auto 32px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.login-review-content { max-width: 800px; margin-inline: auto; min-width: 0; }
+.login-review-content h1 { font-size: clamp(25px, 4vw, 38px); line-height: 1.4; margin-block: 16px; overflow-wrap: anywhere; }
+.login-review-content p { line-height: 1.8; margin-block: 16px; overflow-wrap: anywhere; }
+.login-review-choices { border: 0; padding: 0; margin-block: 24px; display: flex; gap: 12px; flex-wrap: wrap; min-width: 0; }
+.login-review-choices legend { margin-bottom: 12px; }
+.login-review-choices button { min-width: 80px; min-height: 44px; }
+.login-review-decks { display: grid; gap: 12px; }
+.login-review-decks .panel { min-width: 0; padding: 20px; }
+.login-review-decks h2, .login-review-deck-title { overflow-wrap: anywhere; font-size: 20px; line-height: 1.6; }
+.login-review-content progress { width: 100%; accent-color: var(--jade); }
+.login-review-content .review-session { width: 100%; max-width: 100%; margin-block: 20px; }
+.login-review-content .review-card { height: auto; min-height: 260px; padding: clamp(18px, 4vw, 40px); overflow-wrap: anywhere; }
+.login-review-content .review-card h2 { font-size: clamp(28px, 6vw, 52px); overflow-wrap: anywhere; }
+.login-review-content .review-card h3 { overflow-wrap: anywhere; }
+.login-review-content .rating-buttons { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.login-review-content .rating-buttons button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+@media(max-width:560px) { .login-review-content .rating-buttons { grid-template-columns: repeat(2,minmax(0,1fr)); } .login-review-top .brand { font-size: 22px; } }

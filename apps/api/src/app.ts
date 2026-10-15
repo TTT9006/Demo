@@ -1,4 +1,5 @@
 import { jlptRouter } from './jlpt';
+import { loginReviewRouter } from './login-review';
 import { jlptPapers, paperSummary } from '../../../packages/shared/jlpt-papers';
 import { grammarRouter, normalizeGrammarAnswer, grammarRoadmap } from './grammar';
 import { allowedOrigin } from './origins';
@@ -91,6 +92,7 @@ async function auth(req: Request, res: Response, next: NextFunction) {
     return;
   }
   res.locals.user = s.user;
+  res.locals.sessionToken = s.token;
   if (s.user.defaultDeckVersion < 1) await ensureDefaultDecks(s.user.id);
   next();
 }
@@ -160,6 +162,7 @@ app.post('/api/auth/logout', async (req, res) => {
 });
 app.get('/api/auth/me', auth, (_req, res) => res.json(safeUser(res.locals.user)));
 app.use('/api', auth);
+app.use('/api/login-review', loginReviewRouter);
 app.post(
   '/api/annotations',
   rateLimit({ windowMs: 60000, limit: 180, standardHeaders: true, legacyHeaders: false }),
