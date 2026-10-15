@@ -7,6 +7,23 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Dịch nghĩa tiếng Việt cho từ vựng thông dụng — ngày 15/10
+
+- **Yêu cầu người dùng:** Dịch các từ thông dụng trong từ điển từ tiếng Anh sang tiếng Việt.
+- **Hiện trạng trước khi xử lý:** Cơ sở dữ liệu từ điển có 218.863 mục từ và 443.593 nghĩa (glosses), nhưng chỉ có 97 bản dịch tiếng Việt thực tế. Nhiều từ vựng sơ cấp cốt lõi (N5/N4/Minna no Nihongo) hoàn toàn chỉ có tiếng Anh, ví dụ từ "sách" (本) bị thiếu dẫn đến truy vấn benchmark tiếng Việt thất bại.
+- **Thực hiện:**
+  - Xây dựng bộ từ vựng chuẩn hóa (`scripts/translate-curated-common.ts`) bao gồm **286 từ vựng tiếng Nhật thông dụng nhất** thuộc các nhóm chủ đề: đồ vật & sinh hoạt hằng ngày, địa điểm & công trình, phương tiện giao thông, gia đình & các mối quan hệ, thức ăn & đồ uống, cơ thể người, tự nhiên & thời tiết, thời gian & ngày tháng, các động từ cơ bản nhóm 1-2-3 (ăn, uống, đọc, viết, đi, đến, về, mở, đóng, gặp, ngủ...), tính từ đuôi い và な, đại từ nhân xưng, từ chào hỏi và số đếm cơ bản.
+  - Phân tích nghĩa (senses) của từng mục từ trong JMdict để dịch chính xác theo ngữ cảnh từng nghĩa, phân biệt rõ các lớp nghĩa khác nhau của cùng một từ (ví dụ: `本` -> nghĩa 1: "sách, cuốn sách, kịch bản", nghĩa 2: "chính, chủ yếu", nghĩa 3: "thật, đích thực", nghĩa 4: "trợ từ đếm vật dài").
+  - Đã nạp thành công **800 bản dịch tiếng Việt** cho **283 mục từ** vào bảng `DictionaryTranslation` (`status: 'completed'`, `provider: 'curated-lexicon'`, `model: 'n5-n4-common'`).
+  - Tự động re-index toàn bộ 283 mục từ vừa dịch vào SQLite FTS5 (`DictionaryFts`), trigram (`DictionaryTrigram`), và các term tìm kiếm (`DictionarySearchTerm`), giúp các truy vấn tìm kiếm bằng tiếng Việt có dấu/không dấu đều trả về kết quả chính xác ngay lập tức.
+- **Kiểm chứng:**
+  - Đã kiểm tra trực tiếp các truy vấn tiếng Việt thông dụng: `sách` (ra `本`), `uống` (ra `飲む`), `gia đình` (ra `家`, `家族`), `bạn bè` (ra `友達`), `bác sĩ` (ra `医者`, `先生`), `ngân hàng` (ra `銀行`), `thời tiết` (ra `天気`, `暑い`, `寒い`), `chó` (ra `犬`), `mèo` (ra `猫`), `trường học` (ra `学校`).
+  - Khắc phục triệt để tồn đọng benchmark: truy vấn "sách" vốn bị thiếu trong đợt đánh giá ngày 13/10 nay đạt 100%.
+  - `npm run typecheck` đạt (0 lỗi).
+  - `npm test`: 114/114 tests qua (10 test suites đạt 100%).
+  - Giữ nguyên toàn vẹn dữ liệu SQLite `prisma/learning.db`, không có migration mới, không reset database.
+- **Tập tin liên quan:** `scripts/translate-curated-common.ts`, `docs/HANDOFF.md`.
+
 ## Nhận diện thương hiệu và Logo Wakaba — ngày 15/10
 
 - Đã cập nhật logo và nhận diện thương hiệu từ Komorebi sang **Wakaba** (若葉 · Học từng chút, lớn mỗi ngày) theo hình ảnh logo biểu tượng mầm lá/cuốn sách mở xanh sage người dùng cung cấp.
