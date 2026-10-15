@@ -55,6 +55,7 @@ try {
   for (const width of [320,390,768,1440]) for (const theme of ['light','dark']) {
     await page.setViewportSize({width,height:1000});
     await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
+    await page.waitForTimeout(200);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
     checks.push(`brand-login/${width}/${theme}`);
     if(width===390||width===1440) await page.screenshot({path:path.join(directory,`brand-login-${width}-${theme}.png`),fullPage:true});

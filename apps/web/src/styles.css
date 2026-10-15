@@ -2163,6 +2163,7 @@ canvas {
 }
 .auth-art > .brand {
   margin-bottom: 110px;
+  color: #242721;
 }
 .auth-art h1 {
   font-size: 65px;
@@ -2170,16 +2171,17 @@ canvas {
   font-weight: 500;
   letter-spacing: -2px;
   margin-top: 25px;
+  color: #242721;
 }
 .auth-art h1 em {
   font-style: normal;
-  color: #80936c;
+  color: #5d7549;
 }
 .auth-art p {
   font-size: 13px;
   line-height: 2.1;
   margin-top: 25px;
-  color: #96a188;
+  color: #55634b;
 }
 .auth-japanese {
   position: absolute;
@@ -2194,8 +2196,11 @@ canvas {
 }
 .auth-art > small {
   margin-top: auto;
-  color: #a3ad95;
+  color: #6a7960;
   padding-top: 40px;
+}
+.auth-art .eyebrow {
+  color: #5d7549;
 }
 .auth-form {
   display: flex;
@@ -2334,6 +2339,66 @@ canvas {
 }
 [data-theme='dark'] .word-row {
   border-color: var(--line);
+}
+[data-theme='dark'] .auth-art {
+  background: #182018;
+  border-right: 1px solid var(--line);
+}
+[data-theme='dark'] .auth-art > .brand {
+  color: #e6ede2;
+}
+[data-theme='dark'] .auth-art .eyebrow {
+  color: #9cb190;
+}
+[data-theme='dark'] .auth-art h1 {
+  color: #eef3eb;
+}
+[data-theme='dark'] .auth-art h1 em {
+  color: #9ecc88;
+}
+[data-theme='dark'] .auth-art p {
+  color: #b0bea8;
+}
+[data-theme='dark'] .auth-art > small {
+  color: #83947c;
+}
+[data-theme='dark'] .auth-japanese {
+  color: #243022;
+}
+[data-theme='dark'] .auth-form {
+  background: #242a22;
+}
+[data-theme='dark'] .auth-form input {
+  background: #1b201a;
+  border-color: #384234;
+  color: #e5ece0;
+}
+[data-theme='dark'] .auth-form input:focus-visible {
+  outline-color: #8da680;
+  border-color: #5c7453;
+}
+[data-theme='dark'] .auth-form label {
+  color: #cdd6c7;
+}
+[data-theme='dark'] .auth-form .button.secondary {
+  background: #2e362c;
+  border-color: #414d3e;
+  color: #e2e8dc;
+}
+[data-theme='dark'] .auth-form .button.secondary:hover {
+  background: #384236;
+}
+[data-theme='dark'] .auth-form .or {
+  color: #818f7a;
+}
+[data-theme='dark'] .auth-form .auth-switch {
+  color: #9ba794;
+}
+[data-theme='dark'] .auth-form .auth-switch a {
+  color: #9dc788;
+}
+[data-theme='dark'] .auth-form .muted {
+  color: #82907c;
 }
 @media (min-width: 1500px) {
   main {
@@ -2760,6 +2825,10 @@ canvas {
   .auth-art {
     padding: 24px 30px;
     min-height: 260px;
+  }
+  [data-theme='dark'] .auth-art {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
   }
   .auth-art > .brand {
     margin-bottom: 35px;
