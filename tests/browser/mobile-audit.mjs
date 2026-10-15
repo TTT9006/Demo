@@ -13,7 +13,7 @@ try {
   assert.ok(await page.getByRole('button',{name:'Dùng tài khoản mẫu'}).isVisible());
   if(width===390)await page.screenshot({path:'test-results/mobile/login.png',fullPage:true});
   await page.getByRole('button',{name:'Dùng tài khoản mẫu'}).click();await page.waitForURL('**/dashboard');
-  for(const route of ['/dashboard','/dictionary?q=ikimasu','/dictionary/1578850','/flashcards','/flashcards/review','/grammar','/grammar/desu','/writing','/tests','/progress','/profile','/settings','/assistant']) {
+  for(const route of ['/dashboard','/dictionary?q=ikimasu','/dictionary/1578850','/flashcards','/flashcards/review','/grammar','/grammar/desu','/writing','/tests','/progress','/profile','/settings']) {
    await page.goto(base+route,{waitUntil:'domcontentloaded'});await page.locator('h1').first().waitFor();
    await page.waitForFunction(()=>document.querySelectorAll('.loading-stack').length===0);
    if(route.startsWith('/dictionary'))await page.locator('.word-card').first().waitFor();

@@ -24,7 +24,6 @@ import {
   ArrowUpRight,
   LogOut,
   ChevronDown,
-  MessageCircle,
   Leaf,
   X,
 } from 'lucide-react';
@@ -42,7 +41,6 @@ import { Grammar, GrammarLesson, GrammarReview } from './pages/grammar';
 import { Tests, TestSession } from './pages/tests';
 import { Writing } from './pages/writing';
 import { SettingsPage, Profile } from './pages/settings';
-import { Assistant } from './pages/assistant';
 const navigation = [
   { to: '/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { to: '/flashcards', label: 'Thẻ từ vựng', icon: Layers },
@@ -52,7 +50,6 @@ const navigation = [
   { to: '/tests', label: 'Kiểm tra', icon: ClipboardCheck },
   { to: '/progress', label: 'Tiến độ học tập', icon: ChartNoAxesCombined },
 ];
-navigation.splice(6, 0, { to: '/assistant', label: 'Góc hỏi đáp AI', icon: MessageCircle });
 export function useUser() {
   return useQuery({ queryKey: ['user'], queryFn: () => api<User>('/auth/me'), retry: false });
 }
@@ -249,7 +246,6 @@ export function App() {
           <Route path="writing" element={<Writing />} />
           <Route path="tests" element={<Tests />} />
           <Route path="tests/:id" element={<TestSession />} />
-          <Route path="assistant" element={<Assistant />} />
           <Route path="progress" element={<Progress />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="profile" element={<Profile />} />

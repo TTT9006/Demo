@@ -37,7 +37,7 @@ The demo account is shared locally and contains clearly marked sample activity. 
 - Eight original N5 grammar lessons, search, JLPT filters, bookmarks, completion, examples and answer-checked exercises.
 - Grammar mini/medium tests, vocabulary tests, mixed tests, typed answers and sentence ordering, server-side scoring, timer, history and review of incorrect answers.
 - Hiragana, Katakana and basic Kanji canvas practice, optional glyph guide, undo/clear and saved drawings.
-- Optional Gemini learning assistant and a separate offline dictionary translation agent. Ordinary searches never call AI.
+- Optional dictionary translation agent using Gemini. Ordinary searches never call AI.
 - Responsive desktop/mobile layout, keyboard-accessible dialogs, loading/error/empty states, light/dark/system themes.
 
 ## Dictionary data
@@ -74,7 +74,7 @@ TRANSLATION_BUDGET_ITEMS=100
 TRANSLATION_DELAY_MS=2000
 ```
 
-The model is deliberately configurable. No model ID is assumed to remain available. The web app starts without either Gemini setting. The learning assistant becomes available after both are configured; it is limited to 10 questions per 15 minutes. Questions are sent to the configured provider only when the user presses Send.
+The model is deliberately configurable. No model ID is assumed to remain available. The web app starts without either Gemini setting. These settings are used only by the dictionary translation workflow; the AI question-and-answer feature has been removed.
 
 ```sh
 npm run dictionary:translate -- --dry-run

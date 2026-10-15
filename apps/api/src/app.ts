@@ -17,7 +17,6 @@ import { kanjiData, kanjiStrokes } from './kanji';
 import { ensureDefaultDecks } from './default-decks';
 import { dictionaryStatus, entryInclude, searchDictionary } from './dictionary';
 import { schedule } from '../../../packages/shared/srs';
-import { explainJapanese } from './assistant';
 import { testDefinitions, type Exercise } from '../../../packages/shared/content';
 declare global {
   namespace Express {
@@ -236,21 +235,6 @@ app.post('/api/radicals/:id/srs', async (req, res) => {
   });
   res.json(card);
 });
-app.get('/api/assistant/status', (_req, res) =>
-  res.json({ configured: !!(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL) }),
-);
-app.post(
-  '/api/assistant',
-  rateLimit({
-    windowMs: 15 * 60000,
-    limit: 10,
-    message: { error: 'Bạn đã dùng 10 lượt hỏi trong 15 phút. Hãy nghỉ một chút rồi quay lại.' },
-  }),
-  async (req, res) => {
-    const { question } = z.object({ question: z.string().trim().min(3).max(1000) }).parse(req.body);
-    res.json(await explainJapanese(question, res.locals.user.level));
-  },
-);
 app.patch('/api/profile', async (req, res) => {
   const data = z
     .object({

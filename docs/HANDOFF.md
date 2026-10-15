@@ -5,6 +5,10 @@
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Gỡ hỏi đáp AI — ngày 15/10
+
+Theo yêu cầu người dùng, đã gỡ mục Góc hỏi đáp AI, trang `/assistant` và API hỏi đáp/status cùng mã gọi mô hình tương ứng. Liên kết trang cũ hiển thị trang không tồn tại với liên kết về góc học tập. Đã cập nhật danh sách trang kiểm tra giao diện và README. Cấu hình Gemini vẫn phục vụ công cụ dịch từ điển riêng, không xóa phần dịch này. Không thay đổi database người học.
+
 ## Kiểm tra JLPT — cập nhật ngày 15/10
 
 Trang Kiểm tra đã thay mini test bằng 4 đề tự biên soạn N5–N2, tổng 366 câu: N5 71 câu/90 phút, N4 86/115, N3 102/140, N2 107/155. Đồng hồ từng phần theo JLPT, tự lưu đáp án và tiếp tục khi tải lại, khóa phần đã kết thúc, có phiếu trả lời và lịch sử lời giải. Kết quả là tỷ lệ câu đúng, không phải thang 180 hay kết luận đỗ/trượt. Nghe dùng giọng Nhật thiết bị, phát từng câu/có phát lại; chưa là băng thi liên tục và chưa có tranh tình huống. Nội dung chưa chuẩn hóa độ khó; thông báo rõ trên giao diện.

@@ -38,7 +38,6 @@ try {
     '/progress',
     '/profile',
     '/settings',
-    '/assistant',
   ];
   for (const width of [320, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
