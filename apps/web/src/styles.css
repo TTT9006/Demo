@@ -3318,3 +3318,66 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .login-review-content .rating-buttons { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .login-review-content .rating-buttons button { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 @media(max-width:560px) { .login-review-content .rating-buttons { grid-template-columns: repeat(2,minmax(0,1fr)); } .login-review-top .brand { font-size: 22px; } }
+
+/* Sage welcome card, matching the approved login-review concept. */
+.login-review-shell { background: radial-gradient(ellipse at 50% 0%, var(--surface), transparent 65%), var(--bg); padding: clamp(12px, 3vw, 44px); }
+.login-review-frame { max-width: 1120px; margin-inline: auto; background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 16px 60px #283a2510; padding: clamp(16px, 4vw, 44px); }
+.login-review-top { margin-bottom: clamp(36px, 5vw, 66px); }
+.login-review-top-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.login-review-day { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.login-review-content { max-width: 760px; text-align: center; }
+.login-review-content h1 { font-weight: 650; letter-spacing: -.035em; font-size: clamp(26px, 3.6vw, 40px); }
+.login-review-greeting { color: var(--muted); font-size: 14px; }
+.login-review-content .login-review-overview { font-size: clamp(14px, 2vw, 17px); color: var(--muted); margin-block: 18px 28px; }
+.login-review-overview span { margin-inline: 6px; }
+.login-review-choices { justify-content: center; gap: 8px; margin-block: 26px; }
+.login-review-choices legend { float: none; width: 100%; text-align: center; font-size: 13px; color: var(--muted); }
+.login-review-choices button { border-radius: 12px; min-width: 88px; }
+.login-review-choices [aria-pressed=true] { box-shadow: 0 4px 12px #35533820; }
+.login-review-decks { gap: 14px; text-align: left; margin-top: 32px; }
+.login-review-decks .panel { display: flex; align-items: center; gap: 22px; border-radius: 16px; padding: 24px; background: var(--card); box-shadow: 0 4px 20px #283a2505; }
+.login-review-deck-icon { display: grid; place-items: center; flex: 0 0 76px; height: 76px; border-radius: 16px; font-family: 'Noto Serif JP',serif; font-size: 42px; color: var(--jade); background: var(--surface); }
+.login-review-deck-icon.tone-1 { background: var(--warm); }
+.login-review-deck-icon.tone-2 { background: var(--pink); }
+.login-review-deck-info { flex: 1; min-width: 0; }
+.login-review-decks h2 { font-size: 19px; margin: 0; font-weight: 650; }
+.login-review-decks .login-review-deck-info p { color: var(--jade); font-weight: 600; margin-block: 5px; font-size: 14px; }
+.login-review-deck-info small { color: var(--muted); font-size: 12px; line-height: 1.7; }
+.login-review-deck-order { color: var(--muted); font-size: 12px; flex-shrink: 0; }
+.login-review-content .login-review-summary { margin-block: 32px 22px; font-style: italic; color: var(--muted); font-size: 14px; }
+.login-review-content .login-review-cta { display: flex; width: min(100%,460px); margin-inline: auto; justify-content: center; gap: 14px; min-height: 58px; font-size: 16px; border-radius: 12px; box-shadow: 0 6px 18px #35533818; white-space: normal; }
+.login-review-content > .muted { max-width: 540px; margin: 20px auto; font-size: 12px; }
+.login-review-footer { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); display: flex; justify-content: center; align-items: center; gap: 10px; text-align: center; font-size: 12px; line-height: 1.7; }
+.login-review-footer svg { flex-shrink: 0; }
+.login-review-check { width: 94px; height: 94px; margin: 0 auto 24px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); color: var(--jade); }
+.login-review-finish > p { color: var(--muted); }
+.login-review-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); margin: 34px auto; max-width: 580px; }
+.login-review-stats > div { display: grid; justify-items: center; gap: 8px; padding: 8px 12px; min-width: 0; }
+.login-review-stats > div + div { border-left: 1px solid var(--line); }
+.login-review-stats svg { color: var(--jade); }
+.login-review-stats strong { font-size: 18px; overflow-wrap: anywhere; }
+.login-review-stats span { color: var(--muted); font-size: 12px; }
+.login-review-next { display: flex; align-items: flex-start; gap: 18px; text-align: left; margin: 40px auto 0; padding: 24px; background: var(--surface); border-radius: 16px; }
+.login-review-next > div { min-width: 0; }
+.login-review-next-icon { color: var(--jade); padding: 10px; background: var(--card); border-radius: 12px; flex-shrink: 0; }
+.login-review-next h2 { font-size: 17px; line-height: 1.6; margin: 0; }
+.login-review-next p { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+.login-review-content .review-card { border-radius: 18px; background: var(--surface); box-shadow: none; }
+.login-review-content .rating-buttons button { border-radius: 12px; min-height: 66px; }
+[data-theme=dark] .login-review-deck-icon.tone-1 { background: #3e3d2f; }
+[data-theme=dark] .login-review-deck-icon.tone-2 { background: #433638; }
+@media(max-width:560px) {
+ .login-review-frame { border-radius: 16px; padding: 18px 14px; }
+ .login-review-top { gap: 14px; margin-bottom: 32px; }
+ .login-review-top-actions { width: 100%; justify-content: space-between; gap: 8px; }
+ .login-review-decks .panel { padding: 16px 12px; gap: 12px; }
+ .login-review-deck-icon { flex-basis: 48px; height: 54px; border-radius: 12px; font-size: 30px; }
+ .login-review-decks h2 { font-size: 16px; }
+ .login-review-deck-order { display: none; }
+ .login-review-choices button { min-width: 66px; }
+ .login-review-stats > div { padding: 6px; }
+ .login-review-stats strong { font-size: 15px; }
+ .login-review-stats span { font-size: 11px; }
+ .login-review-next { padding: 16px; gap: 12px; }
+ .login-review-content .login-review-cta { font-size: 15px; }
+}

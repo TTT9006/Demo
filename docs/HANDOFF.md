@@ -7,6 +7,8 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 
 ## Ôn flashcard sau đăng nhập — ngày 15/10
 
+Giao diện đã chỉnh tiếp theo bản ý tưởng đầu tiên: khung bo góc nền sáng/xanh sage, tiêu đề căn giữa, lời chào cá nhân, lựa chọn 1/3/5 bộ, hàng bộ thẻ có biểu tượng chữ Nhật và thứ tự ưu tiên, nút bắt đầu lớn, footer nhẹ. Màn hình hoàn tất có dấu tích và thống kê số thẻ/bộ cùng trạng thái lịch ôn (không giả lập thời gian thực tế). Giữ luồng ôn bắt buộc lượt đã chọn. Build/TypeScript/lint đạt; 32 kiểm tra bố cục sáng/tối 320–1440 px và luồng ôn đạt. Ảnh bản thật với dữ liệu thử: `test-results/login-review/welcome-preview-1440.png`, `welcome-preview-390.png`; đã xem trực tiếp cả hai. Không thay đổi API, SRS hoặc database trong lần chỉnh giao diện này.
+
 Đã thêm màn hình ôn ưu tiên trước giao diện chính, cá nhân hóa theo tài khoản. Chỉ lấy thẻ có `lastReviewed` và đã đến hạn (kể cả thẻ quên có repetitions=0), sắp bộ theo hạn cũ nhất. Chọn 1/3/5 bộ, giới hạn theo số bộ hiện có; chỉ ôn thẻ đến hạn trong các bộ đã chọn. Không có thẻ cần ôn thì vào thẳng web. Hoàn thành lượt đã chọn mở web bình thường; bộ chưa chọn vẫn đến hạn. Không có nút bỏ qua lượt đã bắt đầu; có đăng xuất.
 
 Lượt đang làm lưu trong `LoginReview` theo user, tiếp tục sau tải lại/đăng nhập và trên thiết bị khác. `Session.reviewReady` đánh dấu phiên đã hoàn thành/không có thẻ; không nhắc lại liên tục trong cùng phiên. Phiên đăng nhập mới kiểm tra lại hạn; không đặt cờ hoàn thành vĩnh viễn cho bộ thẻ. Lịch dùng SRS hiện có: Quên 10 phút, các lần nhớ đầu 1 ngày/6 ngày, sau đó điều chỉnh theo độ khó. Không dùng lịch minh họa 1–3–7 cố định của bản ý tưởng. Nếu giữ phiên đăng nhập lâu ngày, không tự chặn lại khi đang sử dụng; đăng nhập mới sẽ kiểm tra lại.

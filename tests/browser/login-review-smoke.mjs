@@ -110,6 +110,15 @@ try {
   }
   await page.getByRole('button', { name: '3 bộ', exact: true }).click();
   await layout('choose');
+  // Capture realistic deck names after the long-text stress check, in the isolated DB only.
+  for (const [i, deck] of decks.entries()) sqlite.prepare('UPDATE Deck SET name=? WHERE id=?').run(['Hiragana','Katakana','Kanji: Cuộc sống','Kanji: Thiên nhiên','Kanji: Trường học'][i],deck.id);
+  await page.reload();
+  await page.getByRole('button', { name: '3 bộ', exact: true }).click();
+  for (const width of [390,1440]) {
+    await page.setViewportSize({width,height:1000});
+    await page.evaluate(()=>document.documentElement.dataset.theme='light');
+    await page.screenshot({path:path.join(directory,`welcome-preview-${width}.png`),fullPage:true});
+  }
   await page.getByRole('button', { name: 'Bắt đầu ôn 3 bộ', exact: true }).click();
   await page.getByRole('button', { name: 'Lật thẻ', exact: true }).waitFor();
   await layout('question');
