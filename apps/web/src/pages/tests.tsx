@@ -1,4 +1,6 @@
 import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';
+import { JlptSession } from './jlpt';
+import type { JlptSummary } from '../../../../packages/shared/jlpt-types';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,7 +9,7 @@ import { api, post } from '../services/api';
 import { useUI } from '../stores/ui';
 import type { Attempt, Question, Result } from '../types';
 import { Button, Empty, ErrorState, Loading, PageHeader, Modal } from '../components/ui';
-type Test = { id: string; title: string; description: string; kind: string };
+type Test = JlptSummary;
 export function QuestionInput({
   question: q,
   value,
@@ -97,7 +99,9 @@ export function QuestionInput({
             className={value === o ? 'selected' : ''}
             onClick={() => onChange(o)}
           >
-            <span className="answer-key" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
+            <span className="answer-key" aria-hidden="true">
+              {q.numbered ? i + 1 : String.fromCharCode(65 + i)}
+            </span>
             <JapaneseAnnotatedText text={o} disabled={q.annotationDisabled} readings={q.readings} />
             {value === o && <Check size={17} />}
           </button>
@@ -129,8 +133,8 @@ export function Tests() {
     <>
       <PageHeader
         eyebrow="BIẾT MÌNH ĐÃ ĐI ĐƯỢC BAO XA"
-        title="Một lần thử, một lần hiểu hơn."
-        description="Kiểm tra ngắn, xem lại lỗi sai và theo dõi tiến bộ của bạn."
+        title="Thi thử JLPT từ N5 đến N2."
+        description="Đề đầy đủ thời gian, chia phần theo cấu trúc JLPT. Lưu bài đang làm và xem lại kết quả từng nhóm."
       />
       {isLoading ? (
         <Loading />
@@ -140,26 +144,40 @@ export function Tests() {
         <div className="test-grid">
           {data?.map((t, i) => (
             <Link className="test-card" to={'/tests/' + t.id} key={t.id}>
-              <span className="eyebrow">
-                {t.kind === 'mini'
-                  ? 'BÀI NGẮN'
-                  : t.kind === 'medium'
-                    ? 'BÀI TỔNG HỢP'
-                    : t.kind === 'mixed'
-                      ? 'NGỮ PHÁP & TỪ VỰNG'
-                      : 'TỪ VỰNG'}
-              </span>
+              <span className="eyebrow">{t.level} · ĐỀ LUYỆN TỰ BIÊN SOẠN</span>
               <span className="test-number">{String(i + 1).padStart(2, '0')}</span>
               <h2>{t.title}</h2>
-              <p>{t.description}</p>
+              <p>
+                {t.total} câu · {t.minutes} phút · {t.sections.length} phần
+              </p>
+              <ul className="jlpt-card-sections">
+                {t.sections.map((s) => (
+                  <li key={s.id}>
+                    {s.title}: {s.minutes} phút
+                  </li>
+                ))}
+              </ul>
               <div>
-                <span>Chấm điểm & giải thích</span>
+                <span>Xem đề & tiếp tục bài đang làm</span>
                 <ArrowRight size={19} />
               </div>
             </Link>
           ))}
         </div>
       )}
+      <p className="spaced">
+        Câu hỏi tự biên soạn, không phải đề thi chính thức. Nghe dùng giọng Nhật tổng hợp trên thiết
+        bị. Điểm hiển thị là tỷ lệ câu đúng, không phải thang 180 của JLPT.{' '}
+        <a
+          className="text-link"
+          href="https://www.jlpt.jp/e/guideline/testsections.html"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Cấu trúc JLPT chính thức
+        </a>
+        .
+      </p>
       <section className="panel spaced">
         <h2>Những lần thử gần đây</h2>
         {history.data?.length ? (
@@ -189,6 +207,11 @@ export function Tests() {
               <strong>
                 {i + 1}. <JapaneseAnnotatedText text={r.prompt} />
               </strong>
+              {r.passage && (
+                <p className="jlpt-passage" lang="ja">
+                  {r.passage}
+                </p>
+              )}
               <p>
                 Bạn chọn: <JapaneseAnnotatedText text={r.given || '(Chưa trả lời)'} />
               </p>
@@ -198,6 +221,11 @@ export function Tests() {
               <small>
                 <JapaneseAnnotatedText text={r.explanation} />
               </small>
+              {r.transcript && (
+                <p className="jlpt-passage" lang="ja">
+                  {r.transcript}
+                </p>
+              )}
             </div>
           ))}
       </Modal>
@@ -205,6 +233,10 @@ export function Tests() {
   );
 }
 export function TestSession() {
+  const { id } = useParams();
+  return id?.startsWith('jlpt-') ? <JlptSession key={id} /> : <LegacyTestSession key={id} />;
+}
+function LegacyTestSession() {
   const { id } = useParams();
   const client = useQueryClient();
   const notify = useUI((s) => s.notify);

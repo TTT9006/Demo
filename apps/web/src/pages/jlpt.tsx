@@ -1,0 +1,450 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, ArrowRight, Check, Clock3, Volume2, Square } from 'lucide-react';
+import { api, post, patch } from '../services/api';
+import { Button, ErrorState, Loading, Modal, PageHeader } from '../components/ui';
+import { QuestionInput } from './tests';
+import type { JlptRunView, JlptSummary } from '../../../../packages/shared/jlpt-types';
+
+async function playJapanese(text: string) {
+  if (!('speechSynthesis' in window)) throw Error('Trình duyệt chưa hỗ trợ đọc tiếng Nhật.');
+  let voices = speechSynthesis.getVoices();
+  if (!voices.some((v) => v.lang.startsWith('ja'))) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    voices = speechSynthesis.getVoices();
+  }
+  const voice = voices.find((v) => v.lang.startsWith('ja'));
+  if (!voice)
+    throw Error(
+      'Thiết bị chưa có giọng tiếng Nhật. Hãy cài giọng Nhật hoặc dùng trình duyệt có giọng Nhật, rồi thử âm thanh trước khi thi.',
+    );
+  speechSynthesis.cancel();
+  return new Promise<void>((resolve, reject) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    utterance.voice = voice;
+    utterance.rate = 0.9;
+    utterance.onend = () => resolve();
+    utterance.onerror = (e) =>
+      e.error === 'canceled' || e.error === 'interrupted'
+        ? resolve()
+        : reject(Error('Không phát được âm thanh. Hãy thử lại.'));
+    speechSynthesis.speak(utterance);
+  });
+}
+const clock = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+export function JlptSession() {
+  const { id } = useParams();
+  const client = useQueryClient();
+  const query = useQuery({
+    queryKey: ['jlpt-paper', id],
+    queryFn: () => api<{ paper: JlptSummary; run: JlptRunView | null }>('/jlpt/papers/' + id),
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+  });
+  const [run, setRun] = useState<JlptRunView | null>(null),
+    [index, setIndex] = useState(0),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(''),
+    [confirm, setConfirm] = useState(false),
+    [speaking, setSpeaking] = useState(false),
+    [now, setNow] = useState(Date.now());
+  const offset = useRef(0),
+    nextPoll = useRef(0),
+    locked = useRef(false);
+  function apply(next: JlptRunView) {
+    offset.current = new Date(next.serverNow).getTime() - Date.now();
+    if (next.section !== run?.section) {
+      setIndex(0);
+      window.speechSynthesis?.cancel();
+      setSpeaking(false);
+      setConfirm(false);
+    }
+    setRun(next);
+    setNow(Date.now());
+    if (next.finished) {
+      void client.invalidateQueries({ queryKey: ['test-history'] });
+      void client.invalidateQueries({ queryKey: ['dashboard'] });
+    }
+  }
+  useEffect(() => {
+    if (query.data?.run) {
+      offset.current = new Date(query.data.run.serverNow).getTime() - Date.now();
+      setRun(query.data.run);
+    }
+  }, [query.data]);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      clearInterval(timer);
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+  const remaining = run?.deadline
+    ? Math.max(0, Math.ceil((new Date(run.deadline).getTime() - (now + offset.current)) / 1000))
+    : 0;
+  useEffect(() => {
+    if (
+      !run?.deadline ||
+      run.finished ||
+      remaining > 0 ||
+      locked.current ||
+      Date.now() < nextPoll.current
+    )
+      return;
+    nextPoll.current = Date.now() + 5000;
+    locked.current = true;
+    setBusy(true);
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    void api<JlptRunView>('/jlpt/runs/' + run.runId)
+      .then(apply)
+      .catch((e) => setError(e.message))
+      .finally(() => {
+        locked.current = false;
+        setBusy(false);
+      });
+  }, [remaining, now, run?.runId, run?.deadline, run?.finished]);
+  async function command(
+    action: 'save' | 'finish' | 'begin',
+    answers: Record<string, string> = {},
+  ) {
+    if (!run || locked.current) return;
+    locked.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      apply(
+        await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
+          action,
+          answers,
+          revision: run.revision,
+        }),
+      );
+      setConfirm(false);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      locked.current = false;
+      setBusy(false);
+    }
+  }
+  async function start() {
+    if (locked.current) return;
+    locked.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      apply(await post<JlptRunView>('/jlpt/papers/' + id + '/start'));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      locked.current = false;
+      setBusy(false);
+    }
+  }
+  async function audio(questionId?: string) {
+    if (speaking) return;
+    setSpeaking(true);
+    setError('');
+    try {
+      const text =
+        questionId && run
+          ? (await api<{ text: string }>(`/jlpt/runs/${run.runId}/audio/${questionId}`)).text
+          : '音声の確認です。日本語の音が聞こえたら、試験を始めてください。';
+      await playJapanese(text);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSpeaking(false);
+    }
+  }
+  if (query.isLoading) return <Loading />;
+  if (!query.data) return <ErrorState error={query.error} />;
+  const paper = query.data.paper,
+    question = run?.questions[index],
+    report = run?.report;
+  const answered = run ? Object.values(run.answers).filter(Boolean).length : 0;
+  return (
+    <>
+      <Link className="back-link" to="/tests">
+        <ArrowLeft size={16} />
+        Các đề luyện JLPT
+      </Link>
+      <PageHeader
+        eyebrow="THI THỬ · ĐỀ TỰ BIÊN SOẠN"
+        title={paper.title}
+        description={`${paper.total} câu · ${paper.minutes} phút làm bài · ${paper.sections.length} phần`}
+        action={
+          run?.deadline && !run.finished ? (
+            <span
+              className={'timer ' + (remaining < 60 ? 'error-text' : '')}
+              role="timer"
+              aria-label="Thời gian còn lại"
+            >
+              <Clock3 size={17} />
+              {clock(remaining)}
+            </span>
+          ) : undefined
+        }
+      />
+      {error && (
+        <div className="feedback incorrect" role="alert">
+          <p>{error}</p>
+          {run && (
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                void api<JlptRunView>('/jlpt/runs/' + run.runId)
+                  .then((next) => {
+                    apply(next);
+                    setError('');
+                  })
+                  .catch((e) => setError(e.message))
+                  .finally(() => setBusy(false));
+              }}
+            >
+              Tải lại bài đã lưu
+            </Button>
+          )}
+        </div>
+      )}
+      {!run ? (
+        <section className="panel jlpt-intro">
+          <h2>Trước khi bắt đầu</h2>
+          <ol>
+            {paper.sections.map((s) => (
+              <li key={s.id}>
+                <strong>{s.title}</strong>
+                <span>
+                  {s.count} câu · {s.minutes} phút
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p>
+            Đồng hồ riêng cho từng phần. Đáp án được lưu sau mỗi lần chọn; tải lại trang vẫn tiếp
+            tục thời gian cũ. Phần đã kết thúc không mở lại. Bạn chủ động bắt đầu phần kế tiếp sau
+            khoảng nghỉ.
+          </p>
+          <p>
+            Không bật chú thích tự động hoặc dịch câu khi đang thi. Nghe hiểu dùng giọng Nhật tổng
+            hợp trên thiết bị, có thể phát lại từng câu; không phải băng thi hay nhịp phát tự động
+            của JLPT chính thức. Tình huống phát ngôn được mô tả bằng chữ.
+          </p>
+          <p>
+            Kết quả là tỷ lệ câu đúng và thống kê từng nhóm, không quy đổi thành điểm JLPT 180 hoặc
+            kết luận đỗ/trượt. Số câu và nội dung do ứng dụng biên soạn; độ khó chưa được chuẩn hóa.
+          </p>
+          <div className="inline-actions">
+            <Button variant="secondary" disabled={speaking} onClick={() => void audio()}>
+              <Volume2 size={16} />
+              Thử giọng Nhật
+            </Button>
+            <Button disabled={busy || speaking} onClick={() => void start()}>
+              Bắt đầu phần 1<ArrowRight size={16} />
+            </Button>
+          </div>
+        </section>
+      ) : report ? (
+        <>
+          <section className="panel jlpt-intro">
+            <h2>Đã hoàn thành bài thi</h2>
+            <p>
+              <strong>{report.score}%</strong> câu đúng ·{' '}
+              {report.results.filter((q) => q.correct).length}/{report.results.length} câu ·{' '}
+              {clock(report.duration)} làm bài
+            </p>
+            <p>Đây là kết quả luyện tập, không phải điểm chuẩn hóa JLPT.</p>
+            <div className="jlpt-score-groups">
+              {report.groups.map((g) => (
+                <div key={g.label}>
+                  <strong>{g.label}</strong>
+                  <span>
+                    {g.correct}/{g.total} câu đúng
+                  </span>
+                </div>
+              ))}
+            </div>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setRun(null);
+                setIndex(0);
+              }}
+            >
+              Làm lại đề
+            </Button>
+          </section>
+          <section className="panel spaced">
+            <h2>Đáp án và giải thích</h2>
+            {report.results.map((q, i) => (
+              <details className="jlpt-result" key={q.id}>
+                <summary>
+                  {i + 1}. {q.group} · {q.correct ? 'Đúng' : q.given ? 'Sai' : 'Bỏ trống'}
+                </summary>
+                <p className="jlpt-passage" lang="ja">
+                  {q.passage}
+                </p>
+                <p lang="ja">{q.prompt}</p>
+                <p>
+                  Bạn chọn: {q.given || '—'} · Đáp án: {q.answer}
+                </p>
+                <p>{q.explanation}</p>
+                {q.transcript && (
+                  <p className="jlpt-passage" lang="ja">
+                    {q.transcript}
+                  </p>
+                )}
+              </details>
+            ))}
+          </section>
+        </>
+      ) : !run.startedAt ? (
+        <section className="panel jlpt-intro">
+          <h2>Đã kết thúc phần {run.section}</h2>
+          <p>
+            Phần tiếp theo: {run.sectionTitle}. Thời gian {run.sections[run.section].minutes} phút.
+            Đồng hồ bắt đầu khi bạn chọn nút dưới.
+          </p>
+          <Button disabled={busy} onClick={() => void command('begin')}>
+            Bắt đầu phần {run.section + 1}
+            <ArrowRight size={16} />
+          </Button>
+        </section>
+      ) : (
+        <>
+          <div className="jlpt-section-heading">
+            <div>
+              <span className="eyebrow">
+                PHẦN {run.section + 1}/{run.sections.length}
+              </span>
+              <h2>{run.sectionTitle}</h2>
+              <p aria-live="polite">
+                {busy ? 'Đang lưu…' : `${answered}/${run.questions.length} câu đã lưu`}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              disabled={busy || remaining === 0}
+              onClick={() => setConfirm(true)}
+            >
+              Kết thúc phần này
+            </Button>
+          </div>
+          <div className="jlpt-layout">
+            <section className="panel jlpt-question">
+              {question && (
+                <>
+                  <div className="eyebrow">
+                    {question.group} · CÂU {index + 1}/{run.questions.length}
+                  </div>
+                  {question.passage && (
+                    <div className="jlpt-passage" lang="ja">
+                      {question.passage}
+                    </div>
+                  )}
+                  <h2 lang="ja">{question.prompt}</h2>
+                  {question.category === 'listening' && (
+                    <div className="inline-actions spaced">
+                      <Button
+                        disabled={speaking || remaining === 0}
+                        onClick={() => void audio(question.id)}
+                      >
+                        <Volume2 size={16} />
+                        {speaking ? 'Đang phát…' : 'Nghe câu này'}
+                      </Button>
+                      {speaking && (
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            window.speechSynthesis?.cancel();
+                            setSpeaking(false);
+                          }}
+                        >
+                          <Square size={16} />
+                          Dừng
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  <QuestionInput
+                    question={{ ...question, numbered: true }}
+                    value={run.answers[question.id] || ''}
+                    disabled={busy || remaining === 0}
+                    onChange={(value) => void command('save', { [question.id]: value })}
+                  />
+                  <div className="inline-actions jlpt-navigation">
+                    <Button
+                      variant="secondary"
+                      disabled={index === 0 || busy}
+                      onClick={() => {
+                        window.speechSynthesis?.cancel();
+                        setSpeaking(false);
+                        setIndex((i) => i - 1);
+                      }}
+                    >
+                      Câu trước
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      disabled={index === run.questions.length - 1 || busy}
+                      onClick={() => {
+                        window.speechSynthesis?.cancel();
+                        setSpeaking(false);
+                        setIndex((i) => i + 1);
+                      }}
+                    >
+                      Câu tiếp
+                    </Button>
+                  </div>
+                </>
+              )}
+            </section>
+            <aside className="panel jlpt-answer-sheet">
+              <h2>Phiếu trả lời</h2>
+              <p>Đã chọn được tô màu. Có thể đổi đáp án trong phần đang làm.</p>
+              <nav aria-label="Chọn câu hỏi">
+                {run.questions.map((q, i) => (
+                  <button
+                    key={q.id}
+                    disabled={busy}
+                    aria-current={i === index ? 'step' : undefined}
+                    aria-label={`Câu ${i + 1}${run.answers[q.id] ? ', đã trả lời' : ''}`}
+                    className={run.answers[q.id] ? 'answered' : ''}
+                    onClick={() => {
+                      window.speechSynthesis?.cancel();
+                      setSpeaking(false);
+                      setIndex(i);
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </nav>
+            </aside>
+          </div>
+        </>
+      )}
+      <Modal open={confirm} onOpenChange={setConfirm} title="Kết thúc phần thi?">
+        <p>
+          Còn {(run?.questions.length || 0) - answered} câu chưa trả lời. Phần này sẽ khóa lại và
+          không thể quay về.
+        </p>
+        <div className="inline-actions">
+          <Button variant="secondary" disabled={busy} onClick={() => setConfirm(false)}>
+            Tiếp tục làm
+          </Button>
+          <Button disabled={busy} onClick={() => void command('finish')}>
+            Xác nhận kết thúc
+            <Check size={16} />
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
+}

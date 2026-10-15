@@ -3214,6 +3214,33 @@ mark { background: #eee1b9; color: #27271f; border-radius: 2px; }
 @media (prefers-reduced-motion: reduce) { .stroke-active { animation: none; } }
 
 /* Grammar curriculum and personal review */
+/* Timed JLPT practice */
+.jlpt-intro { max-width: 980px; margin-inline: auto; }
+.jlpt-intro ol { padding-left: 22px; }
+.jlpt-intro li { padding: 10px 0; }
+.jlpt-intro li span { display: block; color: var(--muted); }
+.jlpt-card-sections { padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.9; flex: 1; }
+.test-card { display: flex; flex-direction: column; min-width: 0; }
+.jlpt-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-block: 24px; }
+.jlpt-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 20px; align-items: start; }
+.jlpt-layout > * { min-width: 0; }
+.jlpt-question h2 { white-space: pre-wrap; font-family: 'Noto Sans JP', sans-serif; font-size: 19px; line-height: 1.9; margin-block: 20px; }
+.jlpt-passage { white-space: pre-wrap; overflow-wrap: anywhere; font-family: 'Noto Sans JP', sans-serif; line-height: 2.1; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; margin-block: 20px; color: var(--ink); }
+.jlpt-passage:empty { display: none; }
+.jlpt-navigation { justify-content: space-between; margin-top: 24px; }
+.jlpt-answer-sheet nav { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; }
+.jlpt-answer-sheet button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 6px; min-height: 36px; padding: 5px; }
+.jlpt-answer-sheet .answered { background: var(--jade); color: white; }
+.jlpt-answer-sheet [aria-current] { outline: 2px solid var(--ink); outline-offset: 2px; }
+.jlpt-answer-sheet p { font-size: 12px; }
+.jlpt-score-groups { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; margin-block: 20px; }
+.jlpt-score-groups > div { padding: 16px; background: var(--surface); border-radius: 8px; }
+.jlpt-score-groups span { display: block; margin-top: 8px; }
+.jlpt-result { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.jlpt-result summary { cursor: pointer; font-weight: 600; }
+.jlpt-result p { margin-top: 16px; }
+@media(max-width:900px) { .jlpt-layout { grid-template-columns: minmax(0,1fr); } .jlpt-answer-sheet nav { grid-template-columns: repeat(auto-fill,minmax(40px,1fr)); } .jlpt-answer-sheet button { min-height: 44px; } }
+@media(max-width:560px) { .jlpt-passage { padding: 14px; font-size: 15px; } .jlpt-question h2 { font-size: 17px; } .jlpt-question .answer-options { grid-template-columns: minmax(0,1fr); } }
 /* Shared content sizing: shrink grid children, wrap labels, keep controls usable. */
 main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .panel > *, .settings-section > *, .deck-grid > *, .grammar-grid > *, .test-grid > *,

@@ -1,0 +1,50 @@
+export type JlptLevel = 'N5' | 'N4' | 'N3' | 'N2';
+export type JlptQuestion = {
+  id: string;
+  type: 'choice';
+  prompt: string;
+  options: string[];
+  answer: string;
+  explanation: string;
+  category: 'vocabulary' | 'grammar' | 'reading' | 'listening';
+  group: string;
+  passage?: string;
+  transcript?: string;
+  audioOptions?: boolean;
+  annotationDisabled: true;
+};
+export type JlptSection = { id: string; title: string; minutes: number; questions: JlptQuestion[] };
+export type JlptPaper = { id: string; title: string; level: JlptLevel; sections: JlptSection[] };
+export type PublicJlptQuestion = Omit<JlptQuestion, 'answer' | 'explanation' | 'transcript'>;
+export type JlptSummary = {
+  id: string;
+  title: string;
+  level: JlptLevel;
+  kind: 'jlpt';
+  description: string;
+  total: number;
+  minutes: number;
+  sections: { id: string; title: string; minutes: number; count: number }[];
+};
+export type JlptResult = JlptQuestion & { given: string; correct: boolean };
+export type JlptReport = {
+  score: number;
+  duration: number;
+  results: JlptResult[];
+  groups: { label: string; correct: number; total: number }[];
+};
+export type JlptRunView = {
+  runId: string;
+  testId: string;
+  revision: number;
+  section: number;
+  sectionTitle: string;
+  sections: JlptSummary['sections'];
+  startedAt: string | null;
+  deadline: string | null;
+  serverNow: string;
+  answers: Record<string, string>;
+  questions: PublicJlptQuestion[];
+  finished: boolean;
+  report?: JlptReport;
+};

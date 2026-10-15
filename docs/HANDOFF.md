@@ -5,6 +5,12 @@
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Kiểm tra JLPT — cập nhật ngày 15/10
+
+Trang Kiểm tra đã thay mini test bằng 4 đề tự biên soạn N5–N2, tổng 366 câu: N5 71 câu/90 phút, N4 86/115, N3 102/140, N2 107/155. Đồng hồ từng phần theo JLPT, tự lưu đáp án và tiếp tục khi tải lại, khóa phần đã kết thúc, có phiếu trả lời và lịch sử lời giải. Kết quả là tỷ lệ câu đúng, không phải thang 180 hay kết luận đỗ/trượt. Nghe dùng giọng Nhật thiết bị, phát từng câu/có phát lại; chưa là băng thi liên tục và chưa có tranh tình huống. Nội dung chưa chuẩn hóa độ khó; thông báo rõ trên giao diện.
+
+Lưu snapshot đề + trạng thái có version trong `TestRun.questions`, kết quả vào `Attempt`; không cần migration hoặc reset dữ liệu. Giữ lịch sử/API mini test cũ. 113 kiểm thử đạt; kiểm tra trình duyệt 4 luồng thi và 102 tổ hợp bố cục đạt, âm thanh mô phỏng. Chi tiết cấu trúc, giới hạn và kiểm chứng: `docs/JLPT-20261015.md`. Log link chia sẻ cũ báo tunnel không tồn tại; chưa xác minh Internet cho tính năng này, cần chạy lại `npm run share` nếu cần link mới. Commit tự động, chưa push.
+
 ## Giao diện — cập nhật ngày 15/10
 
 Bổ sung theo ảnh người dùng: sửa lỗi đáp án ngữ pháp xếp dọc/tràn nút. Selector `.answer-options button > span` từng áp khung 25×25 của nhãn A/B/C lên cả `JapaneseAnnotatedText`. Đã thay bằng lớp `.answer-key`, cho nội dung đáp án co giãn độc lập và giữ icon lựa chọn không co méo. Component dùng chung cho ngữ pháp và bài kiểm tra. Script `tests/browser/grammar-answer-layout.mjs` kiểm tra đúng bài `/grammar/janai`: 20 tổ hợp 5 độ rộng × 2 chế độ chú thích × 2 theme, cả trạng thái chọn, kiểm tra khung từng text/ruby nằm trong nút — đạt. Audit tràn ngang trước đó chưa phát hiện lỗi tràn dọc bên trong nút; không coi kết quả cũ là kiểm chứng trường hợp này. Build/TypeScript/lint đạt; commit tự động theo quy ước, chưa push.

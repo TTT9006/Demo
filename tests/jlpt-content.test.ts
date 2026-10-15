@@ -1,0 +1,47 @@
+import { describe, it, expect } from 'vitest';
+import { jlptPapers, paperSummary } from '../packages/shared/jlpt-papers';
+describe('Original full-length JLPT practice papers', () => {
+  it('has four papers, official section timing and declared question counts', () => {
+    expect(jlptPapers.map((p) => p.level)).toEqual(['N5', 'N4', 'N3', 'N2']);
+    expect(jlptPapers.map((p) => p.sections.map((s) => s.minutes))).toEqual([
+      [20, 40, 30],
+      [25, 55, 35],
+      [30, 70, 40],
+      [105, 50],
+    ]);
+    expect(jlptPapers.map((p) => paperSummary(p).total)).toEqual([71, 86, 102, 107]);
+  });
+  it('provides unique questions, one exact answer and protected reading prompts', () => {
+    for (const paper of jlptPapers) {
+      const ids = new Set<string>();
+      for (const q of paper.sections.flatMap((s) => s.questions)) {
+        expect(ids.has(q.id), q.id).toBe(false);
+        ids.add(q.id);
+        expect(
+          q.options.filter((o) => o === q.answer),
+          q.id,
+        ).toHaveLength(1);
+        expect(new Set(q.options).size, q.id).toBe(q.options.length);
+        expect(q.options.length, q.id).toBeGreaterThanOrEqual(3);
+        expect(q.annotationDisabled, q.id).toBe(true);
+        expect(q.explanation.length, q.id).toBeGreaterThan(10);
+        if (q.category === 'reading') expect(q.passage?.length, q.id).toBeGreaterThan(50);
+        if (q.category === 'listening') expect(q.transcript?.length, q.id).toBeGreaterThan(10);
+      }
+    }
+  });
+  it('includes level-specific formats without inventing an N5 usage section', () => {
+    const groups = (level: string) =>
+      new Set(
+        jlptPapers
+          .find((p) => p.level === level)!
+          .sections.flatMap((s) => s.questions.map((q) => q.group)),
+      );
+    expect(groups('N5').has('Cách dùng từ')).toBe(false);
+    expect(groups('N2').has('Cấu tạo từ')).toBe(true);
+    expect(groups('N3').has('Đoạn dài')).toBe(true);
+    expect(groups('N2').has('So sánh hai văn bản')).toBe(true);
+    expect(groups('N2').has('Quan điểm tác giả')).toBe(true);
+    expect(groups('N2').has('Hiểu tổng hợp')).toBe(true);
+  });
+});

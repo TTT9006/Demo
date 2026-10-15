@@ -406,4 +406,65 @@ describe.sequential('Dictionary import, search and resumable translation', () =>
     expect(translation.translatedText).toBe('ăn (đã duyệt)');
     expect(translation.status).toBe('stale');
   });
+  it('persists JLPT answers, enforces section deadlines and saves one private result', async () => {
+    const { jlptPapers } = await import('../packages/shared/jlpt-papers');
+    const paper = jlptPapers[0];
+    const catalog = await session.get('/api/tests');
+    expect(catalog.body.map((p: {level:string})=>p.level)).toEqual(['N5','N4','N3','N2']);
+    expect(JSON.stringify(catalog.body)).not.toContain('answer');
+    expect((await request(app).get('/api/jlpt/papers')).status).toBe(401);
+    let response = await session.post(`/api/jlpt/papers/${paper.id}/start`);
+    expect(response.status).toBe(200);
+    let run = response.body;
+    const runId = run.runId;
+    const route = `/api/jlpt/runs/${runId}`;
+    expect(run.questions).toHaveLength(21);
+    expect(run.questions[0].answer).toBeUndefined();
+    expect(run.questions[0].explanation).toBeUndefined();
+    expect(new Date(run.deadline).getTime()-new Date(run.startedAt).getTime()).toBe(20*60_000);
+    expect((await session.post(`/api/jlpt/papers/${paper.id}/start`)).body.runId).toBe(runId);
+    const outsider = request.agent(app);
+    await outsider.post('/api/auth/register').send({name:'Other exam user',email:'exam-other@example.com',password:'Example-test-password'});
+    expect((await outsider.get(route)).status).toBe(404);
+    expect((await outsider.patch(route).send({action:'finish',revision:0})).status).toBe(404);
+    expect((await session.get(`${route}/audio/${paper.sections[2].questions[0].id}`)).status).toBe(403);
+    expect((await session.post(`/api/tests/${paper.id}/submit`).send({runId,answers:{}})).status).toBe(400);
+    const first = paper.sections[0].questions[0];
+    response = await session.patch(route).send({action:'save',revision:run.revision,answers:{[first.id]:first.answer}});
+    expect(response.status).toBe(200); run=response.body;
+    expect((await session.get(`/api/jlpt/papers/${paper.id}`)).body.run.answers[first.id]).toBe(first.answer);
+    expect((await session.patch(route).send({action:'finish',revision:0})).status).toBe(409);
+    expect((await session.patch(route).send({action:'save',revision:run.revision,answers:{[paper.sections[1].questions[0].id]:'invalid'}})).status).toBe(400);
+    // Move only the isolated test database clock to simulate closing the browser past expiry.
+    const saved=await db.testRun.findUniqueOrThrow({where:{id:runId}});
+    const state=JSON.parse(saved.questions);
+    state.sectionStarted=Date.now()-21*60_000;
+    await db.testRun.update({where:{id:runId},data:{questions:JSON.stringify(state)}});
+    const second=paper.sections[0].questions[1];
+    response=await session.patch(route).send({action:'save',revision:run.revision,answers:{[second.id]:second.answer}});
+    expect(response.status).toBe(200);run=response.body;
+    expect(run.section).toBe(1); expect(run.startedAt).toBeNull(); expect(run.questions).toEqual([]);
+    expect(JSON.parse((await db.testRun.findUniqueOrThrow({where:{id:runId}})).questions).answers[second.id]).toBeUndefined();
+    for(let part=1;part<3;part++) {
+      response=await session.patch(route).send({action:'begin',revision:run.revision});
+      expect(response.status).toBe(200); run=response.body;
+      expect(run.questions).toHaveLength(paper.sections[part].questions.length);
+      if(part===2) {
+        expect(run.questions.every((q:Record<string,unknown>)=>!q.transcript&&!q.answer)).toBe(true);
+        const audio=await session.get(`${route}/audio/${run.questions[0].id}`);
+        expect(audio.status).toBe(200);expect(audio.body.text).toContain('話');
+      }
+      response=await session.patch(route).send({action:'finish',revision:run.revision});
+      expect(response.status).toBe(200);run=response.body;
+    }
+    expect(run.finished).toBe(true);expect(run.report.results).toHaveLength(71);
+    expect(run.report.groups).toHaveLength(2);
+    expect(run.report.results.filter((q:{correct:boolean})=>q.correct)).toHaveLength(1);
+    expect(run.report.duration).toBeGreaterThanOrEqual(1200);
+    await session.patch(route).send({action:'finish',revision:run.revision});
+    await session.get(route);
+    expect(await db.attempt.count({where:{userId,testId:paper.id}})).toBe(1);
+    expect((await outsider.get('/api/tests/history')).body).toEqual([]);
+    expect((await session.post(`/api/jlpt/papers/${paper.id}/start`)).body.runId).not.toBe(runId);
+  });
 });

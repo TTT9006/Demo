@@ -92,6 +92,9 @@ export type LessonSummary = {
   practice?: { total: number; answered: number; correct: number; mastered: boolean; due: number; weak: number; nextDue: string | null };
 };
 export type Question = {
+  numbered?: boolean;
+  passage?: string;
+  transcript?: string;
   annotationDisabled?: boolean;
   readings?: Record<string, string>;
   id: string;

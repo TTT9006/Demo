@@ -1,3 +1,5 @@
+import { jlptRouter } from './jlpt';
+import { jlptPapers, paperSummary } from '../../../packages/shared/jlpt-papers';
 import { grammarRouter, normalizeGrammarAnswer, grammarRoadmap } from './grammar';
 import { allowedOrigin } from './origins';
 import express, { type Request, type Response, type NextFunction } from 'express';
@@ -544,25 +546,8 @@ app.post('/api/flashcards/pdf', upload.single('file'), async (req, res) => {
 });
 app.use('/api/grammar', grammarRouter);
 const normalizeAnswer = normalizeGrammarAnswer;
-app.get('/api/tests', async (_req, res) =>
-  res.json([
-    ...testDefinitions,
-    {
-      id: 'vocabulary',
-      title: 'Từ vựng của bạn',
-      description: 'Trắc nghiệm, gõ đáp án và ghép nghĩa',
-      kind: 'vocabulary',
-      lessonIds: [],
-    },
-    {
-      id: 'mixed',
-      title: 'Ôn tập tổng hợp',
-      description: 'Kết hợp từ vựng và ngữ pháp N5',
-      kind: 'mixed',
-      lessonIds: ['desu', 'wo'],
-    },
-  ]),
-);
+app.use('/api/jlpt', jlptRouter);
+app.get('/api/tests', (_req, res) => res.json(jlptPapers.map(paperSummary)));
 app.get('/api/tests/history', async (_req, res) =>
   res.json(
     await db.attempt.findMany({
@@ -655,6 +640,10 @@ app.post('/api/tests/:id/start', async (req, res) => {
   });
 });
 app.post('/api/tests/:id/submit', async (req, res) => {
+  if (String(req.params.id).startsWith('jlpt-')) {
+    res.status(400).json({ error: 'Đề JLPT phải nộp theo từng phần trong phiên thi.' });
+    return;
+  }
   const { runId, answers } = z
     .object({ runId: z.string(), answers: z.record(z.string(), z.string().max(1000)) })
     .parse(req.body);
