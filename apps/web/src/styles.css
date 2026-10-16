@@ -1670,6 +1670,20 @@ main {
   box-shadow: 0 16px 36px -4px rgba(40, 60, 35, 0.12), 0 4px 12px -2px rgba(40, 60, 35, 0.06);
 }
 
+.review-3d-scene,
+.review-card-wrapper,
+.review-card {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.review-3d-scene::-webkit-scrollbar,
+.review-card-wrapper::-webkit-scrollbar,
+.review-card::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Card Faces */
 .review-card-face {
   position: absolute;
@@ -1688,6 +1702,13 @@ main {
   justify-content: center;
   text-align: center;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.review-card-face::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .review-card-face > * {
   max-width: 100%;
@@ -3618,8 +3639,10 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .login-review-decks h2, .login-review-deck-title { overflow-wrap: anywhere; font-size: 20px; line-height: 1.6; }
 .login-review-content progress { width: 100%; accent-color: var(--jade); }
 .login-review-content .review-session { width: 100%; max-width: 100%; margin-block: 20px; }
-.login-review-content .review-card { height: auto; min-height: 320px; padding: 0; background: transparent; overflow-wrap: anywhere; }
-.login-review-content .review-card-face { padding: clamp(18px, 4vw, 36px); background: var(--surface); }
+.login-review-content .review-card { height: auto; min-height: 380px; padding: 0; background: transparent; overflow-wrap: anywhere; scrollbar-width: none; -ms-overflow-style: none; }
+.login-review-content .review-card::-webkit-scrollbar,
+.login-review-content .review-card-face::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.login-review-content .review-card-face { padding: clamp(18px, 4vw, 36px); background: var(--surface); scrollbar-width: none; -ms-overflow-style: none; }
 .login-review-content .review-card h2 { font-size: clamp(28px, 6vw, 52px); overflow-wrap: anywhere; }
 .login-review-content .review-card h3 { overflow-wrap: anywhere; }
 .login-review-content .rating-buttons { grid-template-columns: repeat(4,minmax(0,1fr)); }

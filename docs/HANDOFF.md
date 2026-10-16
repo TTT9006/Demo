@@ -7,6 +7,27 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Loại bỏ thanh cuộn (rollbar/scrollbar) trên thẻ flashcard — ngày 16/10
+
+- **Yêu cầu người dùng:** Xóa thanh rollbar (scrollbar dọc hiển thị trên thẻ flashcard) xuất hiện ở phần flashcard sau khi vừa đăng nhập (màn hình ôn tập đầu ngày `login-review`).
+- **Nguyên nhân kỹ thuật:**
+  - Lớp `.review-card-face` có thuộc tính `overflow-y: auto`. Trên hệ điều hành Windows (trình duyệt Chromium / Edge / Firefox), khi nội dung thẻ hoặc đệm padding vượt nhẹ chiều cao thẻ, trình duyệt tự động hiển thị thanh cuộn mặc định màu xám với 2 nút mũi tên lên/xuống ở mép phải thẻ.
+  - Ngoài ra, trong `.login-review-content .review-card`, `min-height` từng đặt mức `320px` (thấp hơn `380px` của màn hình flashcard chính), khiến thẻ dễ bị tràn chiều dọc hơn.
+- **Thực hiện kỹ thuật (`apps/web/src/styles.css`):**
+  - Áp dụng triệt để cơ chế ẩn scrollbar chuẩn hiện đại và đa trình duyệt:
+    - `scrollbar-width: none;` (hỗ trợ Firefox & Chrome 121+).
+    - `-ms-overflow-style: none;` (hỗ trợ Edge/IE).
+    - `::-webkit-scrollbar { display: none; width: 0; height: 0; }` (hỗ trợ Chrome, Edge, Safari, Opera).
+  - Áp dụng bộ quy tắc trên đồng bộ cho `.review-card-face`, `.review-card`, `.review-card-wrapper`, `.review-3d-scene` cũng như `.login-review-content .review-card` và `.login-review-content .review-card-face`.
+  - Tăng `min-height` của `.login-review-content .review-card` lên `380px` đồng bộ với giao diện flashcard chính, giữ tỷ lệ thẻ hài hòa, thoáng đãng và không bị bó hẹp.
+- **Kiểm chứng & Bằng chứng:**
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm run build`: Build production Vite & esbuild hoàn tất trơn tru.
+  - `node tests/browser/login-review-smoke.mjs`: Chạy 40/40 kiểm tra trình duyệt hoàn tất thành công (`{"checks":40,"errors":[]}`).
+  - Kiểm tra trực quan ảnh chụp màn hình thực tế: [question-light.png](file:///d:/Demo/test-results/login-review/question-light.png) và [question-dark.png](file:///d:/Demo/test-results/login-review/question-dark.png) xác nhận thanh rollbar đã biến mất hoàn toàn trên cả theme Sáng và Tối.
+- **Trạng thái Git:** Tự động commit theo quy ước dự án.
+- **Tập tin liên quan:** `apps/web/src/styles.css`, `docs/HANDOFF.md`.
+
 ## Bổ sung chế độ Ôn lại tự do bất cứ lúc nào cho thẻ nhớ (Anytime Review) — ngày 16/10
 
 - **Yêu cầu người dùng:** Thêm lựa chọn ôn lại cho thẻ nhớ để muốn ôn lại lúc nào cũng được, cơ chế ôn tập dài hạn sẽ điều chỉnh theo lần ôn mới nhất.
