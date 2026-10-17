@@ -5,7 +5,11 @@ import { syncGrammarContent } from './grammar';
 import { ensureDefaultDecks } from './default-decks';
 import bcrypt from 'bcryptjs';
 
-await db.$queryRawUnsafe('PRAGMA journal_mode=WAL');
+try {
+  await db.$queryRawUnsafe('PRAGMA journal_mode=WAL');
+} catch {
+  /* Managed by remote database engine */
+}
 await initSearch();
 await recoverSearchIndex();
 await syncGrammarContent();
