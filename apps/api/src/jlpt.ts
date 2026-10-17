@@ -77,10 +77,17 @@ export function advanceExam(
     state.sectionStarted = now;
   } else {
     if (state.sectionStarted === null) throw fail('Hãy bắt đầu phần thi tiếp theo.');
+    let hasNewAnswer = false;
     for (const [id, answer] of Object.entries(answers)) {
       const question = current.questions.find((q) => q.id === id);
       if (!question || (answer !== '' && !question.options.includes(answer)))
         throw fail('Đáp án không thuộc phần thi hiện tại.', 400);
+      if (state.answers[id] !== answer) {
+        hasNewAnswer = true;
+      }
+    }
+    if (action === 'save' && !hasNewAnswer) {
+      return false;
     }
     Object.assign(state.answers, answers);
     if (action === 'finish') completeSection(state, now);

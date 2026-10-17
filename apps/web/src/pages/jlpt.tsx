@@ -198,7 +198,9 @@ export function JlptSession() {
     [now, setNow] = useState(Date.now());
   const offset = useRef(0),
     nextPoll = useRef(0),
-    locked = useRef(false);
+    locked = useRef(false),
+    saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null),
+    pendingAnswers = useRef<Record<string, string>>({});
   function apply(next: JlptRunView) {
     offset.current = new Date(next.serverNow).getTime() - Date.now();
     if (next.section !== run?.section) {
@@ -206,8 +208,23 @@ export function JlptSession() {
       window.speechSynthesis?.cancel();
       setSpeaking(false);
       setConfirm(false);
+      pendingAnswers.current = {};
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+      }
     }
-    setRun(next);
+    setRun((current) => {
+      if (!current) return next;
+      // Preserve any local answers that haven't been synced or were just clicked
+      return {
+        ...next,
+        answers: {
+          ...next.answers,
+          ...pendingAnswers.current,
+        },
+      };
+    });
     setNow(Date.now());
     if (next.finished) {
       void client.invalidateQueries({ queryKey: ['test-history'] });
@@ -224,6 +241,7 @@ export function JlptSession() {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => {
       clearInterval(timer);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
       window.speechSynthesis?.cancel();
     };
   }, []);
@@ -252,19 +270,68 @@ export function JlptSession() {
         setBusy(false);
       });
   }, [remaining, now, run?.runId, run?.deadline, run?.finished]);
+  async function flushPendingAnswers(currentRun: JlptRunView) {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    const toSave = { ...pendingAnswers.current };
+    if (Object.keys(toSave).length === 0) return;
+    try {
+      const updated = await patch<JlptRunView>('/jlpt/runs/' + currentRun.runId, {
+        action: 'save',
+        answers: toSave,
+        revision: currentRun.revision,
+      });
+      // Clear saved keys from pending
+      for (const k of Object.keys(toSave)) {
+        if (pendingAnswers.current[k] === toSave[k]) {
+          delete pendingAnswers.current[k];
+        }
+      }
+      apply(updated);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  function handleAnswer(questionId: string, value: string) {
+    if (!run || remaining === 0) return;
+    if (run.answers[questionId] === value) return; // Ignore clicking the already selected option
+
+    // Optimistic UI update
+    pendingAnswers.current[questionId] = value;
+    setRun((prev) => (prev ? { ...prev, answers: { ...prev.answers, [questionId]: value } } : prev));
+
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveTimer.current = null;
+      if (runRef.current && !locked.current) {
+        void flushPendingAnswers(runRef.current);
+      }
+    }, 400);
+  }
+  const runRef = useRef<JlptRunView | null>(null);
+  runRef.current = run;
+
   async function command(
     action: 'save' | 'finish' | 'begin',
     answers: Record<string, string> = {},
   ) {
     if (!run || locked.current) return;
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
     locked.current = true;
     setBusy(true);
     setError('');
     try {
+      const mergedAnswers = { ...pendingAnswers.current, ...answers };
+      pendingAnswers.current = {};
       apply(
         await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
           action,
-          answers,
+          answers: mergedAnswers,
           revision: run.revision,
         }),
       );
@@ -559,8 +626,8 @@ export function JlptSession() {
                   <QuestionInput
                     question={{ ...question, numbered: true }}
                     value={run.answers[question.id] || ''}
-                    disabled={busy || remaining === 0}
-                    onChange={(value) => void command('save', { [question.id]: value })}
+                    disabled={remaining === 0}
+                    onChange={(value) => handleAnswer(question.id, value)}
                   />
                   <div className="inline-actions jlpt-navigation">
                     <Button
@@ -596,7 +663,6 @@ export function JlptSession() {
                 {run.questions.map((q, i) => (
                   <button
                     key={q.id}
-                    disabled={busy}
                     aria-current={i === index ? 'step' : undefined}
                     aria-label={`Câu ${i + 1}${run.answers[q.id] ? ', đã trả lời' : ''}`}
                     className={run.answers[q.id] ? 'answered' : ''}
