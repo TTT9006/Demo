@@ -1,0 +1,11 @@
+node_modules
+.git
+.share
+.tools
+.recovery
+dist
+dist-api
+prisma/*.db*
+test-results
+playwright-report
+*.log
