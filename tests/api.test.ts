@@ -497,7 +497,7 @@ describe.sequential('Dictionary import, search and resumable translation', () =>
     const { jlptPapers } = await import('../packages/shared/jlpt-papers');
     const paper = jlptPapers[0];
     const catalog = await session.get('/api/tests');
-    expect(catalog.body.map((p: {level:string})=>p.level)).toEqual(['N5','N4','N3','N2']);
+    expect(catalog.body.map((p: {level:string})=>p.level)).toEqual(jlptPapers.map((p) => p.level));
     expect(JSON.stringify(catalog.body)).not.toContain('answer');
     expect((await request(app).get('/api/jlpt/papers')).status).toBe(401);
     let response = await session.post(`/api/jlpt/papers/${paper.id}/start`);

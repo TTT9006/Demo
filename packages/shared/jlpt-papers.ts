@@ -200,14 +200,28 @@ function makePaper(level: JlptLevel): JlptPaper {
     sections,
   };
 }
-export const jlptPapers = (['N5', 'N4', 'N3', 'N2'] as const).map(makePaper);
+import { jlptN5Paper202407 } from './jlpt-papers-n5-2024-07';
+import { jlptN5Paper202112 } from './jlpt-papers-n5-2021-12';
+import { jlptN5Paper201707 } from './jlpt-papers-n5-2017-07';
+import { jlptN5Paper201307 } from './jlpt-papers-n5-2013-07';
+
+export const jlptPracticePapers = (['N5', 'N4', 'N3', 'N2'] as const).map(makePaper);
+export const jlptOfficialPapers: JlptPaper[] = [
+  jlptN5Paper202407,
+  jlptN5Paper202112,
+  jlptN5Paper201707,
+  jlptN5Paper201307,
+];
+export const jlptPapers: JlptPaper[] = [...jlptPracticePapers, ...jlptOfficialPapers];
 export function paperSummary(p: JlptPaper): JlptSummary {
   return {
     id: p.id,
     title: p.title,
     level: p.level,
     kind: 'jlpt',
-    description: 'Đề tự biên soạn, đủ phần và thời gian thi; không phải đề JLPT chính thức.',
+    isOfficial: p.isOfficial,
+    description:
+      p.description ?? 'Đề tự biên soạn, đủ phần và thời gian thi; không phải đề JLPT chính thức.',
     total: p.sections.reduce((n, s) => n + s.questions.length, 0),
     minutes: p.sections.reduce((n, s) => n + s.minutes, 0),
     sections: p.sections.map((s) => ({

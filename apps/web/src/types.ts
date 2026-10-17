@@ -137,6 +137,11 @@ export type Question = {
   prompt: string;
   options?: string[];
   rows?: string[];
+  audioOptions?: boolean;
+  audioUrl?: string;
+  imageUrl?: string;
+  category?: string;
+  group?: string;
 };
 export type Result = Question & {
   given: string;

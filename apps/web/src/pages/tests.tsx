@@ -4,7 +4,7 @@ import type { JlptSummary } from '../../../../packages/shared/jlpt-types';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Clock3, Check, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock3, Check, RotateCcw, Headphones } from 'lucide-react';
 import { api, post } from '../services/api';
 import { useUI } from '../stores/ui';
 import type { Attempt, Question, Result } from '../types';
@@ -121,6 +121,7 @@ export function QuestionInput({
 }
 export function Tests() {
   const [review, setReview] = useState<Attempt | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const { data, isLoading, error } = useQuery({
     queryKey: ['tests'],
     queryFn: () => api<Test[]>('/tests'),
@@ -129,6 +130,20 @@ export function Tests() {
     queryKey: ['test-history'],
     queryFn: () => api<Attempt[]>('/tests/history'),
   });
+
+  const levels = ['N5', 'N4', 'N3', 'N2'] as const;
+  const counts = {
+    all: data?.length || 0,
+    N5: data?.filter((t) => t.level === 'N5').length || 0,
+    N4: data?.filter((t) => t.level === 'N4').length || 0,
+    N3: data?.filter((t) => t.level === 'N3').length || 0,
+    N2: data?.filter((t) => t.level === 'N2').length || 0,
+  };
+  const activeLevels =
+    selectedLevel === 'all'
+      ? levels
+      : levels.filter((lvl) => lvl === selectedLevel);
+
   return (
     <>
       <PageHeader
@@ -136,38 +151,122 @@ export function Tests() {
         title="Thi thử JLPT từ N5 đến N2."
         description="Đề đầy đủ thời gian, chia phần theo cấu trúc JLPT. Lưu bài đang làm và xem lại kết quả từng nhóm."
       />
+      <div className="tabs inline-actions spaced" role="tablist" aria-label="Lọc cấp độ đề thi" style={{ marginBlock: '20px', flexWrap: 'wrap' }}>
+        <button
+          role="tab"
+          aria-selected={selectedLevel === 'all'}
+          className={selectedLevel === 'all' ? 'active' : ''}
+          onClick={() => setSelectedLevel('all')}
+        >
+          <span>Tất cả</span>
+          <span className="tab-badge">{counts.all}</span>
+        </button>
+        {levels.map((lvl) => (
+          <button
+            key={lvl}
+            role="tab"
+            aria-selected={selectedLevel === lvl}
+            className={selectedLevel === lvl ? 'active' : ''}
+            onClick={() => setSelectedLevel(lvl)}
+          >
+            <span>JLPT {lvl}</span>
+            <span className="tab-badge">{counts[lvl]}</span>
+          </button>
+        ))}
+      </div>
       {isLoading ? (
         <Loading />
       ) : error ? (
         <ErrorState error={error} />
       ) : (
-        <div className="test-grid">
-          {data?.map((t, i) => (
-            <Link className="test-card" to={'/tests/' + t.id} key={t.id}>
-              <span className="eyebrow">{t.level} · ĐỀ LUYỆN TỰ BIÊN SOẠN</span>
-              <span className="test-number">{String(i + 1).padStart(2, '0')}</span>
-              <h2>{t.title}</h2>
-              <p>
-                {t.total} câu · {t.minutes} phút · {t.sections.length} phần
-              </p>
-              <ul className="jlpt-card-sections">
-                {t.sections.map((s) => (
-                  <li key={s.id}>
-                    {s.title}: {s.minutes} phút
-                  </li>
-                ))}
-              </ul>
-              <div>
-                <span>Xem đề & tiếp tục bài đang làm</span>
-                <ArrowRight size={19} />
-              </div>
-            </Link>
-          ))}
+        <div className="jlpt-groups-container">
+          {activeLevels.map((lvl) => {
+            const papers = (data?.filter((t) => t.level === lvl) || []).slice().sort((a, b) => {
+              if (a.isOfficial && !b.isOfficial) return -1;
+              if (!a.isOfficial && b.isOfficial) return 1;
+              return b.title.localeCompare(a.title);
+            });
+            if (!papers.length) return null;
+            const officialCount = papers.filter((p) => p.isOfficial).length;
+            const practiceCount = papers.filter((p) => !p.isOfficial).length;
+            return (
+              <section key={lvl} className="spaced" style={{ marginBlock: '28px' }}>
+                <div className="section-heading">
+                  <div>
+                    <h2 style={{ fontSize: '20px', marginBottom: '4px' }}>Cấp độ JLPT {lvl}</h2>
+                    <span className="muted" style={{ fontSize: '13px' }}>
+                      {papers.length} bộ đề
+                      {officialCount > 0
+                        ? ` · ${officialCount} đề thi thật (audio đồng bộ gốc) · ${practiceCount} đề luyện tập`
+                        : ` · ${practiceCount} đề luyện tập`}
+                    </span>
+                  </div>
+                </div>
+                <div className="test-grid">
+                  {papers.map((t, i) => (
+                    <Link
+                      className={`test-card ${t.isOfficial ? 'test-card-official' : ''}`}
+                      to={'/tests/' + t.id}
+                      key={t.id}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        <span className="eyebrow" style={{ margin: 0 }}>
+                          {t.level} · {t.isOfficial ? 'ĐỀ THI THẬT' : 'ĐỀ LUYỆN TẬP'}
+                        </span>
+                        {t.isOfficial && (
+                          <span
+                            className="tag"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              color: 'var(--jade)',
+                              borderColor: 'var(--jade)',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                            }}
+                          >
+                            <Headphones size={13} />
+                            Audio gốc
+                          </span>
+                        )}
+                      </div>
+                      <span className="test-number">{String(i + 1).padStart(2, '0')}</span>
+                      <h2>{t.title}</h2>
+                      <p>
+                        {t.total} câu · {t.minutes} phút · {t.sections.length} phần
+                      </p>
+                      <ul className="jlpt-card-sections">
+                        {t.sections.map((s) => (
+                          <li key={s.id}>
+                            {s.title}: {s.minutes} phút ({s.count} câu)
+                          </li>
+                        ))}
+                      </ul>
+                      <div>
+                        <span>Xem đề & tiếp tục bài đang làm</span>
+                        <ArrowRight size={19} />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </div>
       )}
       <p className="spaced">
-        Câu hỏi tự biên soạn, không phải đề thi chính thức. Nghe dùng giọng Nhật tổng hợp trên thiết
-        bị. Điểm hiển thị là tỷ lệ câu đúng, không phải thang 180 của JLPT.{' '}
+        Câu hỏi tự biên soạn và đề thi chính thức được cung cấp kèm âm thanh gốc đồng bộ theo từng
+        câu. Điểm hiển thị là tỷ lệ câu đúng, không phải thang 180 của JLPT.{' '}
         <a
           className="text-link"
           href="https://www.jlpt.jp/e/guideline/testsections.html"
@@ -207,6 +306,21 @@ export function Tests() {
               <strong>
                 {i + 1}. <JapaneseAnnotatedText text={r.prompt} />
               </strong>
+              {r.imageUrl && (
+                <div style={{ marginBlock: '8px' }}>
+                  <img
+                    src={r.imageUrl}
+                    alt="Hình minh họa"
+                    className="jlpt-question-image"
+                    style={{ maxHeight: '240px', objectFit: 'contain' }}
+                  />
+                </div>
+              )}
+              {r.audioUrl && (
+                <div className="jlpt-audio-player" style={{ marginBlock: '8px' }}>
+                  <audio controls src={r.audioUrl} className="jlpt-audio-element" />
+                </div>
+              )}
               {r.passage && (
                 <p className="jlpt-passage" lang="ja">
                   {r.passage}

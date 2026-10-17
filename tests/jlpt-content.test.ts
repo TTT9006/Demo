@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { jlptPapers, paperSummary } from '../packages/shared/jlpt-papers';
+import { jlptPapers, jlptPracticePapers, paperSummary } from '../packages/shared/jlpt-papers';
 describe('Original full-length JLPT practice papers', () => {
   it('has four papers, official section timing and declared question counts', () => {
-    expect(jlptPapers.map((p) => p.level)).toEqual(['N5', 'N4', 'N3', 'N2']);
-    expect(jlptPapers.map((p) => p.sections.map((s) => s.minutes))).toEqual([
+    expect(jlptPracticePapers.map((p) => p.level)).toEqual(['N5', 'N4', 'N3', 'N2']);
+    expect(jlptPracticePapers.map((p) => p.sections.map((s) => s.minutes))).toEqual([
       [20, 40, 30],
       [25, 55, 35],
       [30, 70, 40],
       [105, 50],
     ]);
-    expect(jlptPapers.map((p) => paperSummary(p).total)).toEqual([71, 86, 102, 107]);
+    expect(jlptPracticePapers.map((p) => paperSummary(p).total)).toEqual([71, 86, 102, 107]);
   });
   it('provides unique questions, one exact answer and protected reading prompts', () => {
     for (const paper of jlptPapers) {
@@ -25,7 +25,7 @@ describe('Original full-length JLPT practice papers', () => {
         expect(q.options.length, q.id).toBeGreaterThanOrEqual(3);
         expect(q.annotationDisabled, q.id).toBe(true);
         expect(q.explanation.length, q.id).toBeGreaterThan(10);
-        if (q.category === 'reading') expect(q.passage?.length, q.id).toBeGreaterThan(50);
+        if (q.category === 'reading') expect(q.passage?.length ?? 0, `${paper.id} ${q.id}`).toBeGreaterThan(50);
         if (q.category === 'listening') expect(q.transcript?.length, q.id).toBeGreaterThan(10);
       }
     }
@@ -43,5 +43,40 @@ describe('Original full-length JLPT practice papers', () => {
     expect(groups('N2').has('So sánh hai văn bản')).toBe(true);
     expect(groups('N2').has('Quan điểm tác giả')).toBe(true);
     expect(groups('N2').has('Hiểu tổng hợp')).toBe(true);
+  });
+  it('includes official JLPT N5 2024-07 paper with exact audio and illustrations', () => {
+    const paper = jlptPapers.find((p) => p.id === 'jlpt-n5-2024-07');
+    expect(paper).toBeDefined();
+    expect(paper!.isOfficial).toBe(true);
+    expect(paper!.sections).toHaveLength(3);
+    const [vocab, grammarReading, listening] = paper!.sections;
+    expect(vocab.questions).toHaveLength(21);
+    expect(grammarReading.questions).toHaveLength(22);
+    expect(listening.questions).toHaveLength(24);
+    expect(vocab.minutes).toBe(20);
+    expect(grammarReading.minutes).toBe(40);
+    expect(listening.minutes).toBe(30);
+    expect(listening.questions.every((q) => q.audioUrl?.startsWith('/audio/jlpt/n5-2024-07/'))).toBe(true);
+    expect(grammarReading.questions.some((q) => q.imageUrl?.startsWith('/images/jlpt/n5-2024-07/'))).toBe(true);
+    expect(listening.questions.filter((q) => q.imageUrl?.startsWith('/images/jlpt/n5-2024-07/'))).toHaveLength(12);
+  });
+  it('includes official JLPT N5 papers (2021-12, 2017-07, 2013-07) with exact audio and illustrations', () => {
+    const ids = ['jlpt-n5-2021-12', 'jlpt-n5-2017-07', 'jlpt-n5-2013-07'];
+    for (const id of ids) {
+      const paper = jlptPapers.find((p) => p.id === id);
+      expect(paper, `Paper ${id} must exist`).toBeDefined();
+      expect(paper!.isOfficial).toBe(true);
+      expect(paper!.sections).toHaveLength(3);
+      const [vocab, grammarReading, listening] = paper!.sections;
+      expect(vocab.questions.length).toBeGreaterThanOrEqual(20);
+      expect(grammarReading.questions.length).toBeGreaterThanOrEqual(20);
+      expect(listening.questions).toHaveLength(24);
+      expect(vocab.minutes).toBe(20);
+      expect(grammarReading.minutes).toBe(40);
+      expect(listening.minutes).toBe(30);
+      const slug = id.replace('jlpt-', '');
+      expect(listening.questions.every((q) => q.audioUrl?.startsWith(`/audio/jlpt/${slug}/`))).toBe(true);
+      expect(listening.questions.some((q) => q.imageUrl?.startsWith(`/images/jlpt/${slug}/`))).toBe(true);
+    }
   });
 });

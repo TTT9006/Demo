@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Check, Clock3, Volume2, Square } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Clock3, Volume2, VolumeX, Square, Play, Pause, Headphones } from 'lucide-react';
 import { api, post, patch } from '../services/api';
 import { Button, ErrorState, Loading, Modal, PageHeader } from '../components/ui';
 import { QuestionInput } from './tests';
@@ -35,6 +35,151 @@ async function playJapanese(text: string) {
 }
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+function ExamAudioPlayer({ src, questionId }: { src: string; questionId: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [hasEnded, setHasEnded] = useState(false);
+  const maxTimeRef = useRef(0);
+
+  useEffect(() => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setHasEnded(false);
+    maxTimeRef.current = 0;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, [questionId, src]);
+
+  const togglePlay = () => {
+    if (!audioRef.current || hasEnded) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch((e) => console.error('Audio play error:', e));
+    }
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    audioRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current) return;
+    const curr = audioRef.current.currentTime;
+    if (curr > maxTimeRef.current) {
+      maxTimeRef.current = curr;
+    }
+    setCurrentTime(curr);
+  };
+
+  const handleSeeking = () => {
+    if (!audioRef.current) return;
+    // Strictly prevent rewinding: clamp to furthest reached time
+    if (audioRef.current.currentTime < maxTimeRef.current - 0.3) {
+      audioRef.current.currentTime = maxTimeRef.current;
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration || 0);
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setHasEnded(true);
+  };
+
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs < 0) return '0:00';
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="exam-audio-card" aria-label="Trình phát âm thanh câu hỏi thi">
+      <audio
+        ref={audioRef}
+        src={src}
+        preload="auto"
+        onTimeUpdate={handleTimeUpdate}
+        onSeeking={handleSeeking}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+      />
+      <div className="exam-audio-header">
+        <span className="exam-audio-badge">
+          <Headphones size={13} />
+          Mô phỏng phòng thi thật
+        </span>
+        <span className="exam-audio-notice">
+          Không hỗ trợ tua lại
+        </span>
+      </div>
+      <div className="exam-audio-controls">
+        <button
+          type="button"
+          className={`exam-audio-btn ${isPlaying ? 'playing' : ''}`}
+          onClick={togglePlay}
+          disabled={hasEnded}
+          title={hasEnded ? 'Đã phát hết bài nghe' : isPlaying ? 'Tạm dừng' : 'Phát âm thanh'}
+          aria-label={hasEnded ? 'Đã phát hết bài nghe' : isPlaying ? 'Tạm dừng' : 'Phát âm thanh'}
+        >
+          {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: '2px' }} />}
+          <span>{hasEnded ? 'Đã nghe xong' : isPlaying ? 'Tạm dừng' : currentTime > 0 ? 'Tiếp tục nghe' : 'Phát bài nghe'}</span>
+        </button>
+
+        <div className="exam-audio-progress-container" title="Tiến trình phát (không thể tua lại)">
+          <div className="exam-audio-progress-track">
+            <div
+              className="exam-audio-progress-fill"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="exam-audio-time">
+            <span>{formatTime(currentTime)}</span>
+            <span>/</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="exam-audio-mute-btn"
+          onClick={toggleMute}
+          title={isMuted ? 'Bật âm thanh' : 'Tắt tiếng'}
+          aria-label={isMuted ? 'Bật âm thanh' : 'Tắt tiếng'}
+        >
+          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function JlptSession() {
   const { id } = useParams();
   const client = useQueryClient();
@@ -174,7 +319,7 @@ export function JlptSession() {
         Các đề luyện JLPT
       </Link>
       <PageHeader
-        eyebrow="THI THỬ · ĐỀ TỰ BIÊN SOẠN"
+        eyebrow={paper.isOfficial ? 'JLPT CHÍNH THỨC · ĐỒNG BỘ AUDIO GỐC' : 'THI THỬ · ĐỀ TỰ BIÊN SOẠN'}
         title={paper.title}
         description={`${paper.total} câu · ${paper.minutes} phút làm bài · ${paper.sections.length} phần`}
         action={
@@ -231,20 +376,29 @@ export function JlptSession() {
             tục thời gian cũ. Phần đã kết thúc không mở lại. Bạn chủ động bắt đầu phần kế tiếp sau
             khoảng nghỉ.
           </p>
-          <p>
-            Không bật chú thích tự động hoặc dịch câu khi đang thi. Nghe hiểu dùng giọng Nhật tổng
-            hợp trên thiết bị, có thể phát lại từng câu; không phải băng thi hay nhịp phát tự động
-            của JLPT chính thức. Tình huống phát ngôn được mô tả bằng chữ.
-          </p>
+          {paper.isOfficial ? (
+            <p>
+              Đây là đề thi JLPT N5 chính thức có âm thanh gốc đồng bộ theo từng câu hỏi.
+              Bạn có thể nghe trực tiếp trên từng câu với trình phát âm thanh tích hợp sẵn.
+            </p>
+          ) : (
+            <p>
+              Không bật chú thích tự động hoặc dịch câu khi đang thi. Nghe hiểu dùng giọng Nhật tổng
+              hợp trên thiết bị, có thể phát lại từng câu; không phải băng thi hay nhịp phát tự động
+              của JLPT chính thức. Tình huống phát ngôn được mô tả bằng chữ.
+            </p>
+          )}
           <p>
             Kết quả là tỷ lệ câu đúng và thống kê từng nhóm, không quy đổi thành điểm JLPT 180 hoặc
-            kết luận đỗ/trượt. Số câu và nội dung do ứng dụng biên soạn; độ khó chưa được chuẩn hóa.
+            kết luận đỗ/trượt.
           </p>
           <div className="inline-actions">
-            <Button variant="secondary" disabled={speaking} onClick={() => void audio()}>
-              <Volume2 size={16} />
-              Thử giọng Nhật
-            </Button>
+            {!paper.isOfficial && (
+              <Button variant="secondary" disabled={speaking} onClick={() => void audio()}>
+                <Volume2 size={16} />
+                Thử giọng Nhật
+              </Button>
+            )}
             <Button disabled={busy || speaking} onClick={() => void start()}>
               Bắt đầu phần 1<ArrowRight size={16} />
             </Button>
@@ -287,6 +441,21 @@ export function JlptSession() {
                 <summary>
                   {i + 1}. {q.group} · {q.correct ? 'Đúng' : q.given ? 'Sai' : 'Bỏ trống'}
                 </summary>
+                {q.imageUrl && (
+                  <div style={{ marginBlock: '12px' }}>
+                    <img
+                      src={q.imageUrl}
+                      alt="Hình minh họa"
+                      className="jlpt-question-image"
+                      style={{ maxHeight: '280px', objectFit: 'contain' }}
+                    />
+                  </div>
+                )}
+                {q.audioUrl && (
+                  <div className="jlpt-audio-player" style={{ marginBlock: '12px' }}>
+                    <audio controls src={q.audioUrl} className="jlpt-audio-element" />
+                  </div>
+                )}
                 <p className="jlpt-passage" lang="ja">
                   {q.passage}
                 </p>
@@ -348,8 +517,23 @@ export function JlptSession() {
                       {question.passage}
                     </div>
                   )}
+                  {question.imageUrl && (
+                    <div style={{ marginBlock: '12px' }}>
+                      <img
+                        src={question.imageUrl}
+                        alt="Hình minh họa câu hỏi"
+                        className="jlpt-question-image"
+                      />
+                    </div>
+                  )}
                   <h2 lang="ja">{question.prompt}</h2>
-                  {question.category === 'listening' && (
+                  {question.audioUrl ? (
+                    <ExamAudioPlayer
+                      key={question.id}
+                      src={question.audioUrl}
+                      questionId={question.id}
+                    />
+                  ) : question.category === 'listening' ? (
                     <div className="inline-actions spaced">
                       <Button
                         disabled={speaking || remaining === 0}
@@ -371,7 +555,7 @@ export function JlptSession() {
                         </Button>
                       )}
                     </div>
-                  )}
+                  ) : null}
                   <QuestionInput
                     question={{ ...question, numbered: true }}
                     value={run.answers[question.id] || ''}

@@ -11,10 +11,19 @@ export type JlptQuestion = {
   passage?: string;
   transcript?: string;
   audioOptions?: boolean;
+  audioUrl?: string;
+  imageUrl?: string;
   annotationDisabled: true;
 };
 export type JlptSection = { id: string; title: string; minutes: number; questions: JlptQuestion[] };
-export type JlptPaper = { id: string; title: string; level: JlptLevel; sections: JlptSection[] };
+export type JlptPaper = {
+  id: string;
+  title: string;
+  level: JlptLevel;
+  sections: JlptSection[];
+  description?: string;
+  isOfficial?: boolean;
+};
 export type PublicJlptQuestion = Omit<JlptQuestion, 'answer' | 'explanation' | 'transcript'>;
 export type JlptSummary = {
   id: string;
@@ -22,6 +31,7 @@ export type JlptSummary = {
   level: JlptLevel;
   kind: 'jlpt';
   description: string;
+  isOfficial?: boolean;
   total: number;
   minutes: number;
   sections: { id: string; title: string; minutes: number; count: number }[];
