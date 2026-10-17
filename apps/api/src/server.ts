@@ -1,10 +1,11 @@
 import { app } from './app';
-import { db } from './db';
+import { db, ensureDatabaseSchema } from './db';
 import { initSearch, recoverSearchIndex } from './dictionary';
 import { syncGrammarContent } from './grammar';
 import { ensureDefaultDecks } from './default-decks';
 import bcrypt from 'bcryptjs';
 
+await ensureDatabaseSchema();
 try {
   await db.$queryRawUnsafe('PRAGMA journal_mode=WAL');
 } catch {
