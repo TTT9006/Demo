@@ -1,5 +1,6 @@
 import { jlptRouter } from './jlpt';
 import { loginReviewRouter } from './login-review';
+import { consolidatedReviewRouter, getConsolidatedOverview } from './consolidated-review';
 import { jlptPapers, paperSummary } from '../../../packages/shared/jlpt-papers';
 import { grammarRouter, normalizeGrammarAnswer, grammarRoadmap } from './grammar';
 import { allowedOrigin } from './origins';
@@ -163,6 +164,7 @@ app.post('/api/auth/logout', async (req, res) => {
 app.get('/api/auth/me', auth, (_req, res) => res.json(safeUser(res.locals.user)));
 app.use('/api', auth);
 app.use('/api/login-review', loginReviewRouter);
+app.use('/api/review/consolidated', consolidatedReviewRouter);
 app.post(
   '/api/annotations',
   rateLimit({ windowMs: 60000, limit: 180, standardHeaders: true, legacyHeaders: false }),
@@ -332,6 +334,7 @@ app.get('/api/dashboard', async (_req, res) => {
       : null,
     weekly,
     recent: cards.filter((c) => c.lastReviewed).slice(0, 5),
+    consolidatedReview: await getConsolidatedOverview(userId),
     nextLesson: roadmap.recommendation,
     attempts,
     upcoming: Array.from({ length: 7 }, (_, i) => {

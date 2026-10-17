@@ -40,6 +40,7 @@ import { AuthPage } from './pages/auth';
 import { Dashboard, Progress } from './pages/dashboard';
 import { Dictionary, DictionaryDetail, DictionaryAdmin } from './pages/dictionary';
 import { Flashcards, DeckDetail, Review } from './pages/flashcards';
+import { ConsolidatedReview } from './pages/consolidated-review';
 import { Grammar, GrammarLesson, GrammarReview } from './pages/grammar';
 import { Tests, TestSession } from './pages/tests';
 import { Writing } from './pages/writing';
@@ -242,6 +243,7 @@ export function App() {
           <Route path="dictionary/:id" element={<DictionaryDetail />} />
           <Route path="flashcards" element={<Flashcards />} />
           <Route path="flashcards/review" element={<Review />} />
+          <Route path="review/consolidated" element={<ConsolidatedReview />} />
           <Route path="flashcards/:deckId" element={<DeckDetail />} />
           <Route path="grammar" element={<Grammar />} />
           <Route path="grammar/review" element={<GrammarReview />} />

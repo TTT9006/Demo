@@ -64,6 +64,40 @@ export type Attempt = {
   createdAt: string;
   answers: string;
 };
+export type ConsolidatedRecentItem =
+  | {
+      id: string;
+      type: 'card';
+      japanese: string;
+      reading: string;
+      meaning: string;
+      repetitions: number;
+      lastReviewed: string | null;
+      due: string;
+    }
+  | {
+      id: string;
+      type: 'grammar';
+      grammarId: string;
+      title: string;
+      pattern: string;
+      level: string;
+      prompt: string;
+      repetitions: number;
+      lastCorrect: boolean;
+      lastReviewed: string | null;
+      due: string;
+    };
+
+export type ConsolidatedOverview = {
+  cardsReviewedCount: number;
+  grammarPracticedCount: number;
+  cardsDueCount: number;
+  grammarDueCount: number;
+  dueCount: number;
+  items: ConsolidatedRecentItem[];
+};
+
 export type DashboardData = {
   user: User;
   learned: number;
@@ -76,6 +110,7 @@ export type DashboardData = {
   accuracy: number | null;
   weekly: { date: string; label: string; reviews: number; activities: number }[];
   recent: Card[];
+  consolidatedReview?: ConsolidatedOverview;
   nextLesson: { id: string; pattern: string; title: string; level?: string } | null;
   attempts: Attempt[];
   upcoming: { date: string; count: number }[];
@@ -108,4 +143,36 @@ export type Result = Question & {
   correct: boolean;
   answer: string;
   explanation: string;
+};
+
+export type ConsolidatedReviewCardItem = {
+  type: 'card';
+  id: string;
+  card: Card;
+  due: string;
+};
+
+export type ConsolidatedReviewGrammarItem = {
+  type: 'grammar';
+  id: string;
+  grammarId: string;
+  title: string;
+  pattern: string;
+  level: string;
+  due: string;
+  question: Question;
+};
+
+export type ConsolidatedReviewItem =
+  | ConsolidatedReviewCardItem
+  | ConsolidatedReviewGrammarItem;
+
+export type ConsolidatedReviewQueue = {
+  items: ConsolidatedReviewItem[];
+  total: number;
+  totalCardsReviewed: number;
+  totalGrammarPracticed: number;
+  cardsDue: number;
+  grammarDue: number;
+  dueCount: number;
 };

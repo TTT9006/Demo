@@ -299,7 +299,7 @@ export async function searchDictionary(query: string, page = 1, limit = 15) {
     ? Prisma.join(
         [...derived.entries()].map(
           ([id, match]) =>
-            Prisma.sql`SELECT ${id} AS entryId, ${3 + Math.min((match as any).priority ?? 0, 99) * 0.01} AS rank`,
+            Prisma.sql`SELECT ${id} AS entryId, ${3 + Math.min((match as { priority?: number }).priority ?? 0, 99) * 0.01} AS rank`,
         ),
         ' UNION ALL ',
       )

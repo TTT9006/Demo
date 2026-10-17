@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, ArrowRight, Flame, Layers, PenLine, Check, Clock3 } from 'lucide-react';
+import { ArrowUpRight, ArrowRight, Flame, Layers, PenLine, Check, Clock3, Sparkles, RotateCcw } from 'lucide-react';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'motion/react';
 import { api } from '../services/api';
@@ -186,25 +186,94 @@ export function Dashboard() {
               </Link>
             </div>
           </section>
-          <section className="panel recent-panel">
+          <section className="panel consolidated-panel">
             <div className="section-heading">
               <div>
-                <h2>Những từ đang quen dần</h2>
-                <p>Gặp lại để nhớ lâu hơn.</p>
+                <h2>Ôn tập tổng hợp</h2>
+                <p>Củng cố đan xen từ vựng và ngữ pháp đã ôn tập.</p>
               </div>
-              <Link to="/flashcards">
-                Xem bộ thẻ <ArrowUpRight size={16} />
+              <Link to="/review/consolidated" className="action-link">
+                Bắt đầu ôn <ArrowUpRight size={16} />
               </Link>
             </div>
-            {data.recent.length ? (
-              <div className="word-table">
+
+            <div className="consolidated-quick-stats">
+              <div className="c-stat">
+                <span className="c-stat-label">Từ vựng đã ôn</span>
+                <strong>
+                  {data.consolidatedReview?.cardsReviewedCount ?? data.learned} thẻ
+                </strong>
+              </div>
+              <div className="c-stat-sep" />
+              <div className="c-stat">
+                <span className="c-stat-label">Ngữ pháp đã luyện</span>
+                <strong>
+                  {data.consolidatedReview?.grammarPracticedCount ?? data.grammarCompleted} câu
+                </strong>
+              </div>
+              <div className="c-stat-sep" />
+              <div className="c-stat">
+                <span className="c-stat-label">Hàng đợi ôn tập</span>
+                <strong className={(data.consolidatedReview?.dueCount ?? data.due) > 0 ? 'highlight-due' : ''}>
+                  {(data.consolidatedReview?.dueCount ?? data.due) > 0
+                    ? `${data.consolidatedReview?.dueCount ?? data.due} mục đến hạn`
+                    : 'Sẵn sàng ôn tự do'}
+                </strong>
+              </div>
+            </div>
+
+            {data.consolidatedReview?.items?.length ? (
+              <div className="consolidated-table">
+                {data.consolidatedReview.items.map((item) => (
+                  <div className="consolidated-row" key={item.id}>
+                    <span className={`mixed-type-tag ${item.type}`}>
+                      {item.type === 'card' ? 'Từ vựng' : `Ngữ pháp · ${item.level}`}
+                    </span>
+                    <div className="word-spelling">
+                      <strong lang="ja">
+                        {item.type === 'card' ? item.japanese : item.pattern}
+                      </strong>
+                      <small>
+                        {item.type === 'card' ? item.reading : item.title}
+                      </small>
+                    </div>
+                    <span className="item-meaning">
+                      {item.type === 'card' ? item.meaning : item.prompt}
+                    </span>
+                    <span className="word-status">
+                      <span className="tiny-dot" />
+                      {item.type === 'card'
+                        ? item.repetitions > 2
+                          ? 'Đã ghi nhớ'
+                          : 'Đang học'
+                        : item.lastCorrect
+                          ? 'Đã nắm vững'
+                          : 'Đang củng cố'}
+                    </span>
+                    {item.type === 'card' ? (
+                      <AudioButton text={item.japanese} />
+                    ) : (
+                      <Link
+                        to={`/grammar/${item.grammarId}`}
+                        className="icon-link-btn"
+                        title="Xem bài học ngữ pháp"
+                      >
+                        <ArrowUpRight size={15} />
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : data.recent.length ? (
+              <div className="consolidated-table">
                 {data.recent.map((c) => (
-                  <div className="word-row" key={c.id}>
+                  <div className="consolidated-row" key={c.id}>
+                    <span className="mixed-type-tag card">Từ vựng</span>
                     <div className="word-spelling">
                       <strong lang="ja">{c.japanese}</strong>
                       <small>{c.reading}</small>
                     </div>
-                    <span>{c.meaning}</span>
+                    <span className="item-meaning">{c.meaning}</span>
                     <span className="word-status">
                       <span className="tiny-dot" />
                       {c.repetitions > 2 ? 'Đã ghi nhớ' : 'Đang học'}
@@ -214,8 +283,22 @@ export function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="muted padded">Bắt đầu ôn thẻ để xem những từ đã học ở đây.</p>
+              <p className="muted padded">Bắt đầu ôn thẻ hoặc làm bài tập ngữ pháp để xem các mục đã học ở đây.</p>
             )}
+
+            <div className="consolidated-actions">
+              <Link className="button primary mixed-cta-btn" to="/review/consolidated">
+                <Sparkles size={16} />
+                Bắt đầu ôn tập tổng hợp
+                <ArrowRight size={16} />
+              </Link>
+              {(data.consolidatedReview?.dueCount ?? data.due) > 0 && (
+                <Link className="button secondary" to="/review/consolidated?mode=due">
+                  <RotateCcw size={15} />
+                  Ôn {data.consolidatedReview?.dueCount ?? data.due} mục đến hạn
+                </Link>
+              )}
+            </div>
           </section>
         </div>
         <div className="dashboard-aside">

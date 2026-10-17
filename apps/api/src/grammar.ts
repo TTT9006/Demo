@@ -13,7 +13,7 @@ export const normalizeGrammarAnswer = (s: string) =>
     .replace(/[\s。.!！?？、,]/g, '')
     .toLowerCase();
 const levelSchema = z.enum(['N5', 'N4', 'N3', 'N2', 'N1']);
-function publicQuestion({
+export function publicQuestion({
   answer: _answer,
   explanation: _explanation,
   acceptedAnswers: _accepted,

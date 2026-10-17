@@ -7,6 +7,44 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Bổ sung tính năng Ôn tập tổng hợp (Consolidated Review) thay thế ô Những từ đang quen dần trên trang Tổng quan — ngày 17/10
+
+- **Yêu cầu người dùng:** Thêm tính năng ôn tập tổng hợp cho các flash card và ngữ pháp đã ôn tập thay thế cho ô "Những từ đang quen dần" trong phần tổng quan (Dashboard).
+- **Thực hiện kỹ thuật:**
+  - **Backend (`apps/api/src/consolidated-review.ts`, `apps/api/src/app.ts`, `apps/api/src/grammar.ts`):**
+    - Xuất hàm `publicQuestion` từ `apps/api/src/grammar.ts` để tái sử dụng câu hỏi bài tập ngữ pháp mà không để lộ đáp án/giải thích trước khi người học trả lời.
+    - Tạo router mới `consolidatedReviewRouter` mounted tại `/api/review/consolidated`:
+      - Hỗ trợ 2 chế độ ôn tập: `mode=all` (ôn tập tự do tất cả các từ vựng và bài tập ngữ pháp đã học) và `mode=due` (chỉ lấy các thẻ và câu ngữ pháp đang đến hạn theo thuật toán SRS).
+      - Cơ chế trộn lẫn đan xen (interleaving): Tự động sắp xếp xen kẽ giữa thẻ từ vựng và câu hỏi ngữ pháp (`[Card, Grammar, Card, Grammar, ...]`), giúp người học củng cố phản xạ ngôn ngữ đa chiều và tăng cường khả năng nhớ lâu.
+      - Trả về metadata và bộ đếm tổng: `cardsReviewedCount`, `grammarPracticedCount`, `cardsDue`, `grammarDue`, `dueCount`.
+    - Tạo hàm `getConsolidatedOverview(userId)` và bổ sung trường `consolidatedReview` vào phản hồi của `GET /api/dashboard`. Giữ nguyên trường `recent` cũ để bảo đảm tính tương thích ngược hoàn hảo.
+  - **Frontend (`apps/web/src/pages/dashboard.tsx`, `apps/web/src/pages/consolidated-review.tsx`, `apps/web/src/app.tsx`, `apps/web/src/types.ts`):**
+    - **Dashboard (`apps/web/src/pages/dashboard.tsx`):**
+      - Thay thế hoàn toàn khối "Những từ đang quen dần" bằng bảng điều khiển **"Ôn tập tổng hợp"** (`.consolidated-panel`).
+      - Thanh thống kê nhanh (`.consolidated-quick-stats`): Hiển thị tổng số thẻ từ vựng đã ôn, câu ngữ pháp đã luyện, và số mục trong hàng đợi đến hạn / sẵn sàng ôn tự do.
+      - Bảng xem trước hỗn hợp (`.consolidated-table`): Hiển thị các mục đã ôn gần nhất với huy hiệu phân loại trực quan (`.mixed-type-tag.vocab` xanh ngọc cho từ vựng, `.mixed-type-tag.grammar` cam đất cho ngữ pháp kèm cấp độ JLPT), hiển thị chữ Hán, cách đọc / tên bài học, nghĩa / prompt, trạng thái ghi nhớ, nút phát âm cho thẻ và nút xem bài học cho ngữ pháp.
+      - Nút hành động nổi bật: Nút CTA lớn **"Bắt đầu ôn tập tổng hợp"** (kèm icon `Sparkles`) chuyển hướng vào luồng ôn tập tổng hợp, và nút phụ **"Ôn mục đến hạn"** khi có nội dung đến hạn.
+    - **Trang ôn tập tổng hợp (`apps/web/src/pages/consolidated-review.tsx`):**
+      - Định tuyến tại `/review/consolidated`.
+      - Hỗ trợ chuyển đổi chế độ tab: "Tất cả đã ôn (Tự do)" và "Mục đến hạn".
+      - Thanh tiến trình Modern Tactile với capsule progress bar và huy hiệu phân loại mục đang làm.
+      - Tích hợp linh hoạt 2 trải nghiệm học tập chuẩn mực:
+        - Với thẻ từ vựng: Tích hợp `ReviewCardInteractive` (hiệu ứng 3D Washi flip, vuốt kéo Tactile Swipe Nhớ/Quên, âm thanh phát âm, gọi `POST /api/flashcards/review` với `allowEarly: true` để dời lịch SRS).
+        - Với ngữ pháp: Tích hợp `GrammarExercise` (trắc nghiệm, điền khuyết, sắp xếp câu, giải thích và chấm điểm tức thời, gọi `POST /api/grammar/:id/exercise`).
+      - Màn hình tổng kết (Completion Screen): Thống kê độ chính xác tổng hợp (%), số thẻ từ vựng đã nhớ / cần ôn lại, số câu ngữ pháp đúng / sai, bảng nhật ký chi tiết từng mục trong lượt ôn và các nút điều hướng tiếp tục học.
+  - **Giao diện & Styling (`apps/web/src/styles.css`):**
+    - Bổ sung bộ quy tắc CSS hoàn chỉnh cho `.consolidated-panel`, `.consolidated-quick-stats`, `.mixed-type-tag`, `.consolidated-table`, `.consolidated-row`, `.consolidated-page`, `.completion-panel`, `.completion-stats-grid`, `.completion-log-table`.
+    - Tương thích 100% theme Sáng (Light) và Tối (Dark).
+    - Tương thích Responsive hoàn hảo trên mobile (320px, 390px, 768px, 1440px).
+- **Kiểm chứng & Bằng chứng:**
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm run lint`: 0 lỗi, 0 cảnh báo.
+  - `tests/api.test.ts`: Bổ sung kiểm thử `provides consolidated review queue and overview for reviewed cards and grammar` — 29/29 tests pass.
+  - Vitest toàn hệ thống: 116/116 tests qua trong cả 10 test suites (100%).
+  - `npm run build`: Build production Vite và esbuild hoàn tất thành công.
+- **Trạng thái Git:** Tự động commit theo quy ước dự án.
+- **Tập tin liên quan:** `apps/api/src/consolidated-review.ts`, `apps/api/src/app.ts`, `apps/api/src/grammar.ts`, `apps/api/src/dictionary.ts`, `apps/web/src/pages/dashboard.tsx`, `apps/web/src/pages/consolidated-review.tsx`, `apps/web/src/app.tsx`, `apps/web/src/types.ts`, `apps/web/src/styles.css`, `apps/web/src/components/review-card-interactive.tsx`, `apps/web/src/pages/login-review.tsx`, `tests/api.test.ts`, `docs/HANDOFF.md`.
+
 ## Loại bỏ thanh cuộn (rollbar/scrollbar) trên thẻ flashcard — ngày 16/10
 
 - **Yêu cầu người dùng:** Xóa thanh rollbar (scrollbar dọc hiển thị trên thẻ flashcard) xuất hiện ở phần flashcard sau khi vừa đăng nhập (màn hình ôn tập đầu ngày `login-review`).

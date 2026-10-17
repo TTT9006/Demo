@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { toRomaji } from 'wanakana';
 import { JapaneseAnnotatedText } from './japanese-annotated-text';
 import { AudioButton } from './ui';
-import { Check, X, RotateCcw } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 export interface InteractiveCardData {
   id: string;

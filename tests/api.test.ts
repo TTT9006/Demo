@@ -215,6 +215,22 @@ describe.sequential('Authenticated learning workflows', () => {
     await session.post('/api/grammar/desu/progress').send({ completed: true, bookmarked: true });
     expect((await session.get('/api/dashboard')).body.grammarCompleted).toBe(1);
   });
+  it('provides consolidated review queue and overview for reviewed cards and grammar', async () => {
+    const queue = await session.get('/api/review/consolidated').query({ mode: 'all' });
+    expect(queue.status).toBe(200);
+    expect(queue.body.items.length).toBeGreaterThanOrEqual(2);
+    expect(queue.body.items.some((i: { type: string }) => i.type === 'card')).toBe(true);
+    expect(queue.body.items.some((i: { type: string }) => i.type === 'grammar')).toBe(true);
+    expect(queue.body.totalCardsReviewed).toBeGreaterThanOrEqual(1);
+    expect(queue.body.totalGrammarPracticed).toBeGreaterThanOrEqual(1);
+
+    const dashboard = await session.get('/api/dashboard');
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.body.consolidatedReview).toBeDefined();
+    expect(dashboard.body.consolidatedReview.cardsReviewedCount).toBeGreaterThanOrEqual(1);
+    expect(dashboard.body.consolidatedReview.grammarPracticedCount).toBeGreaterThanOrEqual(1);
+    expect(dashboard.body.consolidatedReview.items.length).toBeGreaterThan(0);
+  });
   it('serves N5–N2 summaries without answer leakage and keeps old lesson links', async () => {
     const list = await session.get('/api/grammar');
     expect(list.status).toBe(200);
