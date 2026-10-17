@@ -90,11 +90,14 @@ export function QuestionInput({
     );
   if (q.options)
     return (
-      <div className="answer-options">
+      <div className="answer-options" role="radiogroup" aria-label="Các phương án trả lời">
         {q.options.map((o, i) => (
           <button
             key={o}
             type="button"
+            role="radio"
+            aria-checked={value === o}
+            aria-label={`Lựa chọn ${q.numbered ? i + 1 : String.fromCharCode(65 + i)}: ${o}`}
             disabled={disabled}
             className={value === o ? 'selected' : ''}
             onClick={() => onChange(o)}
@@ -318,7 +321,7 @@ export function Tests() {
               )}
               {r.audioUrl && (
                 <div className="jlpt-audio-player" style={{ marginBlock: '8px' }}>
-                  <audio controls src={r.audioUrl} className="jlpt-audio-element" />
+                  <audio controls preload="auto" src={r.audioUrl} className="jlpt-audio-element" />
                 </div>
               )}
               {r.passage && (

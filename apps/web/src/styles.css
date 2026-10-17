@@ -2828,6 +2828,33 @@ canvas {
 .auth-form label {
   font-size: 11px;
 }
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.password-input-wrap input {
+  width: 100%;
+  padding-right: 42px !important;
+}
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted, #718096);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+.password-toggle-btn:hover {
+  color: var(--ink, #2d3748);
+}
 .mobile-overlay {
   display: none;
 }

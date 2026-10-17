@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { post } from '../services/api';
 import { Button } from '../components/ui';
 const schema = z.object({
@@ -18,6 +18,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const client = useQueryClient();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register: field,
     handleSubmit,
@@ -94,12 +95,22 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             </label>
             <label>
               Mật khẩu
-              <input
-                {...field('password')}
-                type="password"
-                autoComplete={register ? 'new-password' : 'current-password'}
-                placeholder="Ít nhất 8 ký tự"
-              />
+              <div className="password-input-wrap">
+                <input
+                  {...field('password')}
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete={register ? 'new-password' : 'current-password'}
+                  placeholder="Ít nhất 8 ký tự"
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && <small className="error-text">{errors.password.message}</small>}
             </label>
             {error && (

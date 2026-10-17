@@ -520,7 +520,7 @@ export function JlptSession() {
                 )}
                 {q.audioUrl && (
                   <div className="jlpt-audio-player" style={{ marginBlock: '12px' }}>
-                    <audio controls src={q.audioUrl} className="jlpt-audio-element" />
+                    <audio controls preload="auto" src={q.audioUrl} className="jlpt-audio-element" />
                   </div>
                 )}
                 <p className="jlpt-passage" lang="ja">

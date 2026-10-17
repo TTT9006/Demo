@@ -172,6 +172,7 @@ app.post('/api/auth/demo', sensitive, async (_req, res) => {
     res.status(503).json({ error: 'Tài khoản mẫu cần được cấu hình quyền người dùng thường.' });
     return;
   }
+  if (user.defaultDeckVersion < 1) await ensureDefaultDecks(user.id);
   await session(res, user.id);
   res.json(safeUser(user));
 });

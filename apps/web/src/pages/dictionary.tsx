@@ -320,6 +320,9 @@ export function Dictionary() {
         >
           <Search size={24} />
           <input
+            type="search"
+            name="q"
+            data-testid="dictionary-search-input"
             autoFocus
             aria-label="Tìm từ trong từ điển"
             placeholder="Bạn muốn tìm từ gì?  例：勉強、taberu、học…"
@@ -356,7 +359,11 @@ export function Dictionary() {
             <p>Không có kết quả chính xác. Các từ gần giống dưới đây chỉ là gợi ý.</p>
           )}
           {results.isLoading ? (
-            <Loading />
+            <div data-testid="dictionary-skeleton-stack" className="loading-stack" aria-label="Đang tìm kiếm">
+              <div className="skeleton" style={{ height: '120px', borderRadius: '12px' }} />
+              <div className="skeleton" style={{ height: '120px', borderRadius: '12px' }} />
+              <div className="skeleton" style={{ height: '120px', borderRadius: '12px' }} />
+            </div>
           ) : results.error ? (
             <ErrorState error={results.error} retry={() => void results.refetch()} />
           ) : results.data?.items.length ? (

@@ -99,6 +99,8 @@ try {
         },
       });
       await ensureDefaultDecks(user.id);
+    } else if (existing.defaultDeckVersion < 1) {
+      await ensureDefaultDecks(existing.id);
     }
   }
 } catch (err) {
