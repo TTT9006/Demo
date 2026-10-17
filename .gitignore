@@ -13,3 +13,5 @@ playwright-report/
 .recovery/
 npm-audit.json
 .share/
+
+vibe-check/

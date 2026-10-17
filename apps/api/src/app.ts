@@ -30,7 +30,11 @@ declare global {
 export const app = express();
 app.disable('x-powered-by');
 // Only enable for the local Cloudflare connector used by the sharing script.
-if (process.env.TRUST_PROXY_LOOPBACK === '1') app.set('trust proxy', 'loopback');
+if (process.env.RENDER || process.env.TRUST_PROXY === '1') {
+  app.set('trust proxy', 1);
+} else if (process.env.TRUST_PROXY_LOOPBACK === '1') {
+  app.set('trust proxy', 'loopback');
+}
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 const CSP_POLICY = [
