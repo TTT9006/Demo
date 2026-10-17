@@ -1,4 +1,7 @@
 import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { Prisma } from '@prisma/client';
 import { toHiragana } from 'wanakana';
 import {
@@ -379,3 +382,114 @@ export async function searchDictionary(query: string, page = 1, limit = 15) {
     limit,
   };
 }
+
+const defaultTranslations: Record<string, string[]> = {
+  '1169870': ['uống', 'nuốt', 'uống (thuốc)'],
+  '1175140': ['ga đường sắt', 'ga tàu'],
+  '1191730': ['nhà', 'nơi cư trú', 'chỗ ở', 'nhà'],
+  '1194500': ['hoa', 'hoa nở', 'bông hoa', 'cánh hoa'],
+  '1206730': ['trường học'],
+  '1206900': ['sinh viên (đặc biệt là sinh viên đại học)'],
+  '1207240': ['thú vị', 'vui', 'dễ chịu', 'hạnh phúc', 'vui thích'],
+  '1258330': ['chó', 'loài chó'],
+  '1259290': ['thấy', 'nhìn', 'xem', 'ngắm', 'quan sát'],
+  '1265070': ['cũ', 'lâu đời', 'cổ xưa', 'lỗi thời', 'cổ', 'cũ kỹ'],
+  '1289400': ['xin chào', 'chào ban ngày', 'chào buổi chiều'],
+  '1302680': ['núi', 'đồi'],
+  '1315920': ['thời gian'],
+  '1343950': ['viết', 'soạn', 'viết'],
+  '1347750': ['nhỏ', 'bé', 'tí hon'],
+  '1358280': ['ăn'],
+  '1361490': ['mới', 'mới lạ', 'mới', 'gần đây', 'mới nhất', 'cập nhật', 'hiện đại'],
+  '1371260': ['nước (đặc biệt là nước mát hoặc lạnh)'],
+  '1387990': ['giáo viên', 'người hướng dẫn', 'thầy'],
+  '1390020': ['sông', 'suối'],
+  '1428280': ['buổi sáng'],
+  '1443530': ['tàu hỏa', 'tàu điện'],
+  '1456360': ['đọc'],
+  '1464530': ['tiếng Nhật'],
+  '1467640': ['mèo (đặc biệt là mèo nhà)', 'loài mèo'],
+  '1486360': ['đẹp', 'xinh', 'đáng yêu', 'dịu dàng', 'trong sáng (tâm hồn, tình bạn…)'],
+  '1512670': ['học tập'],
+  '1536350': ['đêm', 'buổi tối'],
+  '1540170': ['bạn bè', 'bạn đồng hành'],
+  '1547720': ['đến (về không gian hoặc thời gian)', 'tiến lại gần', 'đến nơi'],
+  '1578850': ['đi', 'di chuyển (về phía)', 'hướng đến', 'khởi hành (đến)'],
+  '1579110': ['hôm nay', 'ngày này'],
+  '1579260': ['hôm qua'],
+  '1582710': ['Nhật Bản'],
+  '1584660': ['ngày mai'],
+  '1586820': ['cảm ơn', 'cảm ơn'],
+  '1588880': ['to', 'lớn', 'lớn lao'],
+  '1591110': ['nghe'],
+  '1593710': ['cây anh đào', 'hoa anh đào', 'sakura'],
+};
+
+export async function ensureDictionaryContent() {
+  const count = await db.dictionaryEntry.count();
+  if (count > 0) return;
+  console.log('Chưa có dữ liệu từ điển. Đang tự động nạp từ điển cơ bản...');
+  try {
+    let fixture: { version: string; source: string; words: SourceWord[] } | undefined;
+    const paths = [
+      path.resolve('data/processed/fixture.json'),
+      path.resolve(process.cwd(), 'data/processed/fixture.json'),
+    ];
+    for (const p of paths) {
+      if (existsSync(p)) {
+        try {
+          fixture = JSON.parse(await readFile(p, 'utf8'));
+          break;
+        } catch {
+          // ignore
+        }
+      }
+    }
+    if (!fixture || !fixture.words) {
+      console.warn('Không tìm thấy tệp fixture từ điển tại:', paths);
+      return;
+    }
+
+    for (const w of fixture.words) {
+      await importWord(w, fixture.version);
+      const vi = defaultTranslations[w.id];
+      if (vi) {
+        const senses = await db.dictionarySense.findMany({
+          where: { entryId: w.id, senseIndex: 0 },
+          include: { glosses: { orderBy: { glossIndex: 'asc' } } },
+        });
+        for (const g of senses[0]?.glosses || []) {
+          if (!vi[g.glossIndex]) continue;
+          await db.dictionaryTranslation.upsert({
+            where: { glossId: g.id },
+            create: {
+              glossId: g.id,
+              translatedText: vi[g.glossIndex],
+              provider: 'curated-fixture',
+              model: 'sample-v1',
+              sourceHash: g.sourceHash,
+              reviewedAt: new Date(),
+            },
+            update: {},
+          });
+        }
+      }
+      await indexEntry(w.id);
+    }
+    if (!(await db.dictionaryImport.findFirst())) {
+      await db.dictionaryImport.create({
+        data: {
+          version: fixture.version,
+          source: fixture.source,
+          checksum: 'fixture: official 40-entry excerpt',
+          count: fixture.words.length,
+          status: 'sample',
+        },
+      });
+    }
+    console.log(`Đã nạp thành công ${fixture.words.length} mục từ điển cơ bản kèm bản dịch tiếng Việt.`);
+  } catch (err) {
+    console.error('Lỗi khi nạp dữ liệu từ điển cơ bản:', err);
+  }
+}
+

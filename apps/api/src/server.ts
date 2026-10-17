@@ -1,6 +1,6 @@
 import { app } from './app';
 import { db, ensureDatabaseSchema } from './db';
-import { initSearch, recoverSearchIndex } from './dictionary';
+import { initSearch, recoverSearchIndex, ensureDictionaryContent } from './dictionary';
 import { syncGrammarContent } from './grammar';
 import { ensureDefaultDecks } from './default-decks';
 import bcrypt from 'bcryptjs';
@@ -14,6 +14,7 @@ try {
 await initSearch();
 await recoverSearchIndex();
 await syncGrammarContent();
+await ensureDictionaryContent();
 
 // Danh sách tài khoản luôn được đảm bảo khởi tạo khi server khởi động (chống mất tài khoản khi Render tắt web/redeploy)
 const PERSISTENT_USERS = [
