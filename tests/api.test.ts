@@ -33,6 +33,16 @@ afterAll(async () => {
   await db?.$disconnect();
 });
 describe.sequential('Authenticated learning workflows', () => {
+  it('enforces all required security headers (CSP, HSTS, XFO, nosniff, Referrer-Policy)', async () => {
+    const res = await request(app).get('/api/health');
+    expect(res.headers['content-security-policy']).toContain("default-src 'self'");
+    expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
+    expect(res.headers['content-security-policy']).toContain("object-src 'none'");
+    expect(res.headers['x-frame-options']).toBe('DENY');
+    expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['strict-transport-security']).toBe('max-age=31536000; includeSubDomains');
+    expect(res.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+  });
   it('protects personal data', async () => {
     expect((await request(app).get('/api/dashboard')).status).toBe(401);
   });
