@@ -4,13 +4,12 @@ WORKDIR /app
 # Install openssl and certificates required by Prisma on Debian
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Install all dependencies
+# Copy package manifests and Prisma schema before install
 COPY package*.json ./
-RUN npm ci
-
-# Generate Prisma client
 COPY prisma ./prisma
-RUN npx prisma generate
+
+# Install all dependencies (will trigger postinstall: prisma generate)
+RUN npm ci
 
 # Copy source and build web + server bundle
 COPY . .
