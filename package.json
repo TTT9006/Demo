@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n API,WEB \"tsx watch apps/api/src/server.ts\" \"vite --host 127.0.0.1\"",
-    "build": "tsc --noEmit && vite build && esbuild apps/api/src/server.ts --platform=node --packages=external --format=esm --bundle --outfile=dist-api/server.js",
+    "build": "tsc --noEmit && vite build && esbuild apps/api/src/server.ts --platform=node --packages=external --format=esm --bundle --outfile=dist-api/server.js && tsx scripts/ensure-full-dictionary.ts",
     "postinstall": "prisma generate",
     "start": "tsx scripts/start.ts",
     "share": "npm run build && tsx scripts/share.ts",
