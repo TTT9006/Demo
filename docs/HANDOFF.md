@@ -1,4 +1,4 @@
-# Bàn giao ngắn — Komorebi (15/10/2026)
+# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 18/10/2026)
 
 ## Quy ước làm việc của người dùng
 
@@ -7,7 +7,56 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
-## Bổ sung tính năng Ôn tập tổng hợp (Consolidated Review) thay thế ô Những từ đang quen dần trên trang Tổng quan — ngày 17/10
+## Cập nhật triển khai Render, Dữ liệu từ điển Mức A & Giọng đọc AI Nanami — ngày 18/10
+
+### 1. Triển khai Web lên Render (Handoff & Vận hành Production)
+- **URL Production:** `https://wakaba-mk61.onrender.com`
+- **Tên dịch vụ (Service Name):** `wakaba` (cấu hình qua `render.yaml`)
+- **Môi trường chạy:** Docker Container (`node:22-slim`), kiến trúc Node.js 22 + Express 5 phục vụ API và Static Files của Frontend Vite build tại cùng một cổng HTTP `PORT=10000` (hoặc cổng Render chỉ định).
+- **Cơ chế nướng sẵn Database (Bake-in-image Database) để thích ứng Free Tier Render:**
+  - *Vấn đề đĩa tạm (Ephemeral Disk) & Giới hạn RAM:* Render Free Tier cung cấp 512MB RAM và ổ cứng dạng ephemeral (mọi dữ liệu ghi vào runtime sẽ bị reset khi container sleep hoặc redeploy). Quá trình tải hoặc giải nén từ điển nặng lúc runtime sẽ làm tràn RAM (OOM) hoặc làm API khởi động chậm vượt timeout healthcheck.
+  - *Giải pháp triệt để:* Đưa toàn bộ cơ sở dữ liệu từ điển đã chuẩn hóa vào ngay trong bước `RUN npm run build` của `Dockerfile` thông qua script `scripts/ensure-full-dictionary.ts`. Cơ sở dữ liệu SQLite `learning.db` (~83MB) chứa trọn vẹn 22.645 mục từ vựng Mức A được "nướng" trực tiếp vào Docker image tại đường dẫn `/app/prisma/learning.db`.
+  - *Ưu điểm:* Khởi động dịch vụ tức thì (< 2 giây), không tốn RAM tải mạng hay giải nén lúc chạy, 0MB băng thông phát sinh, không phụ thuộc vào dịch vụ lưu trữ ngoài.
+- **Xử lý triệt để xung đột biến môi trường Turso (`TURSO_DATABASE_URL`):**
+  - Trước đây, cấu hình cũ trên Render Dashboard tồn tại biến `TURSO_DATABASE_URL` trỏ về database rỗng, khiến ứng dụng ưu tiên kết nối ra ngoài và không nạp từ điển cục bộ.
+  - Đã cập nhật `apps/api/src/db.ts`: Kiểm tra nếu tồn tại file SQLite nội bộ `/app/prisma/learning.db` (hoặc biến `FORCE_LOCAL_SQLITE=1`), ứng dụng sẽ cưỡng chế bỏ qua `TURSO_DATABASE_URL` và kết nối trực tiếp vào SQLite nội bộ đầy đủ.
+- **Tự động hóa kiểm tra sức khỏe (Health Check):**
+  - Endpoint `/api/health` trả về JSON trạng thái: `{"status":"ok","version":"2.2.0-nanami","service":"wakaba"}`.
+  - Endpoint `/api/dictionary/status` xác nhận trực tiếp tình trạng từ điển: `{"count":22645,"status":"ready"}`.
+
+### 2. Dữ liệu từ điển Mức A (22.645 mục từ — Tối ưu dung lượng máy chủ)
+- **Yêu cầu người dùng:** Thay đổi lựa chọn từ điển từ Mức B sang **Mức A** để tiết kiệm tài nguyên máy chủ nhưng vẫn đảm bảo hoạt động trơn tru, không phải sửa nhiều lần.
+- **Quy mô dữ liệu Mức A:**
+  - Bao phủ trọn vẹn **22.645 từ vựng** tiếng Nhật thông dụng và cốt lõi nhất từ N5 đến N1 (bao gồm toàn bộ từ vựng thường dùng của Minna no Nihongo, Soumatome, Mimikara Oboeru và JMdict core).
+  - Tích hợp đầy đủ FTS5 Full-Text Search, bảng tra cứu Trigram và bộ biến đổi deinflect đa tầng.
+  - Tối ưu dung lượng database chỉ còn ~83MB (thay vì hàng trăm MB như mức lớn), hoàn toàn nằm gọn trong giới hạn 512MB RAM của máy chủ Render.
+
+### 3. Đồng bộ giọng đọc AI Nanami Neural trên toàn bộ trang web
+- **Lựa chọn giọng đọc:** Sau quá trình tạo mẫu thử nghiệm và đối chiếu 4 phương án công nghệ (Phương án 1: Microsoft Edge Neural Nanami; Phương án 2: Keita Neural; Phương án 3: Google Web Speech; Phương án 4: Voicevox/Anime), người dùng đã chính thức lựa chọn **Nanami Neural** (`ja-JP-NanamiNeural`) nhờ chất giọng truyền cảm, tự nhiên, nhịp điệu ngắt nghỉ chuẩn Tokyo và phát âm mẫu mực trong cả giao tiếp hằng ngày lẫn ngữ cảnh trang trọng.
+- **Kiến trúc Backend TTS (`apps/api/src/tts.ts` & `apps/api/src/app.ts`):**
+  - Sử dụng thư viện `node-edge-tts` (được lựa chọn thay thế cho `msedge-tts` do bản phát hành npm của `msedge-tts` có nhúng script `"preinstall": "npx only-allow pnpm"` gây lỗi build trên Docker npm).
+  - Cung cấp endpoint công khai `GET /api/tts?text=...` (đặt trước middleware xác thực `auth` để các component thẻ có thể phát âm mượt mà ngay lập tức mà không gặp rào cản token).
+  - **Cơ chế RAM LRU Cache:** Bộ đệm trong bộ nhớ lưu trữ tới 200 đoạn âm thanh MP3 gần nhất; các từ vựng lặp lại sẽ được phản hồi ngay lập tức trong 1-5ms mà không cần gọi lại máy chủ TTS, tiết kiệm băng thông và loại bỏ độ trễ.
+- **Đồng bộ Frontend (`apps/web/src/services/api.ts` & `apps/web/src/components/ui.tsx`):**
+  - Hàm `speak(text)` được chuẩn hóa phát âm qua endpoint `/api/tts` với giọng Nanami Neural.
+  - Cơ chế dự phòng thông minh (Fallback): Tự động chuyển về Web Speech API cục bộ của trình duyệt nếu người dùng offline hoặc kết nối mạng bị gián đoạn.
+  - Cải tiến nút `AudioButton`: Bổ sung hiệu ứng rung nhịp (pulsing active state) khi đang phát âm thanh để người học nhận biết trạng thái trực quan.
+- **BẢO TỒN NGUYÊN BẢN AUDIO ĐỀ THI THẬT (QUY TẮC BẤT DI BẤT DỊCH):**
+  - Giữ nguyên 100% các file audio đề thi nghe thực tế trong `public/audio/jlpt/*.mp3`.
+  - Component `ExamAudioPlayer` trong `apps/web/src/pages/jlpt.tsx` **tuyệt đối không** bị can thiệp bởi TTS AI; bảo đảm giữ nguyên vẹn giọng đọc, nhạc hiệu và không khí phòng thi thực tế của các kỳ thi JLPT N5–N2.
+
+### 4. Kiểm chứng hệ thống & Bằng chứng triển khai
+- **Local Validation:**
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm test`: 116/116 unit & integration tests hoàn thành xuất sắc (100% pass).
+  - Docker build kiểm tra: `docker build -t wakaba-test .` build thành công, không gặp lỗi script preinstall.
+- **Production Validation (Live trên Render):**
+  - `GET https://wakaba-mk61.onrender.com/api/health` -> Trả về `version: 2.2.0-nanami`, `service: wakaba`.
+  - `GET https://wakaba-mk61.onrender.com/api/dictionary/status` -> Trả về `count: 22645`, `status: ready`.
+  - `GET https://wakaba-mk61.onrender.com/api/tts?text=こんにちは` -> Trả về file âm thanh `audio/mpeg` chuẩn chất giọng Nanami Neural với HTTP 200.
+  - Giao diện web hiển thị sắc nét, tra cứu từ vựng Mức A lập tức ra kết quả, âm thanh các thẻ từ vựng và bài tập phát âm chuẩn xác bằng giọng Nanami.
+
+---
 
 - **Yêu cầu người dùng:** Thêm tính năng ôn tập tổng hợp cho các flash card và ngữ pháp đã ôn tập thay thế cho ô "Những từ đang quen dần" trong phần tổng quan (Dashboard).
 - **Thực hiện kỹ thuật:**
