@@ -429,7 +429,7 @@ import defaultDictionary from './default-dictionary.json';
 
 export async function ensureDictionaryContent() {
   const count = await db.dictionaryEntry.count();
-  if (count >= 100000) return;
+  if (count >= 20000) return;
   console.log(`Từ điển hiện có ${count} từ. Đang kiểm tra và chuẩn bị dữ liệu từ điển...`);
 
   // Nếu đang chạy SQLite cục bộ và chưa có từ điển nào
@@ -449,12 +449,12 @@ export async function ensureDictionaryContent() {
     }
   }
 
-  // Tự động kiểm tra và nâng cấp lên toàn bộ 218.863 từ (Mức B)
+  // Tự động kiểm tra và đảm bảo nạp đủ 22.645 từ thông dụng N5-N1 (Mức A)
   try {
     const { ensureFullDictionary } = await import('../../../scripts/ensure-full-dictionary');
     await ensureFullDictionary();
   } catch (fullErr) {
-    console.warn('Không thể nạp toàn bộ từ điển JMdict trong runtime:', fullErr);
+    console.warn('Không thể nạp từ điển JMdict trong runtime:', fullErr);
   }
 }
 

@@ -14,8 +14,8 @@ import { createBatchImporter } from './import-batch';
 
 const file = 'data/raw/jmdict.json';
 
-async function downloadJmdict(): Promise<string> {
-  console.log('Đang kiểm tra bản phát hành JMdict mới nhất từ GitHub...');
+async function downloadCommonJmdict(): Promise<string> {
+  console.log('Đang kiểm tra bản phát hành JMdict Common mới nhất từ GitHub...');
   const res = await fetch(
     'https://api.github.com/repos/scriptin/jmdict-simplified/releases/latest',
     { headers: { 'User-Agent': 'Wakaba-dictionary-builder' } },
@@ -26,22 +26,22 @@ async function downloadJmdict(): Promise<string> {
     assets: { name: string; browser_download_url: string; digest?: string }[];
   };
 
+  // Ưu tiên tải bản jmdict-eng-common (~1.4 MB) - Mức A: 22.645 từ thông dụng N5-N1
   const asset = release.assets.find(
     (a) =>
-      a.name.startsWith('jmdict-eng-') &&
-      !a.name.includes('common') &&
+      a.name.startsWith('jmdict-eng-common-') &&
       !a.name.includes('examp') &&
       (a.name.endsWith('.json.tgz') || a.name.endsWith('.json.gz')),
   );
 
   if (!asset) {
-    throw new Error('Không tìm thấy tệp từ điển JMdict trong release');
+    throw new Error('Không tìm thấy tệp từ điển JMdict Common trong release');
   }
 
   await mkdir('data/raw', { recursive: true });
   const archive = 'data/raw/' + asset.name;
 
-  console.log(`Đang tải từ điển JMdict (${asset.name})...`);
+  console.log(`Đang tải từ điển JMdict Common (${asset.name})...`);
   const downloadRes = await fetch(asset.browser_download_url);
   if (!downloadRes.ok || !downloadRes.body) {
     throw new Error(`Lỗi tải file: ${downloadRes.status}`);
@@ -62,12 +62,11 @@ async function downloadJmdict(): Promise<string> {
     try {
       execFileSync('tar', ['-xzf', archive, '-C', 'data/raw']);
     } catch {
-      // Fallback for Windows without tar
       execFileSync('tar.exe', ['-xzf', archive, '-C', 'data/raw']);
     }
     const { readdir, rename } = await import('node:fs/promises');
     const name = (await readdir('data/raw')).find(
-      (n) => n.startsWith('jmdict-eng-') && n.endsWith('.json'),
+      (n) => n.startsWith('jmdict-eng-common-') && n.endsWith('.json'),
     );
     if (!name) throw new Error('Không tìm thấy tệp JSON sau khi giải nén archive');
     await rename('data/raw/' + name, file);
@@ -88,7 +87,6 @@ async function downloadJmdict(): Promise<string> {
     ),
   );
 
-  // Xóa archive nén sau khi giải nén để tiết kiệm ổ đĩa
   await rm(archive, { force: true });
   return release.tag_name;
 }
@@ -104,16 +102,17 @@ export async function ensureFullDictionary() {
     count = 0;
   }
 
-  if (count >= 100000) {
-    console.log(`✓ Đã có sẵn ${count} từ vựng trong từ điển. Bỏ qua nạp lại.`);
+  // Mức A: Nếu đã có >= 20.000 từ vựng thông dụng thì coi như hoàn tất
+  if (count >= 20000) {
+    console.log(`✓ Đã có sẵn ${count} từ vựng trong từ điển (Mức A). Bỏ qua nạp lại.`);
     return;
   }
 
-  console.log(`Từ điển hiện có ${count} từ. Bắt đầu nạp toàn bộ 218.863 từ vựng (Mức B)...`);
+  console.log(`Từ điển hiện có ${count} từ. Bắt đầu nạp ~22.645 từ thông dụng N5-N1 (Mức A - Tiết kiệm dung lượng)...`);
 
   let version = '3.6.2';
   if (!existsSync(file)) {
-    version = await downloadJmdict();
+    version = await downloadCommonJmdict();
   } else if (existsSync(file + '.metadata.json')) {
     try {
       const meta = JSON.parse(await readFile(file + '.metadata.json', 'utf8'));
@@ -141,7 +140,7 @@ export async function ensureFullDictionary() {
       importer.write(batch);
       importedCount += batch.length;
       batch = [];
-      if (importedCount % 25000 === 0) {
+      if (importedCount % 5000 === 0) {
         const elapsed = ((Date.now() - start) / 1000).toFixed(1);
         console.log(`Đã nhập: ${importedCount} từ (${elapsed}s)...`);
       }
@@ -155,9 +154,9 @@ export async function ensureFullDictionary() {
 
   importer.close();
   const totalElapsed = ((Date.now() - start) / 1000).toFixed(1);
-  console.log(`✓ Đã nạp thành công toàn bộ ${importedCount} từ vựng vào từ điển trong ${totalElapsed}s!`);
+  console.log(`✓ Đã nạp thành công ${importedCount} từ vựng thông dụng N5-N1 trong ${totalElapsed}s!`);
 
-  // Xóa tệp JSON thô để tiết kiệm dung lượng ổ đĩa
+  // Xóa tệp JSON thô để tiết kiệm dung lượng ổ đĩa tối đa cho server
   await rm('data/raw', { recursive: true, force: true });
 }
 
@@ -165,7 +164,7 @@ if (process.argv[1] && process.argv[1].includes('ensure-full-dictionary')) {
   ensureFullDictionary()
     .then(() => process.exit(0))
     .catch((err) => {
-      console.error('Lỗi khi nạp toàn bộ từ điển:', err);
+      console.error('Lỗi khi nạp từ điển:', err);
       process.exit(1);
     });
 }
