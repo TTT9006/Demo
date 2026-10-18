@@ -17,7 +17,7 @@ import { db } from './db';
 import { annotate } from './annotation';
 import { kanjiData, kanjiStrokes } from './kanji';
 import { ensureDefaultDecks } from './default-decks';
-import { dictionaryStatus, entryInclude, searchDictionary } from './dictionary';
+import { dictionaryStatus, entryInclude, searchDictionary, ensureDictionaryContent } from './dictionary';
 import { schedule } from '../../../packages/shared/srs';
 import { testDefinitions, type Exercise } from '../../../packages/shared/content';
 declare global {
@@ -366,7 +366,11 @@ app.get('/api/dashboard', async (_req, res) => {
   });
 });
 app.get('/api/dictionary/status', async (_req, res) => {
-  const s = await dictionaryStatus();
+  let s = await dictionaryStatus();
+  if (s.entries === 0) {
+    await ensureDictionaryContent();
+    s = await dictionaryStatus();
+  }
   res.json({ ...s, jobs: undefined });
 });
 const searchParams = z.object({
@@ -376,7 +380,12 @@ const searchParams = z.object({
 });
 app.get('/api/dictionary/search', async (req, res) => {
   const p = searchParams.parse(req.query);
-  res.json(await searchDictionary(p.q, p.page, p.limit));
+  let result = await searchDictionary(p.q, p.page, p.limit);
+  if (result.total === 0 && (await db.dictionaryEntry.count()) === 0) {
+    await ensureDictionaryContent();
+    result = await searchDictionary(p.q, p.page, p.limit);
+  }
+  res.json(result);
 });
 app.get('/api/dictionary/suggestions', async (req, res) => {
   const { q } = searchParams.parse(req.query);

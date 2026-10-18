@@ -425,33 +425,22 @@ const defaultTranslations: Record<string, string[]> = {
   '1593710': ['cây anh đào', 'hoa anh đào', 'sakura'],
 };
 
+import defaultDictionary from './default-dictionary.json';
+
 export async function ensureDictionaryContent() {
   const count = await db.dictionaryEntry.count();
   if (count > 0) return;
   console.log('Chưa có dữ liệu từ điển. Đang tự động nạp từ điển cơ bản...');
   try {
-    let fixture: { version: string; source: string; words: SourceWord[] } | undefined;
-    const paths = [
-      path.resolve('data/processed/fixture.json'),
-      path.resolve(process.cwd(), 'data/processed/fixture.json'),
-    ];
-    for (const p of paths) {
-      if (existsSync(p)) {
-        try {
-          fixture = JSON.parse(await readFile(p, 'utf8'));
-          break;
-        } catch {
-          // ignore
-        }
-      }
-    }
-    if (!fixture || !fixture.words) {
-      console.warn('Không tìm thấy tệp fixture từ điển tại:', paths);
+    const fixture = defaultDictionary as { version: string; words: SourceWord[] };
+    if (!fixture || !fixture.words || !fixture.words.length) {
+      console.warn('Không có dữ liệu từ điển mặc định');
       return;
     }
 
+    const version = fixture.version || '3.6.2';
     for (const w of fixture.words) {
-      await importWord(w, fixture.version);
+      await importWord(w, version);
       const vi = defaultTranslations[w.id];
       if (vi) {
         const senses = await db.dictionarySense.findMany({
@@ -479,17 +468,18 @@ export async function ensureDictionaryContent() {
     if (!(await db.dictionaryImport.findFirst())) {
       await db.dictionaryImport.create({
         data: {
-          version: fixture.version,
-          source: fixture.source,
-          checksum: 'fixture: official 40-entry excerpt',
+          version,
+          source: 'https://github.com/scriptin/jmdict-simplified',
+          checksum: `bundled: ${fixture.words.length} core vocabulary entries`,
           count: fixture.words.length,
           status: 'sample',
         },
       });
     }
-    console.log(`Đã nạp thành công ${fixture.words.length} mục từ điển cơ bản kèm bản dịch tiếng Việt.`);
+    console.log(`Đã nạp thành công ${fixture.words.length} mục từ điển cơ bản kèm chỉ mục tìm kiếm.`);
   } catch (err) {
     console.error('Lỗi khi nạp dữ liệu từ điển cơ bản:', err);
   }
 }
+
 
