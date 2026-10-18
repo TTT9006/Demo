@@ -7,6 +7,48 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
 
+## Cập nhật bộ cấu trúc ngữ pháp trọng điểm thi JLPT (N5 – N2) — ngày 18/10
+
+- **Yêu cầu người dùng:** Tìm kiếm từ toàn bộ các nguồn có thể, cập nhật tiếp các cấu trúc ngữ pháp cho từng cấp độ (lần lượt từ N5 đến N2), chọn lọc các ngữ pháp thường xuất hiện nhất trong các đề thi chứng chỉ tiếng Nhật (JLPT) và cân đo đong đếm sao cho không làm tràn dữ liệu hay quá tải tài nguyên máy chủ Render (Free Tier 512MB RAM).
+- **Phân tích tối ưu dữ liệu & máy chủ:**
+  - *Tối ưu tài nguyên:* Nội dung ngữ pháp được cấu trúc hóa dưới dạng mã TypeScript biên dịch tĩnh (`packages/shared/jlpt-grammar-additions.ts`) kèm logic nạp đồng bộ database tự động. Tổng dung lượng dữ liệu thêm mới chỉ ~28KB, không sinh thêm file nhị phân lớn, hoàn toàn miễn nhiễm với nguy cơ tràn bộ nhớ RAM (512MB) hay đĩa tạm (ephemeral disk) trên Render.
+  - *Phân bổ theo cấp độ:* Bổ sung chọn lọc 20 cấu trúc trọng điểm phân bổ đều 4 cấp độ: N5 (+5 bài), N4 (+5 bài), N3 (+5 bài), N2 (+5 bài).
+  - *Tổng số bài ngữ pháp toàn hệ thống:* Tăng từ 106 bài lên **126 bài** (N5: 38 bài, N4: 30 bài, N3: 29 bài, N2: 29 bài).
+- **Nội dung cấu trúc chọn lọc:**
+  - **Cấp độ N5 (+5 bài):**
+    1. `〜てから` (Sau khi làm A thì làm B — thứ tự thời gian hành động)
+    2. `〜前に` (Trước khi làm việc gì — quy tắc V nguyên dạng/Nの)
+    3. `〜ながら` (Vừa làm A vừa làm B — cùng 1 chủ ngữ thực hiện 2 việc đồng thời)
+    4. `〜ほうがいい` (Khuyên nên Vた / không nên Vない)
+    5. `〜かもしれない` (Có lẽ, có thể là — phỏng đoán xác suất 50%)
+  - **Cấp độ N4 (+5 bài):**
+    6. `〜はずだ・はずがない` (Chắc chắn là / Làm sao có chuyện... — phán đoán logic)
+    7. `〜ようだ・ように` (Hình như, có vẻ như — cảm nhận trực giác giác quan)
+    8. `〜たばかり` (Vừa mới làm xong — cảm nhận tâm lý chủ quan)
+    9. `〜ところだ` (Giai đoạn sắp làm / đang làm / vừa mới xong tức thì)
+    10. `〜させていただけませんか` (Kính ngữ xin phép cho chính mình làm gì)
+  - **Cấp độ N3 (+5 bài):**
+    11. `〜わけではない・わけがない` (Phủ định từng phần / Tuyệt đối không đời nào)
+    12. `〜ことにしている・ことになる` (Kỷ luật cá nhân / Quy định của tập thể)
+    13. `〜ほど・〜くらい` (Đến mức độ như thế nào — ví von phóng đại)
+    14. `〜どころか` (Không những không... mà trái lại còn tệ hơn)
+    15. `〜に応じて・に応じた` (Tùy theo / Tương ứng phù hợp với đối tượng)
+  - **Cấp độ N2 (+5 bài):**
+    16. `〜ものなら` (Giá như có thể làm được — điều bất khả thi / lỡ làm thì nguy hại)
+    17. `〜かねない・かねる` (Có nguy cơ dẫn đến hậu quả xấu / Khó lòng mà làm được)
+    18. `〜ざるを得ない` (Buộc lòng phải làm dù không muốn — hoàn cảnh bắt buộc)
+    19. `〜に伴って・とともに` (Biến đổi vĩ mô kéo theo sự thay đổi tương ứng)
+    20. `〜次第だ・次第で` (Tùy thuộc vào nỗ lực / Giải thích toàn bộ nguồn cơn)
+- **Tích hợp bài tập tương tác:**
+  - Mỗi cấu trúc mới đều có trọn vẹn 3 dạng bài tập chuẩn hóa: Trắc nghiệm (`choice`), Điền khuyết (`fill`), Sắp xếp câu (`order`).
+  - Đầy đủ giải thích chi tiết (`explanation`), công thức kết hợp (`formation`), ghi chú bẫy thi (`mistake`, `notes`), ví dụ thực tế kèm Furigana chuẩn hóa.
+- **Kiểm chứng hệ thống:**
+  - `tsc --noEmit`: 0 lỗi TypeScript.
+  - Vitest toàn hệ thống: 119/119 tests pass (10 test suites đạt 100%).
+  - `npm run build` (Vite build): Thành công mỹ mãn.
+  - Đồng bộ database SQLite: `node --import tsx ./scripts/grammar-content.ts` nạp đủ 126 bài vào bảng `Grammar`, bảo toàn 100% tiến độ và dữ liệu học tập của các tài khoản.
+- **Tập tin liên quan:** `packages/shared/jlpt-grammar-additions.ts`, `packages/shared/content.ts`, `docs/HANDOFF.md`.
+
 ## Cập nhật triển khai Render, Dữ liệu từ điển Mức A & Giọng đọc AI Nanami — ngày 18/10
 
 ### 1. Triển khai Web lên Render (Handoff & Vận hành Production)

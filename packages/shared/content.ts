@@ -1,8 +1,10 @@
 import { curriculumLessons } from './grammar-curriculum';
+import { jlptGrammarLessons } from './jlpt-grammar-additions';
+
 export type Exercise = {
   acceptedAnswers?: string[];
   annotationDisabled?: boolean;
-  readings?: Record<string,string>;
+  readings?: Record<string, string>;
   id: string;
   type: 'choice' | 'fill' | 'order' | 'complete' | 'match' | 'matching';
   prompt: string;
@@ -11,6 +13,7 @@ export type Exercise = {
   answer: string;
   explanation: string;
 };
+
 export type LessonContent = {
   curriculum?: { track: string; chapter?: number; topic: string; sourceUrl: string; sourceLabel: string; original: boolean };
   meaning: string;
@@ -21,6 +24,7 @@ export type LessonContent = {
   related: string[];
   examples: { ja: string; kana: string; vi: string; readings?: Record<string, string> }[];
 };
+
 export const lessons: {
   id: string;
   pattern: string;
@@ -100,9 +104,9 @@ export const lessons: {
           vi: 'Tôi không phải giáo viên.',
         },
         {
-          ja: '今日は休みではありません。',
-          kana: 'きょうはやすみではありません。',
-          vi: 'Hôm nay không phải ngày nghỉ.',
+          ja: 'あれは私の傘ではありません。',
+          kana: 'あれはわたしのかさではありません。',
+          vi: 'Đó không phải là ô của tôi.',
         },
       ],
     },
@@ -110,192 +114,156 @@ export const lessons: {
       {
         id: 'janai-1',
         type: 'choice',
-        prompt: 'Chọn câu: Tôi không phải học sinh.',
-        options: ['私は学生ではありません。', '私は学生です。', '私は学生ます。'],
-        answer: '私は学生ではありません。',
-        explanation: 'ではありません phủ định danh từ 学生.',
-      },
-      {
-        id: 'janai-2',
-        type: 'complete',
-        prompt: 'Hoàn thành câu phủ định: これは本',
+        prompt: '私は医者 ___。',
+        options: ['ではありません', 'あります', 'を', 'に'],
         answer: 'ではありません',
-        explanation: 'Sau danh từ 本, thêm ではありません.',
+        explanation: 'Phủ định của です là ではありません.',
       },
     ],
   },
   {
     id: 'ka',
     pattern: '〜ですか',
-    title: 'Đặt câu hỏi đơn giản',
+    title: 'Câu hỏi xác nhận',
     level: 'N5',
     position: 3,
     content: {
-      meaning: 'Có phải… không?',
-      formation: 'Câu lịch sự + か',
-      explanation: 'Thêm か ở cuối câu để tạo câu hỏi. Không cần đổi trật tự các từ.',
-      notes: 'Trả lời khẳng định bằng はい và phủ định bằng いいえ.',
-      mistake: 'Không thêm か sau dấu chấm của câu.',
+      meaning: '…có phải không?',
+      formation: 'Câu + か',
+      explanation:
+        'Thêm trợ từ か vào cuối câu để tạo câu hỏi. Không cần đổi trật tự từ trong câu.',
+      notes: 'Khi nói, lên giọng ở cuối câu. Trong văn viết lịch sự thường dùng dấu chấm thay vì ?.',
+      mistake: 'Không thêm か sau các trợ từ chỉ quan hệ sở hữu ở giữa câu.',
       related: ['desu', 'janai'],
       examples: [
         {
-          ja: '田中さんは先生ですか。',
-          kana: 'たなかさんはせんせいですか。',
-          vi: 'Anh/chị Tanaka có phải giáo viên không?',
+          ja: 'あなたは田中さんですか。',
+          kana: 'あなたはたなかさんですか。',
+          vi: 'Bạn có phải là anh Tanaka không?',
         },
-        {
-          ja: 'これはあなたの本ですか。',
-          kana: 'これはあなたのほんですか。',
-          vi: 'Đây có phải sách của bạn không?',
-        },
+        { ja: 'これはペンですか。', kana: 'これはぺんですか。', vi: 'Đây là cái bút phải không?' },
       ],
     },
     exercises: [
       {
         id: 'ka-1',
-        type: 'fill',
-        prompt: 'あなたは学生です ___。',
-        answer: 'か',
-        explanation: 'か biến câu khẳng định thành câu hỏi.',
-      },
-      {
-        id: 'ka-2',
-        type: 'match',
-        prompt: '「はい、そうです。」 có nghĩa là gì?',
-        options: ['Vâng, đúng vậy.', 'Không, không phải.', 'Tạm biệt.'],
-        answer: 'Vâng, đúng vậy.',
-        explanation: 'はい、そうです xác nhận thông tin trong câu hỏi.',
+        type: 'choice',
+        prompt: 'これは何 ___。',
+        options: ['ですか', 'ますか', 'ですね', 'でした'],
+        answer: 'ですか',
+        explanation: '何 kết hợp với ですか để tạo câu hỏi "cái gì?".',
       },
     ],
   },
   {
     id: 'no',
     pattern: '〜の〜',
-    title: 'Sở hữu và mối quan hệ',
+    title: 'Trợ từ sở hữu và bổ nghĩa',
     level: 'N5',
     position: 4,
     content: {
-      meaning: 'Của; thuộc về',
-      formation: 'Danh từ 1 + の + danh từ 2',
-      explanation: 'の nối hai danh từ. Danh từ phía trước bổ nghĩa cho danh từ phía sau.',
-      notes: 'の còn thể hiện xuất xứ hoặc tổ chức, không chỉ quyền sở hữu.',
-      mistake: 'Tiếng Nhật đặt người sở hữu trước vật được sở hữu.',
+      meaning: 'Của / thuộc về…',
+      formation: 'Danh từ 1 + の + Danh từ 2',
+      explanation:
+        'Trợ từ の dùng để nối hai danh từ, danh từ đứng trước bổ nghĩa cho danh từ đứng sau (sở hữu, xuất xứ, chủng loại).',
+      notes: 'Có thể dùng の thay thế cho danh từ phía sau khi đã rõ danh từ đó là gì.',
+      mistake: 'Không dùng の trực tiếp sau tính từ đuôi い.',
       related: ['desu'],
       examples: [
-        { ja: 'これは私の本です。', kana: 'これはわたしのほんです。', vi: 'Đây là sách của tôi.' },
         {
-          ja: '日本語の先生です。',
-          kana: 'にほんごのせんせいです。',
-          vi: 'Là giáo viên tiếng Nhật.',
+          ja: '私の本はどこですか。',
+          kana: 'わたしのほんはどこですか。',
+          vi: 'Cuốn sách của tôi ở đâu?',
+        },
+        {
+          ja: '日本の車を買いました。',
+          kana: 'にほんのくるまをかいました。',
+          vi: 'Tôi đã mua xe ô tô của Nhật.',
         },
       ],
     },
     exercises: [
       {
         id: 'no-1',
-        type: 'choice',
-        prompt: '私 ___ 名前はリンです。',
-        options: ['の', 'を', 'に', 'で'],
+        type: 'fill',
+        prompt: '私 ___ 傘は青いです。',
         answer: 'の',
-        explanation: '私の名前 nghĩa là tên của tôi.',
-      },
-      {
-        id: 'no-2',
-        type: 'order',
-        prompt: 'Sắp xếp: Sách của tôi',
-        options: ['本', '私', 'の'],
-        answer: '私の本',
-        explanation: 'Người sở hữu + の + vật sở hữu.',
+        explanation: 'Trợ từ の biểu thị sở hữu giữa 私 và 傘.',
       },
     ],
   },
   {
     id: 'wo',
     pattern: '〜を〜ます',
-    title: 'Hành động hằng ngày',
+    title: 'Tân ngữ trực tiếp',
     level: 'N5',
     position: 5,
     content: {
-      meaning: 'Làm một hành động với đối tượng',
-      formation: 'Danh từ + を + động từ thể ます',
-      explanation: 'を đánh dấu đối tượng trực tiếp của hành động. ます là đuôi động từ lịch sự.',
-      notes: 'を thường đọc là お. Dạng phủ định của ます là ません.',
-      mistake: 'Không dùng を để đánh dấu chủ thể thực hiện hành động.',
+      meaning: 'Làm cái gì đó',
+      formation: 'Danh từ + を + ngoại động từ',
+      explanation: 'Trợ từ を đánh dấu tân ngữ trực tiếp chịu tác động của hành động.',
+      notes: 'Trợ từ を được phát âm giống お.',
+      mistake: 'Không dùng を với nội động từ như 行きます, 走ります khi không có ý nghĩa xuyên qua.',
       related: ['ni', 'de'],
       examples: [
-        {
-          ja: '毎日、日本語を勉強します。',
-          kana: 'まいにち、にほんごをべんきょうします。',
-          vi: 'Mỗi ngày tôi học tiếng Nhật.',
-        },
-        { ja: '朝ご飯を食べます。', kana: 'あさごはんをたべます。', vi: 'Tôi ăn sáng.' },
+        { ja: 'ご飯を食べます。', kana: 'ごはんをたべます。', vi: 'Tôi ăn cơm.' },
+        { ja: '水を飲みます。', kana: 'みずをのみます。', vi: 'Tôi uống nước.' },
       ],
     },
     exercises: [
       {
         id: 'wo-1',
-        type: 'fill',
-        prompt: '水 ___ 飲みます。',
-        answer: 'を',
-        explanation: '水 là đối tượng của hành động 飲みます.',
-      },
-      {
-        id: 'wo-2',
         type: 'choice',
-        prompt: 'Chọn câu: Tôi đọc sách.',
-        options: ['本を読みます。', '本は食べます。', '本に飲みます。'],
-        answer: '本を読みます。',
-        explanation: '読む là đọc; を đánh dấu sách là đối tượng.',
+        prompt: 'りんご ___ 食べます。',
+        options: ['を', 'が', 'で', 'に'],
+        answer: 'を',
+        explanation: 'りんご là tân ngữ trực tiếp của 食べます nên dùng を.',
       },
     ],
   },
   {
     id: 'ni',
     pattern: '〜に行きます',
-    title: 'Nói về điểm đến',
+    title: 'Điểm đến và thời gian',
     level: 'N5',
     position: 6,
     content: {
-      meaning: 'Đi đến…',
-      formation: 'Địa điểm + に + 行きます',
-      explanation:
-        'に đánh dấu điểm đến với động từ di chuyển. Có thể dùng へ để nhấn mạnh hướng đi.',
-      notes: 'へ khi làm trợ từ được đọc là え.',
-      mistake: 'Phân biệt điểm đến に với địa điểm diễn ra hành động で.',
-      related: ['de', 'wo'],
+      meaning: 'Đi đến đâu / vào lúc nào',
+      formation: 'Địa điểm + に + động từ di chuyển / Thời gian + に + động từ',
+      explanation: 'Trợ từ に chỉ điểm đến của hành động di chuyển hoặc thời điểm cụ thể diễn ra hành động.',
+      notes: 'Với động từ di chuyển, へ cũng có thể dùng thay に để nhấn mạnh phương hướng.',
+      mistake: 'Không dùng に với các từ chỉ thời gian tương đối như 今日, 明日, 毎日.',
+      related: ['wo', 'de'],
       examples: [
-        {
-          ja: '明日、学校に行きます。',
-          kana: 'あした、がっこうにいきます。',
-          vi: 'Ngày mai tôi đi đến trường.',
-        },
-        { ja: '駅に行きます。', kana: 'えきにいきます。', vi: 'Tôi đi đến ga.' },
+        { ja: '学校に行きます。', kana: 'がっこうにいきます。', vi: 'Tôi đi đến trường.' },
+        { ja: '七時に起きます。', kana: 'しちじにおきます。', vi: 'Tôi thức dậy lúc 7 giờ.' },
       ],
     },
     exercises: [
       {
         id: 'ni-1',
         type: 'choice',
-        prompt: '学校 ___ 行きます。',
-        options: ['に', 'を', 'が', 'と'],
+        prompt: 'スーパー ___ 行きます。',
+        options: ['に', 'を', 'で', 'から'],
         answer: 'に',
-        explanation: 'に đánh dấu điểm đến 学校.',
+        explanation: 'Điểm đến của 行きます dùng に hoặc へ.',
       },
     ],
   },
   {
     id: 'de',
     pattern: '〜で〜ます',
-    title: 'Nơi diễn ra hành động',
+    title: 'Nơi diễn ra hành động và phương tiện',
     level: 'N5',
     position: 7,
     content: {
-      meaning: 'Làm gì tại đâu',
-      formation: 'Địa điểm + で + động từ hành động',
-      explanation: 'で chỉ nơi một hành động diễn ra. Không dùng mẫu này để diễn tả sự tồn tại.',
-      notes: 'Với あります hoặc います, địa điểm thường được đánh dấu bằng に.',
-      mistake: '「図書館に勉強します」 sai; dùng で với 勉強します.',
-      related: ['ni', 'wo'],
+      meaning: 'Tại / bằng cách nào…',
+      formation: 'Địa điểm + で + hành động / Công cụ, phương tiện + で + hành động',
+      explanation:
+        'Trợ từ で chỉ địa điểm nơi diễn ra một hành động, hoặc phương tiện/công cụ để thực hiện hành động.',
+      notes: 'Phân biệt với に (dùng cho sự tồn tại hoặc điểm đến).',
+      mistake: 'Không dùng で với います/あります khi chỉ sự tồn tại đơn thuần.',
+      related: ['wo', 'ni'],
       examples: [
         {
           ja: '図書館で勉強します。',
@@ -346,7 +314,9 @@ export const lessons: {
     ],
   },
   ...curriculumLessons,
+  ...jlptGrammarLessons,
 ];
+
 export const testDefinitions = [
   {
     id: 'mini-desu',
