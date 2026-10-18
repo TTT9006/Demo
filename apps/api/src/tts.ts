@@ -1,18 +1,8 @@
-import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
+import { EdgeTTS } from 'node-edge-tts';
 
 // Bộ nhớ đệm âm thanh trong RAM để phát ngay lập tức (0ms) cho các từ hay gặp
 const audioCache = new Map<string, Buffer>();
 const MAX_CACHE_SIZE = 2000;
-
-let ttsClient: MsEdgeTTS | null = null;
-
-async function getTtsClient(): Promise<MsEdgeTTS> {
-  if (!ttsClient) {
-    ttsClient = new MsEdgeTTS();
-    await ttsClient.setMetadata('ja-JP-NanamiNeural', OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-  }
-  return ttsClient;
-}
 
 /**
  * Tạo âm thanh giọng đọc tiếng Nhật tự nhiên (Nanami Neural)
@@ -35,23 +25,25 @@ export async function synthesizeSpeech(text: string, voice = 'ja-JP-NanamiNeural
 
   let buffer: Buffer | null = null;
 
-  // 1. Tạo giọng đọc tự nhiên qua Microsoft Azure Neural (Nanami)
+  // 1. Tạo giọng đọc tự nhiên qua Microsoft Azure Neural (Nanami) bằng node-edge-tts
   try {
-    const client = await getTtsClient();
-    const { audioStream } = client.toStream(clean);
+    const tts = new EdgeTTS({
+      voice,
+      lang: 'ja-JP',
+      outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+      timeout: 10000,
+    });
     const chunks: Buffer[] = [];
-    for await (const chunk of audioStream) {
-      chunks.push(chunk as Buffer);
+    for await (const chunk of tts.streamAudio(clean)) {
+      if (Buffer.isBuffer(chunk)) {
+        chunks.push(chunk);
+      }
     }
     if (chunks.length > 0) {
       buffer = Buffer.concat(chunks);
     }
   } catch (edgeErr) {
     console.warn('Lưu ý khi tạo giọng đọc Nanami:', edgeErr);
-    try {
-      ttsClient?.close();
-    } catch {}
-    ttsClient = null;
   }
 
   // 2. Dự phòng: Dùng Google Neural Speech nếu Microsoft tạm thời không phản hồi

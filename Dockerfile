@@ -8,8 +8,8 @@ RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /v
 COPY package*.json ./
 COPY prisma ./prisma
 
-# Install all dependencies safely ignoring third-party preinstall blocks, then generate Prisma client
-RUN npm ci --ignore-scripts && npx prisma generate
+# Install all dependencies (will trigger postinstall: prisma generate)
+RUN npm ci
 
 # Default environment variables for production (set before build so scripts write to /app/prisma/learning.db)
 ENV NODE_ENV=production
