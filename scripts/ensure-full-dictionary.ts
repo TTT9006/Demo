@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { db, ensureDatabaseSchema } from '../apps/api/src/db';
 import { initSearch } from '../apps/api/src/dictionary';
-import { createReadStream, existsSync, readdirSync } from 'node:fs';
+import { createReadStream, existsSync, readdirSync, mkdirSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
@@ -15,12 +15,7 @@ const RAW_DIR = path.resolve('data/raw');
 
 function unpackSeedArchive(): string {
   console.log('Đang giải nén bộ từ điển hạt giống (Mức A - 22.645 từ thông dụng)...');
-  if (!existsSync(RAW_DIR)) {
-    execFileSync(process.platform === 'win32' ? 'cmd.exe' : 'mkdir', [
-      process.platform === 'win32' ? '/c' : '-p',
-      process.platform === 'win32' ? `mkdir "${RAW_DIR}"` : RAW_DIR,
-    ]);
-  }
+  mkdirSync(RAW_DIR, { recursive: true });
 
   try {
     execFileSync('tar', ['-xzf', SEED_ARCHIVE, '-C', RAW_DIR]);
