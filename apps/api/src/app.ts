@@ -136,6 +136,7 @@ app.get('/api/health', async (_req, res) => {
   const count = await db.dictionaryEntry.count().catch(() => -1);
   res.json({
     status: 'ok',
+    version: '2.2.0-nanami',
     databaseUrl: process.env.DATABASE_URL,
     dictionaryEntries: count,
   });

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: komorebi-nihongo
+    name: wakaba
     runtime: docker
     plan: free
     envVars:
