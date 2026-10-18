@@ -429,25 +429,11 @@ import defaultDictionary from './default-dictionary.json';
 
 export async function ensureDictionaryContent() {
   const count = await db.dictionaryEntry.count();
-  if (count >= 20000) return;
-  console.log(`Từ điển hiện có ${count} từ. Đang kiểm tra và chuẩn bị dữ liệu từ điển...`);
-
-  // Nếu đang chạy SQLite cục bộ và chưa có từ điển nào
-  if (count === 0) {
-    try {
-      const fixture = defaultDictionary as { version: string; words: SourceWord[] };
-      if (fixture?.words?.length) {
-        console.log(`Nạp nhanh ${fixture.words.length} từ vựng cốt lõi làm mồi ban đầu...`);
-        const { createBatchImporter } = await import('../../../scripts/import-batch');
-        const importer = createBatchImporter(fixture.version || '3.6.2');
-        importer.write(fixture.words);
-        importer.close();
-        console.log(`✓ Đã nạp tức thì ${fixture.words.length} từ cốt lõi trong vài mili-giây.`);
-      }
-    } catch (batchErr) {
-      console.warn('Batch importer không khả dụng, sử dụng nạp tuần tự dự phòng:', batchErr);
-    }
+  if (count >= 20000) {
+    console.log(`✓ Từ điển đã đầy đủ (${count} từ vựng thông dụng N5-N1). Sẵn sàng phục vụ.`);
+    return;
   }
+  console.log(`Từ điển hiện có ${count} từ. Đang kích hoạt nạp 22.645 từ thông dụng N5-N1...`);
 
   // Tự động kiểm tra và đảm bảo nạp đủ 22.645 từ thông dụng N5-N1 (Mức A)
   try {

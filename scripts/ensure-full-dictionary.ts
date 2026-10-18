@@ -99,6 +99,51 @@ export async function ensureFullDictionary() {
   const totalElapsed = ((Date.now() - start) / 1000).toFixed(1);
   console.log(`✓ Đã nạp thành công toàn bộ ${importedCount} từ vựng thông dụng N5-N1 trong ${totalElapsed}s!`);
 
+  // Checkpoint WAL và VACUUM để database được ghi trọn vẹn vào learning.db
+  try {
+    const { DatabaseSync } = await import('node:sqlite');
+    const { databaseLocation } = await import('../packages/shared/database-location');
+    const resolvedLocation = databaseLocation(process.env.DATABASE_URL);
+    const dbSync = new DatabaseSync(resolvedLocation.filename);
+    dbSync.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+    dbSync.exec('VACUUM;');
+    dbSync.close();
+    console.log('✓ Đã đồng bộ WAL và tối ưu hóa file SQLite thành công.');
+  } catch (cpErr) {
+    console.warn('Lưu ý khi checkpoint SQLite WAL:', cpErr);
+  }
+
+  // Cập nhật trạng thái nhập dữ liệu vào bảng DictionaryImport
+  try {
+    const latest = await db.dictionaryImport.findFirst({ orderBy: { importedAt: 'desc' } });
+    if (latest) {
+      await db.dictionaryImport.update({
+        where: { id: latest.id },
+        data: {
+          version,
+          source: 'https://github.com/scriptin/jmdict-simplified',
+          checksum: 'jmdict-eng-common-3.6.2 (Mức A - 22.645 từ thông dụng)',
+          count: importedCount,
+          status: 'completed',
+          importedAt: new Date(),
+        },
+      });
+    } else {
+      await db.dictionaryImport.create({
+        data: {
+          version,
+          source: 'https://github.com/scriptin/jmdict-simplified',
+          checksum: 'jmdict-eng-common-3.6.2 (Mức A - 22.645 từ thông dụng)',
+          count: importedCount,
+          status: 'completed',
+          importedAt: new Date(),
+        },
+      });
+    }
+  } catch (importErr) {
+    console.warn('Không thể ghi bản ghi DictionaryImport:', importErr);
+  }
+
   // Xóa thư mục giải nén tạm thời để bảo toàn dung lượng ổ đĩa cho máy chủ
   try {
     await rm(RAW_DIR, { recursive: true, force: true });
