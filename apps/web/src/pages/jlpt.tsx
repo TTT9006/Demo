@@ -2,36 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Check, Clock3, Volume2, VolumeX, Square, Play, Pause, Headphones } from 'lucide-react';
-import { api, post, patch } from '../services/api';
+import { api, post, patch, speak, stopSpeech } from '../services/api';
 import { Button, ErrorState, Loading, Modal, PageHeader } from '../components/ui';
 import { QuestionInput } from './tests';
 import type { JlptRunView, JlptSummary } from '../../../../packages/shared/jlpt-types';
 
 async function playJapanese(text: string) {
-  if (!('speechSynthesis' in window)) throw Error('Trình duyệt chưa hỗ trợ đọc tiếng Nhật.');
-  let voices = speechSynthesis.getVoices();
-  if (!voices.some((v) => v.lang.startsWith('ja'))) {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    voices = speechSynthesis.getVoices();
-  }
-  const voice = voices.find((v) => v.lang.startsWith('ja'));
-  if (!voice)
-    throw Error(
-      'Thiết bị chưa có giọng tiếng Nhật. Hãy cài giọng Nhật hoặc dùng trình duyệt có giọng Nhật, rồi thử âm thanh trước khi thi.',
-    );
-  speechSynthesis.cancel();
-  return new Promise<void>((resolve, reject) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ja-JP';
-    utterance.voice = voice;
-    utterance.rate = 0.9;
-    utterance.onend = () => resolve();
-    utterance.onerror = (e) =>
-      e.error === 'canceled' || e.error === 'interrupted'
-        ? resolve()
-        : reject(Error('Không phát được âm thanh. Hãy thử lại.'));
-    speechSynthesis.speak(utterance);
-  });
+  await speak(text);
 }
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
@@ -205,7 +182,7 @@ export function JlptSession() {
     offset.current = new Date(next.serverNow).getTime() - Date.now();
     if (next.section !== run?.section) {
       setIndex(0);
-      window.speechSynthesis?.cancel();
+      stopSpeech();
       setSpeaking(false);
       setConfirm(false);
       pendingAnswers.current = {};
@@ -242,7 +219,7 @@ export function JlptSession() {
     return () => {
       clearInterval(timer);
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      window.speechSynthesis?.cancel();
+      stopSpeech();
     };
   }, []);
   const remaining = run?.deadline
@@ -260,7 +237,7 @@ export function JlptSession() {
     nextPoll.current = Date.now() + 5000;
     locked.current = true;
     setBusy(true);
-    window.speechSynthesis?.cancel();
+    stopSpeech();
     setSpeaking(false);
     void api<JlptRunView>('/jlpt/runs/' + run.runId)
       .then(apply)
@@ -613,7 +590,7 @@ export function JlptSession() {
                         <Button
                           variant="secondary"
                           onClick={() => {
-                            window.speechSynthesis?.cancel();
+                            stopSpeech();
                             setSpeaking(false);
                           }}
                         >
@@ -634,7 +611,7 @@ export function JlptSession() {
                       variant="secondary"
                       disabled={index === 0 || busy}
                       onClick={() => {
-                        window.speechSynthesis?.cancel();
+                        stopSpeech();
                         setSpeaking(false);
                         setIndex((i) => i - 1);
                       }}
@@ -645,7 +622,7 @@ export function JlptSession() {
                       variant="secondary"
                       disabled={index === run.questions.length - 1 || busy}
                       onClick={() => {
-                        window.speechSynthesis?.cancel();
+                        stopSpeech();
                         setSpeaking(false);
                         setIndex((i) => i + 1);
                       }}
@@ -667,7 +644,7 @@ export function JlptSession() {
                     aria-label={`Câu ${i + 1}${run.answers[q.id] ? ', đã trả lời' : ''}`}
                     className={run.answers[q.id] ? 'answered' : ''}
                     onClick={() => {
-                      window.speechSynthesis?.cancel();
+                      stopSpeech();
                       setSpeaking(false);
                       setIndex(i);
                     }}

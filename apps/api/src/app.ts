@@ -17,6 +17,7 @@ import { db } from './db';
 import { annotate } from './annotation';
 import { kanjiData, kanjiStrokes } from './kanji';
 import { ensureDefaultDecks } from './default-decks';
+import { synthesizeSpeech } from './tts';
 import { dictionaryStatus, entryInclude, searchDictionary, ensureDictionaryContent } from './dictionary';
 import { schedule } from '../../../packages/shared/srs';
 import { testDefinitions, type Exercise } from '../../../packages/shared/content';
@@ -190,6 +191,22 @@ app.post('/api/auth/logout', async (req, res) => {
   res.json({ ok: true });
 });
 app.get('/api/auth/me', auth, (_req, res) => res.json(safeUser(res.locals.user)));
+app.get(
+  '/api/tts',
+  rateLimit({ windowMs: 60000, limit: 120, standardHeaders: true, legacyHeaders: false }),
+  async (req, res) => {
+    try {
+      const text = z.string().min(1).max(1000).parse(req.query.text);
+      const voice = typeof req.query.voice === 'string' ? req.query.voice : 'ja-JP-NanamiNeural';
+      const audioBuffer = await synthesizeSpeech(text, voice);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.send(audioBuffer);
+    } catch (err) {
+      res.status(400).json({ error: (err as Error).message });
+    }
+  },
+);
 app.use('/api', auth);
 app.use('/api/login-review', loginReviewRouter);
 app.use('/api/review/consolidated', consolidatedReviewRouter);

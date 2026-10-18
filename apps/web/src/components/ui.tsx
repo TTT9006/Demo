@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { clsx } from 'clsx';
@@ -97,16 +97,27 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
     </div>
   );
 }
-export function AudioButton({ text }: { text: string }) {
+export function AudioButton({ text, className }: { text: string; className?: string }) {
   const notify = useUI((s) => s.notify);
+  const [playing, setPlaying] = useState(false);
   return (
     <Button
       variant="ghost"
       size="icon"
       aria-label={'Phát âm ' + text}
-      onClick={() => void speak(text).catch((e) => notify((e as Error).message))}
+      className={cn(playing && 'text-primary scale-110 transition-transform duration-200', className)}
+      onClick={async () => {
+        try {
+          setPlaying(true);
+          await speak(text);
+        } catch (e) {
+          notify((e as Error).message);
+        } finally {
+          setPlaying(false);
+        }
+      }}
     >
-      <Volume2 size={18} />
+      <Volume2 size={18} className={playing ? 'animate-pulse' : ''} />
     </Button>
   );
 }

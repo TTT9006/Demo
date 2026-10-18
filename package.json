@@ -45,6 +45,7 @@
     "kuromoji": "0.1.2",
     "lucide-react": "0.577.0",
     "motion": "14.1.0",
+    "msedge-tts": "^2.1.0",
     "multer": "2.4.0",
     "pdf-parse": "2.4.5",
     "react": "19.3.0",
