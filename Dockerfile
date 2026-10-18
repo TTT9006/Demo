@@ -25,5 +25,5 @@ RUN mkdir -p /app/prisma
 
 EXPOSE 3000
 
-# Deploy schema migrations and start the production server
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist-api/server.js"]
+# Khởi động máy chủ sản xuất (cơ sở dữ liệu tự động đồng bộ qua ensureDatabaseSchema)
+CMD ["node", "dist-api/server.js"]
