@@ -8,7 +8,7 @@ export function databaseLocation(url = 'file:./learning.db', root = process.cwd(
   }
   if (!url.startsWith('file:')) throw new Error('DATABASE_URL phải là đường dẫn SQLite file: hoặc libsql:.');
   const filename = url.slice(5);
-  const resolved = path.resolve(root, 'prisma', filename);
+  const resolved = path.isAbsolute(filename) ? filename : path.resolve(root, 'prisma', filename);
   if (resolved.toLowerCase() === path.resolve(root, '.share/trial.db').toLowerCase()) {
     throw new Error(
       'trial.db là dữ liệu cũ. Hãy hợp nhất bằng scripts/unify-databases.ts rồi dùng prisma/learning.db.',

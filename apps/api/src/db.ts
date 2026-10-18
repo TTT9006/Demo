@@ -3,15 +3,26 @@ import { PrismaClient } from '@prisma/client';
 import { createClient } from '@libsql/client';
 import { PrismaLibSQL } from '@prisma/adapter-libsql';
 import { databaseLocation } from '../../../packages/shared/database-location';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
+// Nếu file CSDL đã được đóng gói sẵn trong Docker (/app/prisma/learning.db),
+// luôn ưu tiên dùng file SQLite cục bộ chứa trọn vẹn 22.645 từ vựng,
+// loại bỏ biến môi trường Turso còn sót lại trên Render dashboard.
+if (existsSync('/app/prisma/learning.db')) {
+  process.env.DATABASE_URL = 'file:/app/prisma/learning.db';
+  delete process.env.TURSO_DATABASE_URL;
+  delete process.env.TURSO_AUTH_TOKEN;
+}
+
 const tursoUrl =
-  process.env.TURSO_DATABASE_URL ||
-  (process.env.DATABASE_URL?.startsWith('libsql://') || process.env.DATABASE_URL?.startsWith('https://')
-    ? process.env.DATABASE_URL
-    : undefined);
+  process.env.DATABASE_URL?.startsWith('file:')
+    ? undefined
+    : (process.env.TURSO_DATABASE_URL ||
+       (process.env.DATABASE_URL?.startsWith('libsql://') || process.env.DATABASE_URL?.startsWith('https://')
+         ? process.env.DATABASE_URL
+         : undefined));
 
 function initDatabase(): PrismaClient {
   if (tursoUrl) {

@@ -131,7 +131,14 @@ const sensitive = rateLimit({
   legacyHeaders: false,
   message: { error: 'Bạn thử quá nhiều lần. Vui lòng chờ 15 phút.' },
 });
-app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', async (_req, res) => {
+  const count = await db.dictionaryEntry.count().catch(() => -1);
+  res.json({
+    status: 'ok',
+    databaseUrl: process.env.DATABASE_URL,
+    dictionaryEntries: count,
+  });
+});
 app.post('/api/auth/register', sensitive, async (req, res) => {
   const data = credentials.extend({ name: z.string().trim().min(1).max(60) }).parse(req.body);
   if (await db.user.findUnique({ where: { email: data.email } })) {
