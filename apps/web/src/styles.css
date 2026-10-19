@@ -286,18 +286,35 @@ progress::-moz-progress-bar {
   color: #7c837b;
   font-size: 12px;
   font-weight: 450;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s ease,
+              color 0.2s ease;
 }
 .sidebar nav a:hover {
-  background: var(--bg);
+  background: var(--card);
   color: var(--jade);
+  transform: translateX(4px) translateY(-2px);
+  box-shadow: 0 6px 14px rgba(88, 113, 93, 0.12), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .sidebar nav a.active {
   background: #eaf0e7;
   color: #435a45;
   font-weight: 600;
 }
+.sidebar nav a.active:hover {
+  background: #e1ebdc;
+}
 .sidebar nav a svg {
   stroke-width: 1.6;
+  flex-shrink: 0;
+  transform-origin: center bottom;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.2s ease;
+}
+.sidebar nav a:hover svg {
+  transform: translateY(-2px) scale(1.12);
+  color: var(--jade);
 }
 .nav-dot {
   width: 5px;
@@ -2879,6 +2896,14 @@ canvas {
   background: #374331;
   border-color: #46523d;
   color: #b7cba5;
+}
+[data-theme='dark'] .sidebar nav a:hover {
+  background: #273024;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  color: #b7cba5;
+}
+[data-theme='dark'] .sidebar nav a.active:hover {
+  background: #3e4c37;
 }
 [data-theme='dark'] .answer-options button.selected {
   background: #232e20;
