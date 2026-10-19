@@ -1,0 +1,13 @@
+{
+  "id": "P006",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Giá 80k rất rẻ nhưng mình băn khoăn không biết đội ngũ phát triển là ai, nội dung ngữ pháp và đề thi có được giáo viên bản xứ thẩm định không.",
+  "objection": "Giá 50k - 80k thì rẻ thật nhưng chất lượng dịch và giải thích ngữ pháp có chuẩn JLPT không hay lấy từ mạng?",
+  "would_change_my_mind": "Có thông tin kiểm định nội dung từ giáo viên hoặc đối chiếu đề thi thật các năm.",
+  "price_too_cheap": 40000,
+  "price_cheap": 80000,
+  "price_expensive": 200000,
+  "price_too_expensive": 350000
+}

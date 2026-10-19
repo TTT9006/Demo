@@ -1,0 +1,222 @@
+[
+ {
+  "id": "P001",
+  "name": "Nia",
+  "age": 19,
+  "segment": "Người chuẩn bị Du học / XKLĐ",
+  "income": 45564000,
+  "behaviour": "Săn đồ miễn phí & Deal hunter",
+  "behaviour_how": "Thích dùng tài liệu chia sẻ miễn phí trên mạng, chỉ mua nếu giá siêu rẻ hoặc không còn cách nào khác.",
+  "objection": "Có cho học thử bài bản không hay chỉ vài từ vựng rồi bắt trả tiền?",
+  "habit": "bạn đã từng tải Anki về nhưng thấy khó dùng và bỏ cuộc"
+ },
+ {
+  "id": "P002",
+  "name": "Rohan",
+  "age": 23,
+  "segment": "Người chuẩn bị Du học / XKLĐ",
+  "income": 60118000,
+  "behaviour": "Người đi làm bận rộn",
+  "behaviour_how": "Thời gian ít, tranh thủ học 10-15 phút trên điện thoại, ưu tiên giao diện tối giản, tập trung vào trọng tâm thi cử.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "habit": "bạn đã từng tải Anki về nhưng thấy khó dùng và bỏ cuộc"
+ },
+ {
+  "id": "P003",
+  "name": "Mason",
+  "age": 19,
+  "segment": "Người chuẩn bị Du học / XKLĐ",
+  "income": 47220000,
+  "behaviour": "So sánh kỹ lưỡng",
+  "behaviour_how": "Đã dùng thử Mazii, Migii, Quizlet, Anki; so sánh gắt gao chất lượng giải thích ngữ pháp và độ mượt trước khi mua.",
+  "objection": "Gói 80k là trả một lần dùng mãi mãi hay mỗi tháng/mỗi năm đều phải đóng lại?",
+  "habit": "bạn tranh thủ học từ vựng lúc đi xe buýt hoặc nghỉ trưa"
+ },
+ {
+  "id": "P004",
+  "name": "Levi",
+  "age": 35,
+  "segment": "Kỹ sư IT / Dân văn phòng",
+  "income": 166968000,
+  "behaviour": "Dễ nản & Bỏ cuộc sớm",
+  "behaviour_how": "Hào hứng mua lúc đầu rồi bỏ ngang sau 1 tuần nếu không có ai đôn đốc hoặc lộ trình quá khô khan.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "habit": "bạn lướt Facebook xem các nhóm tự học tiếng Nhật mỗi tối"
+ },
+ {
+  "id": "P005",
+  "name": "Poppy",
+  "age": 35,
+  "segment": "Học sinh / Sinh viên",
+  "income": 39490000,
+  "behaviour": "Trung thành với app quen",
+  "behaviour_how": "Đang quen học với Mazii hoặc sách giấy Minna no Nihongo, ngại chuyển sang nền tảng mới nếu không có gì đột phá.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P006",
+  "name": "Zoe",
+  "age": 34,
+  "segment": "Kỹ sư IT / Dân văn phòng",
+  "income": 174097000,
+  "behaviour": "Săn đồ miễn phí & Deal hunter",
+  "behaviour_how": "Thích dùng tài liệu chia sẻ miễn phí trên mạng, chỉ mua nếu giá siêu rẻ hoặc không còn cách nào khác.",
+  "objection": "Giá 50k - 80k thì rẻ thật nhưng chất lượng dịch và giải thích ngữ pháp có chuẩn JLPT không hay lấy từ mạng?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P007",
+  "name": "Luca",
+  "age": 23,
+  "segment": "Kỹ sư IT / Dân văn phòng",
+  "income": 352331000,
+  "behaviour": "Người đi làm bận rộn",
+  "behaviour_how": "Thời gian ít, tranh thủ học 10-15 phút trên điện thoại, ưu tiên giao diện tối giản, tập trung vào trọng tâm thi cử.",
+  "objection": "Tự học một mình rất dễ nản, web có ai nhắc nhở hay hỗ trợ giải đáp khi không hiểu không?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P008",
+  "name": "Maeve",
+  "age": 34,
+  "segment": "Học sinh / Sinh viên",
+  "income": 34553000,
+  "behaviour": "Săn đồ miễn phí & Deal hunter",
+  "behaviour_how": "Thích dùng tài liệu chia sẻ miễn phí trên mạng, chỉ mua nếu giá siêu rẻ hoặc không còn cách nào khác.",
+  "objection": "Gói 80k là trả một lần dùng mãi mãi hay mỗi tháng/mỗi năm đều phải đóng lại?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P009",
+  "name": "Freya",
+  "age": 18,
+  "segment": "Học sinh / Sinh viên",
+  "income": 35636000,
+  "behaviour": "So sánh kỹ lưỡng",
+  "behaviour_how": "Đã dùng thử Mazii, Migii, Quizlet, Anki; so sánh gắt gao chất lượng giải thích ngữ pháp và độ mượt trước khi mua.",
+  "objection": "Có cho học thử bài bản không hay chỉ vài từ vựng rồi bắt trả tiền?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P010",
+  "name": "Marco",
+  "age": 30,
+  "segment": "Kỹ sư IT / Dân văn phòng",
+  "income": 237028000,
+  "behaviour": "Săn đồ miễn phí & Deal hunter",
+  "behaviour_how": "Thích dùng tài liệu chia sẻ miễn phí trên mạng, chỉ mua nếu giá siêu rẻ hoặc không còn cách nào khác.",
+  "objection": "Có cho học thử bài bản không hay chỉ vài từ vựng rồi bắt trả tiền?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P011",
+  "name": "Darius",
+  "age": 34,
+  "segment": "Học sinh / Sinh viên",
+  "income": 36559000,
+  "behaviour": "Học kỷ luật mỗi ngày",
+  "behaviour_how": "Học đều đặn 30-45 phút mỗi ngày, cần hệ thống lặp lại ngắt quãng (SRS) và theo dõi số liệu tiến độ.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "habit": "bạn đã từng tải Anki về nhưng thấy khó dùng và bỏ cuộc"
+ },
+ {
+  "id": "P012",
+  "name": "Rosa",
+  "age": 24,
+  "segment": "Học sinh / Sinh viên",
+  "income": 35876000,
+  "behaviour": "So sánh kỹ lưỡng",
+  "behaviour_how": "Đã dùng thử Mazii, Migii, Quizlet, Anki; so sánh gắt gao chất lượng giải thích ngữ pháp và độ mượt trước khi mua.",
+  "objection": "Học trên web di động có mượt và tiện bằng tải ứng dụng từ App Store/Google Play không?",
+  "habit": "bạn lướt Facebook xem các nhóm tự học tiếng Nhật mỗi tối"
+ },
+ {
+  "id": "P013",
+  "name": "Ezra",
+  "age": 19,
+  "segment": "Người chuẩn bị Du học / XKLĐ",
+  "income": 87720000,
+  "behaviour": "Người đi làm bận rộn",
+  "behaviour_how": "Thời gian ít, tranh thủ học 10-15 phút trên điện thoại, ưu tiên giao diện tối giản, tập trung vào trọng tâm thi cử.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P014",
+  "name": "Oscar",
+  "age": 30,
+  "segment": "Kỹ sư IT / Dân văn phòng",
+  "income": 177404000,
+  "behaviour": "Dễ nản & Bỏ cuộc sớm",
+  "behaviour_how": "Hào hứng mua lúc đầu rồi bỏ ngang sau 1 tuần nếu không có ai đôn đốc hoặc lộ trình quá khô khan.",
+  "objection": "Học trên web di động có mượt và tiện bằng tải ứng dụng từ App Store/Google Play không?",
+  "habit": "bạn lướt Facebook xem các nhóm tự học tiếng Nhật mỗi tối"
+ },
+ {
+  "id": "P015",
+  "name": "Maya",
+  "age": 27,
+  "segment": "Học sinh / Sinh viên",
+  "income": 38680000,
+  "behaviour": "Trung thành với app quen",
+  "behaviour_how": "Đang quen học với Mazii hoặc sách giấy Minna no Nihongo, ngại chuyển sang nền tảng mới nếu không có gì đột phá.",
+  "objection": "Học trên web di động có mượt và tiện bằng tải ứng dụng từ App Store/Google Play không?",
+  "habit": "bạn lướt Facebook xem các nhóm tự học tiếng Nhật mỗi tối"
+ },
+ {
+  "id": "P016",
+  "name": "Elena",
+  "age": 26,
+  "segment": "Người chuẩn bị Du học / XKLĐ",
+  "income": 72863000,
+  "behaviour": "Học kỷ luật mỗi ngày",
+  "behaviour_how": "Học đều đặn 30-45 phút mỗi ngày, cần hệ thống lặp lại ngắt quãng (SRS) và theo dõi số liệu tiến độ.",
+  "objection": "Tự học một mình rất dễ nản, web có ai nhắc nhở hay hỗ trợ giải đáp khi không hiểu không?",
+  "habit": "bạn lướt Facebook xem các nhóm tự học tiếng Nhật mỗi tối"
+ },
+ {
+  "id": "P017",
+  "name": "Amara",
+  "age": 18,
+  "segment": "Học sinh / Sinh viên",
+  "income": 19111000,
+  "behaviour": "Học kỷ luật mỗi ngày",
+  "behaviour_how": "Học đều đặn 30-45 phút mỗi ngày, cần hệ thống lặp lại ngắt quãng (SRS) và theo dõi số liệu tiến độ.",
+  "objection": "Học trên web di động có mượt và tiện bằng tải ứng dụng từ App Store/Google Play không?",
+  "habit": "bạn lướt Facebook xem các nhóm tự học tiếng Nhật mỗi tối"
+ },
+ {
+  "id": "P018",
+  "name": "Callum",
+  "age": 24,
+  "segment": "Kỹ sư IT / Dân văn phòng",
+  "income": 311969000,
+  "behaviour": "Người đi làm bận rộn",
+  "behaviour_how": "Thời gian ít, tranh thủ học 10-15 phút trên điện thoại, ưu tiên giao diện tối giản, tập trung vào trọng tâm thi cử.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "habit": "bạn đã từng tải Anki về nhưng thấy khó dùng và bỏ cuộc"
+ },
+ {
+  "id": "P019",
+  "name": "Bilal",
+  "age": 23,
+  "segment": "Kỹ sư IT / Dân văn phòng",
+  "income": 148420000,
+  "behaviour": "Học kỷ luật mỗi ngày",
+  "behaviour_how": "Học đều đặn 30-45 phút mỗi ngày, cần hệ thống lặp lại ngắt quãng (SRS) và theo dõi số liệu tiến độ.",
+  "objection": "Giá 50k - 80k thì rẻ thật nhưng chất lượng dịch và giải thích ngữ pháp có chuẩn JLPT không hay lấy từ mạng?",
+  "habit": "bạn sắp có kỳ thi JLPT vào tháng 7 hoặc tháng 12 tới"
+ },
+ {
+  "id": "P020",
+  "name": "Jasper",
+  "age": 35,
+  "segment": "Học sinh / Sinh viên",
+  "income": 39743000,
+  "behaviour": "Săn đồ miễn phí & Deal hunter",
+  "behaviour_how": "Thích dùng tài liệu chia sẻ miễn phí trên mạng, chỉ mua nếu giá siêu rẻ hoặc không còn cách nào khác.",
+  "objection": "Có cho học thử bài bản không hay chỉ vài từ vựng rồi bắt trả tiền?",
+  "habit": "bạn đã từng tải Anki về nhưng thấy khó dùng và bỏ cuộc"
+ }
+]

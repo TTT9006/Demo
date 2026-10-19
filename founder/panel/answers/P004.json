@@ -1,0 +1,13 @@
+{
+  "id": "P004",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "Mình hay bị nản sau 1 tuần. Một trang web tự học dù giao diện đẹp đến mấy mà không có người nhắc nhở hay tương tác thì mình mua xong cũng vứt đó.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "would_change_my_mind": "Có tính năng gửi nhắc nhở qua Zalo/Email hàng ngày hoặc bảng xếp hạng thi đua.",
+  "price_too_cheap": 30000,
+  "price_cheap": 70000,
+  "price_expensive": 180000,
+  "price_too_expensive": 300000
+}

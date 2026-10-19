@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "convenience",
+  "reason": "Mình chủ yếu học trên điện thoại khi đi xe buýt. Web mobile dù tốt nhưng không thể tiện và mượt bằng app native có thông báo đẩy.",
+  "objection": "Học trên web di động có mượt và tiện bằng tải ứng dụng từ App Store/Google Play không?",
+  "would_change_my_mind": "Có ứng dụng PWA cài trực tiếp ra màn hình chính và hỗ trợ học offline.",
+  "price_too_cheap": 20000,
+  "price_cheap": 50000,
+  "price_expensive": 100000,
+  "price_too_expensive": 180000
+}

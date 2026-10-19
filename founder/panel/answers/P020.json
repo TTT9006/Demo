@@ -1,0 +1,13 @@
+{
+  "id": "P020",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Mình chỉ cần học từ vựng cơ bản, bản Free N5 của Wakaba đã quá tốt rồi nên mình chưa có lý do gì phải bỏ tiền mua gói Plus.",
+  "objection": "Có cho học thử bài bản không hay chỉ vài từ vựng rồi bắt trả tiền?",
+  "would_change_my_mind": "Khi nào học hết N5 và cần luyện thi N3 gấp.",
+  "price_too_cheap": 20000,
+  "price_cheap": 45000,
+  "price_expensive": 100000,
+  "price_too_expensive": 170000
+}

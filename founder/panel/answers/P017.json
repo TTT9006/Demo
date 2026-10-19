@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "price",
+  "reason": "Mình là sinh viên năm nhất, 50k gói Plus bằng đúng 2 bữa cơm trưa để học ngữ pháp và từ vựng N3 bài bản thì mình ủng hộ ngay.",
+  "objection": "Học trên web di động có mượt và tiện bằng tải ứng dụng từ App Store/Google Play không?",
+  "would_change_my_mind": "",
+  "price_too_cheap": 15000,
+  "price_cheap": 40000,
+  "price_expensive": 85000,
+  "price_too_expensive": 140000
+}

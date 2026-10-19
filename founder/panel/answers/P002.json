@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Mình đang dùng Mazii và app Migii trên điện thoại quen rồi, mở lên là tra được ngay. Dùng web trên điện thoại hơi bất tiện khi di chuyển.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "would_change_my_mind": "Có ứng dụng di động mượt mà tải được từ App Store / Google Play.",
+  "price_too_cheap": 25000,
+  "price_cheap": 50000,
+  "price_expensive": 120000,
+  "price_too_expensive": 200000
+}

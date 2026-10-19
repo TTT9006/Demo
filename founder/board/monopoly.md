@@ -1,0 +1,35 @@
+# Monopoly lens
+Score: 3/10 | Vote: FUND IF
+
+## What is strong
+- **Chi phí cận biên bằng không (Zero Marginal Cost) của sản phẩm số:** Là một ứng dụng web, chi phí kỹ thuật để phục vụ người dùng thứ 1.000 gần như tương đương người dùng đầu tiên. Đây là nền tảng cốt lõi duy nhất trong cấu trúc sản phẩm hiện tại để có tiềm năng đạt tính kinh tế theo quy mô (*economies of scale*), nếu vượt qua được giai đoạn sống còn ban đầu.
+- **Tận dụng phễu Freemium (N5 miễn phí) để giảm ma sát tiếp cận:** Việc mở miễn phí phân khúc N5 giúp hạ rào cản gia nhập về 0 (*zero-friction adoption*), cho phép tạo phễu thu thập người dùng và dữ liệu học tập ban đầu mà không phải trả chi phí dùng thử cho người học.
+- **Thị trường có nhu cầu thực tế và nhận thức sẵn có:** Khách hàng mục tiêu (học sinh, sinh viên, người chuẩn bị XKLĐ/du học, dân IT/văn phòng) đều có động lực rõ ràng với chứng chỉ JLPT để phục vụ công việc hoặc nâng cao thu nhập. Nhà sáng lập không tốn chi phí giáo dục thị trường về tầm quan trọng của chứng chỉ JLPT.
+
+## What would kill it (the top 3, most dangerous first)
+1. **Cạm bẫy cạnh tranh hoàn hảo & Thiếu hụt công nghệ độc quyền vượt trội 10x (*The Perfect Competition Trap & No 10x Tech*):**
+   Thị trường học tiếng Nhật tại Việt Nam là một "đại dương đỏ" khốc liệt và phân mảnh. Các đối thủ sừng sỏ đã cắm rễ sâu nhiều năm: Mazii (chiếm lĩnh từ điển và cộng đồng), Migii JLPT, HeyJapan, Bunpro, Anki, Quizlet, Duolingo, cùng hàng ngàn giáo trình lậu, tài liệu PDF và nhóm tự học miễn phí trên Facebook/YouTube. Sản phẩm trong bản brief là một tập hợp chắp vá các tính năng đại trà (flashcard, từ điển, ngữ pháp, luyện viết, thi thử) — mỗi thứ một ít nhưng không có bất kỳ khía cạnh nào tốt hơn gấp 10 lần (*10x better*) giải pháp hiện hữu. Theo nguyên lý Độc quyền: *"Cạnh tranh là dành cho kẻ thất bại"* (*Competition is for losers*). Khi lao vào một thị trường đông đúc với một sản phẩm hàng hóa đại trà (*commodity*), biên lợi nhuận sẽ bị triệt tiêu về 0 và doanh nghiệp sẽ chết vì kiệt sức trước các đối thủ có tiềm lực lớn hơn.
+
+2. **Ảo tưởng phân phối với ngân sách 1.000.000 VNĐ (*Distribution Failure & Fatal CAC-to-Budget Ratio*):**
+   *"Phân phối chiếm một nửa cuộc chơi."* Một sản phẩm tốt đến mấy mà không có kênh đưa đến tay người dùng thì không phải là một doanh nghiệp. Với tổng ngân sách 1.000.000 VNĐ (~$40), nhà sáng lập hoàn toàn không thể mua lượt tiếp cận bằng quảng cáo trả phí (Paid Ads). Việc trông chờ vào "SEO và mạng xã hội" là chiến lược ngây thơ: SEO các từ khóa JLPT/học tiếng Nhật đã bị các trang tin lớn và trung tâm ngoại ngữ thống trị cả chục năm; các hội nhóm mạng xã hội thì bội thực bài viết chia sẻ tài liệu và link rác. Không có một kênh phân phối độc quyền (*proprietary distribution channel*) hay cơ chế tăng trưởng tự thân (*viral loop*), ứng dụng sẽ vô hình và chết trong im lặng trước khi có được 100 khách hàng trả tiền đầu tiên.
+
+3. **Mô hình định giá rẻ mạt và không có rào cản phòng thủ (*Commodity Pricing & Defensibility Void*):**
+   Mức giá 50.000 đ – 80.000 đ (nhất là nếu trả 1 lần) là một cái bẫy tự sát: Giá trị trọn đời của khách hàng (LTV) quá thấp, không đủ chi trả chi phí máy chủ, duy trì cơ sở dữ liệu, sửa lỗi và chăm sóc khách hàng. Quan trọng hơn, sản phẩm hoàn toàn không có hiệu ứng mạng (*network effects*) — việc 1.000 người học N3 không làm cho trải nghiệm của người học thứ 1.001 tốt hơn; không có bí mật sở hữu trí tuệ; và không có rào cản nào ngăn chặn một đối thủ hoặc sinh viên công nghệ khác sao chép toàn bộ web app trong vòng 2 tuần (với sự trợ giúp của AI hiện đại) và phát hành miễn phí để hút phễu bán khóa học offline.
+
+## The questions I would ask the founder
+1. **Câu hỏi Độc quyền (*The Monopoly Question*):** Thay vì cố phục vụ "tất cả mọi người học N5 đến N2", thị trường ngách siêu nhỏ nào (*micro-niche*) mà bạn có thể độc chiếm 80% thị phần trong vòng 90 ngày đầu tiên — một ngách quá nhỏ hoặc quá đặc thù khiến Mazii, Migii hay Duolingo không buồn bận tâm? *(Ví dụ: Tiếng Nhật phỏng vấn visa kỹ sư IT, hay tiếng Nhật phản xạ cấp tốc cho điều dưỡng viên đi Kaigo?)*
+2. **Bí mật của bạn là gì? (*The Secret Question*):** Bạn biết điều gì về việc học và thi JLPT của người Việt Nam mà các trung tâm lớn, các app ngoại ngữ và phần còn lại của thị trường đang hoàn toàn bỏ sót hoặc hiểu sai?
+3. **Lợi thế vượt trội 10x (*The Engineering Question*):** Tính năng đơn lẻ cốt lõi nào của bạn giải quyết nỗi đau của người học tốt gấp 10 lần các công cụ hiện nay, khiến người dùng một khi đã thử thì không thể quay lại cách học cũ, thay vì chỉ là "tôi cũng có flashcard và tra ngữ pháp như mọi app khác"?
+4. **Kế hoạch 100 khách hàng đầu tiên (*The Distribution Question*):** Chính xác bằng cách nào bạn mang về 100 khách hàng trả tiền đầu tiên với ngân sách đúng 1.000.000 VNĐ mà chi phí thu hút khách hàng (CAC) xấp xỉ bằng 0? Kênh tiếp cận độc quyền mà bạn nắm giữ là gì?
+5. **Tính bền vững sau 5 năm (*The Durability Question*):** Đến tháng thứ 6, nếu một trung tâm tiếng Nhật lớn sao chép toàn bộ giao diện và tính năng của bạn rồi mở miễn phí 100% cho học viên của họ, yếu tố nào sẽ giữ chân người dùng ở lại với nền tảng của bạn?
+
+## If FUND IF: the conditions
+Để hội đồng đồng ý giải ngân (hoặc khuyến nghị tiếp tục đầu tư thời gian và nguồn lực), người sáng lập bắt buộc phải thực hiện 4 chuyển dịch chiến lược sau:
+1. **Khai tử định vị "All-in-one" đại trà, chuyển sang thống trị một ngách độc quyền (*Dominate a Micro-Niche*):**
+   Cắt bỏ ngay lập tức 80% các tính năng dàn trải (từ điển tra cứu thông thường, bài giảng ngữ pháp cơ bản). Chọn DUY NHẤT một nhóm đối tượng có nhu cầu sinh tử và sẵn sàng trả tiền cao (ví dụ: Kỹ sư CNTT ôn thi N3-N2 để phỏng vấn công ty Nhật, hoặc nhóm luyện giải đề bẫy JLPT trong 30 ngày trước kỳ thi). Mục tiêu sống còn: Phải độc quyền được phân khúc 1.000 người đầu tiên này trước khi mở rộng.
+2. **Tạo ra một giá trị độc quyền hoặc công nghệ vượt trội 10x (*Build a 10x Proprietary Advantage*):**
+   Không làm flashcard hay bài tập trắc nghiệm thông thường. Phải phát triển một năng lực cốt lõi vượt trội: ví dụ thuật toán học sâu chẩn đoán chính xác lỗ hổng kiến thức JLPT theo bộ đề thực chiến, hoặc phương pháp độc quyền liên kết âm Hán - Việt giải mã Kanji nhanh gấp 5-10 lần cách học vẹt thông thường.
+3. **Thiết lập kênh phân phối độc quyền với chi phí bằng 0 (*Zero-CAC Distribution Wedge*):**
+   Xây dựng cơ chế tiếp cận khách hàng tự nhiên không phụ thuộc vào tiền quảng cáo: ví dụ tích hợp cơ chế chia sẻ nhóm nhận tài liệu độc quyền (*viral mechanic*), hoặc hợp tác độc quyền với một cộng đồng/KOL ngách uy tín chưa bị khai thác thương mại, đảm bảo có sẵn tệp 200 - 500 người dùng đầu tiên cam kết sử dụng.
+4. **Tái cấu trúc mô hình định giá thoát khỏi bẫy giá rẻ (*Value-Based Pricing*):**
+   Xóa bỏ mức giá 50.000 đ – 80.000 đ bán đứt. Thay bằng định giá theo giá trị mang lại (*Value-based pricing*): Chẳng hạn gói "Cam kết đỗ N3 / Tăng 35 điểm JLPT" giá 300.000 đ – 500.000 đ/kỳ thi, hoặc mô hình thuê bao hàng tháng (Subscription) kết hợp lộ trình để tạo dòng tiền quay vòng và kiểm chứng mức độ gắn kết thực sự của khách hàng.

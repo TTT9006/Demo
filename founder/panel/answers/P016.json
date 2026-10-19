@@ -1,0 +1,13 @@
+{
+  "id": "P016",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "quality",
+  "reason": "Tính năng theo dõi số liệu học tập và luyện đề thi có giải thích giúp mình biết rõ điểm yếu phần nào để bù đắp trước kỳ thi. 80k là mức giá quá hợp lý.",
+  "objection": "Tự học một mình rất dễ nản, web có ai nhắc nhở hay hỗ trợ giải đáp khi không hiểu không?",
+  "would_change_my_mind": "",
+  "price_too_cheap": 30000,
+  "price_cheap": 70000,
+  "price_expensive": 150000,
+  "price_too_expensive": 240000
+}

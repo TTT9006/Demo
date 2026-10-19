@@ -31,6 +31,59 @@ function unpackSeedArchive(): string {
   return path.join(RAW_DIR, jsonFile);
 }
 
+const TRANSLATION_ARCHIVE = path.resolve('data/seed/translations-vi-common.json.gz');
+
+export async function ensureTranslations() {
+  if (!existsSync(TRANSLATION_ARCHIVE)) return;
+  let count = 0;
+  try {
+    count = await db.dictionaryTranslation.count({ where: { status: 'completed' } });
+  } catch {
+    count = 0;
+  }
+  if (count >= 50000) {
+    console.log(`✓ Đã có sẵn ${count} bản dịch tiếng Việt hoàn tất.`);
+    return;
+  }
+  console.log(`Từ điển hiện có ${count} bản dịch. Bắt đầu khôi phục toàn bộ 87.585 bản dịch tiếng Việt chuẩn Mazii...`);
+  const { DatabaseSync } = await import('node:sqlite');
+  const { databaseLocation } = await import('../packages/shared/database-location');
+  const { readFileSync } = await import('node:fs');
+  const zlib = await import('node:zlib');
+  const resolvedLocation = databaseLocation(process.env.DATABASE_URL);
+  const dbSync = new DatabaseSync(resolvedLocation.filename);
+
+  const raw = readFileSync(TRANSLATION_ARCHIVE);
+  const decompressed = zlib.gunzipSync(raw).toString('utf8');
+  const items = JSON.parse(decompressed) as Array<{
+    glossId: string;
+    translatedText: string;
+    provider: string;
+    model: string;
+    sourceHash: string;
+  }>;
+
+  const insert = dbSync.prepare(`
+    INSERT INTO DictionaryTranslation(id, glossId, targetLanguage, translatedText, status, provider, model, sourceHash, translatedAt, reviewedAt)
+    VALUES(?, ?, 'vi', ?, 'completed', ?, ?, ?, datetime('now'), datetime('now'))
+    ON CONFLICT(glossId) DO UPDATE SET
+      translatedText = excluded.translatedText,
+      status = 'completed',
+      provider = excluded.provider,
+      model = excluded.model,
+      sourceHash = excluded.sourceHash
+  `);
+
+  dbSync.exec('BEGIN TRANSACTION;');
+  for (const item of items) {
+    insert.run(`trans_${item.glossId}`, item.glossId, item.translatedText, item.provider, item.model, item.sourceHash);
+  }
+  dbSync.exec('COMMIT;');
+  dbSync.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+  dbSync.close();
+  console.log(`✓ Đã nạp thành công ${items.length} bản dịch tiếng Việt chuẩn vào từ điển!`);
+}
+
 export async function ensureFullDictionary() {
   await ensureDatabaseSchema();
   await initSearch();
@@ -42,9 +95,10 @@ export async function ensureFullDictionary() {
     count = 0;
   }
 
-  // Mức A: Nếu đã có >= 20.000 từ vựng thông dụng thì coi như hoàn tất
+  // Mức A: Nếu đã có >= 20.000 từ vựng thông dụng thì đảm bảo bản dịch và hoàn tất
   if (count >= 20000) {
-    console.log(`✓ Đã có sẵn ${count} từ vựng trong từ điển (Mức A). Bỏ qua nạp lại.`);
+    console.log(`✓ Đã có sẵn ${count} từ vựng trong từ điển (Mức A).`);
+    await ensureTranslations();
     return;
   }
 
@@ -112,6 +166,9 @@ export async function ensureFullDictionary() {
   } catch (cpErr) {
     console.warn('Lưu ý khi checkpoint SQLite WAL:', cpErr);
   }
+
+  // Khôi phục bản dịch tiếng Việt đi kèm
+  await ensureTranslations();
 
   // Cập nhật trạng thái nhập dữ liệu vào bảng DictionaryImport
   try {

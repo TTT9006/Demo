@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Mình quen viết tay ra giấy và học theo sách Minna ở trung tâm. Học trên web luyện viết chữ bằng chuột cảm giác rất gượng gạo.",
+  "objection": "Học trên web di động có mượt và tiện bằng tải ứng dụng từ App Store/Google Play không?",
+  "would_change_my_mind": "Tập trung vào phần nghe hiểu và ngữ pháp thay vì luyện viết chữ trên web.",
+  "price_too_cheap": 20000,
+  "price_cheap": 45000,
+  "price_expensive": 100000,
+  "price_too_expensive": 170000
+}

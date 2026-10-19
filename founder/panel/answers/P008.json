@@ -1,0 +1,13 @@
+{
+  "id": "P008",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Hiện tại gói Free cho học thử N5 là đủ cho mình rồi. Mình sinh viên chưa có thu nhập nên sẽ tận dụng đồ free trước chừng nào cần thi mới tính.",
+  "objection": "Gói 80k là trả một lần dùng mãi mãi hay mỗi tháng/mỗi năm đều phải đóng lại?",
+  "would_change_my_mind": "Giảm giá đặc biệt cho sinh viên còn 39k hoặc chia sẻ bạn bè được tặng gói Plus.",
+  "price_too_cheap": 15000,
+  "price_cheap": 35000,
+  "price_expensive": 80000,
+  "price_too_expensive": 150000
+}

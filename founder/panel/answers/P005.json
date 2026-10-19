@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Mình học theo giáo trình sách giấy Minna và app Mazii đã thành thói quen 2 năm nay rồi, đổi sang web khác lại phải làm quen từ đầu.",
+  "objection": "Mazii, Migii và Anki miễn phí đầy ra, web này có gì hơn để tôi phải bỏ tiền?",
+  "would_change_my_mind": "Tính năng import từ vựng từ sách Minna no Nihongo hoặc đồng bộ với Mazii.",
+  "price_too_cheap": 20000,
+  "price_cheap": 50000,
+  "price_expensive": 100000,
+  "price_too_expensive": 180000
+}

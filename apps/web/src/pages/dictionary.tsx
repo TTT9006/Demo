@@ -153,18 +153,33 @@ export function WordCard({
                   ))}
                 </div>
                 <p>
-                  {sense.glosses.map((g, j) => (
-                    <span key={g.id}>
-                      {j > 0 ? '; ' : ''}
-                      {g.translation?.status === 'completed' ? (
-                        <SearchHighlight text={g.translation.translatedText} query={query} />
-                      ) : (
-                        <span className="untranslated">
-                          {g.originalText} <small>chưa có bản dịch Việt</small>
-                        </span>
-                      )}
-                    </span>
-                  ))}
+                  {(() => {
+                    const rendered = new Set<string>();
+                    const items: { id: string; text: string; isTranslated: boolean }[] = [];
+                    for (const g of sense.glosses) {
+                      if (g.translation?.status === 'completed') {
+                        const t = g.translation.translatedText.trim();
+                        if (!rendered.has(t)) {
+                          rendered.add(t);
+                          items.push({ id: g.id, text: t, isTranslated: true });
+                        }
+                      } else {
+                        items.push({ id: g.id, text: g.originalText, isTranslated: false });
+                      }
+                    }
+                    return items.map((item, j) => (
+                      <span key={item.id}>
+                        {j > 0 ? '; ' : ''}
+                        {item.isTranslated ? (
+                          <SearchHighlight text={item.text} query={query} />
+                        ) : (
+                          <span className="untranslated">
+                            {item.text} <small>chưa có bản dịch Việt</small>
+                          </span>
+                        )}
+                      </span>
+                    ));
+                  })()}
                 </p>
                 <details>
                   <summary>Nghĩa gốc tiếng Anh</summary>
@@ -223,13 +238,15 @@ export function WordCard({
             {entry.senses.map((s, i) => (
               <option key={s.id} value={i}>
                 {i + 1}.{' '}
-                {s.glosses
-                  .map((g) =>
-                    g.translation?.status === 'completed'
-                      ? g.translation.translatedText
-                      : g.originalText,
-                  )
-                  .join('; ')}
+                {Array.from(
+                  new Set(
+                    s.glosses.map((g) =>
+                      g.translation?.status === 'completed'
+                        ? g.translation.translatedText
+                        : g.originalText,
+                    ),
+                  ),
+                ).join('; ')}
               </option>
             ))}
           </select>

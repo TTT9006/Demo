@@ -1,0 +1,19 @@
+{
+  "business": "Web tự học tiếng Nhật N5-N2 (Gói Pro 80k - Render 0đ)",
+  "unit": "tài khoản",
+  "price": 80000,
+  "variable": [
+    {"label": "Phí cổng thanh toán / ngân hàng (1.5%)", "cost": 1200}
+  ],
+  "fixed_monthly": [
+    {"label": "Hosting Render (Free tier)", "cost": 0},
+    {"label": "Database Neon / Supabase (Free tier)", "cost": 0}
+  ],
+  "startup": [
+    {"label": "Chi phí vốn khởi điểm (Domain .vn/.com + tài liệu)", "cost": 1000000}
+  ],
+  "days_per_month": 30,
+  "capacity_per_day": 100,
+  "plan_per_day": 1,
+  "ramp_per_day": [0.2, 0.3, 0.5, 0.7, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+}

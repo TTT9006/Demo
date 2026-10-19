@@ -1,0 +1,13 @@
+{
+  "id": "P010",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "Mình mới học thử N5 vỡ lòng, phần miễn phí trên web đã đủ dùng. Khi nào học lên N3 mình mới cân nhắc mua tiếp.",
+  "objection": "Có cho học thử bài bản không hay chỉ vài từ vựng rồi bắt trả tiền?",
+  "would_change_my_mind": "Gói combo tiết kiệm hoặc tặng kèm bộ tài liệu ngữ pháp PDF độc quyền.",
+  "price_too_cheap": 30000,
+  "price_cheap": 60000,
+  "price_expensive": 150000,
+  "price_too_expensive": 250000
+}

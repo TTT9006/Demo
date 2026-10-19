@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "convenience",
+  "reason": "Mình từng bỏ cuộc với Anki vì giao diện quá phức tạp. Wakaba có giao diện tiếng Việt sạch sẽ, lại cho học thử trọn gói N5 miễn phí nên mình sẵn sàng bỏ 50k để học tiếp N3.",
+  "objection": "Có cho học thử bài bản không hay chỉ vài từ vựng rồi bắt trả tiền?",
+  "would_change_my_mind": "Được học thử trọn vẹn N5 miễn phí để kiểm chứng trước khi mua.",
+  "price_too_cheap": 20000,
+  "price_cheap": 40000,
+  "price_expensive": 90000,
+  "price_too_expensive": 150000
+}
