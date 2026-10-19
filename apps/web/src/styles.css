@@ -4197,3 +4197,65 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .brand-name { min-width: 0; letter-spacing: -.8px; }
 .brand .brand-name small { font-size: 6px; letter-spacing: 1px; }
 @media(max-width:1100px) { .brand-logo { width: 38px; height: 38px; flex-basis: 38px; } }
+
+/* Curriculum Trust Badges */
+.auth-curriculum-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: rgba(88, 113, 93, 0.08);
+  border: 1px solid rgba(88, 113, 93, 0.2);
+  border-radius: 8px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.auth-curriculum-badge .badge-check {
+  color: var(--jade);
+  font-weight: 700;
+}
+.auth-trust-banner {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.auth-trust-banner .badge-check {
+  color: var(--jade);
+  font-weight: 700;
+}
+.curriculum-trust-strip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.curriculum-trust-strip svg {
+  color: var(--jade);
+  flex-shrink: 0;
+}
+.curriculum-trust-strip strong {
+  color: var(--ink);
+}
+@media(max-width: 760px) {
+  .curriculum-trust-strip {
+    font-size: 11px;
+    padding: 8px 12px;
+  }
+}
+

@@ -69,6 +69,10 @@ export function Dashboard() {
           </div>
         }
       />
+      <div className="curriculum-trust-strip">
+        <Sparkles size={16} />
+        <span>Hệ thống từ vựng & ngữ pháp được biên soạn bám sát giáo trình chuẩn JLPT: <strong>Minna no Nihongo</strong>, <strong>Shinkanzen Master</strong> & <strong>Soumatome</strong>.</span>
+      </div>
       <section className="hero-study">
         <div className="hero-copy">
           <span className="eyebrow">

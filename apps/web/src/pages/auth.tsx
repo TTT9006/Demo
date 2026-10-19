@@ -61,6 +61,10 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             <br />
             Khám phá một thế giới qua ngôn ngữ.
           </p>
+          <div className="auth-curriculum-badge">
+            <span className="badge-check">✓</span>
+            <span>Hệ thống từ vựng & ngữ pháp biên soạn bám sát giáo trình chuẩn JLPT: <strong>Minna no Nihongo, Shinkanzen Master & Soumatome</strong>.</span>
+          </div>
         </div>
         <span className="auth-japanese" lang="ja">
           若葉
@@ -136,6 +140,10 @@ export function AuthPage({ register = false }: { register?: boolean }) {
               {register ? 'Đăng nhập' : 'Tạo tài khoản'}
             </Link>
           </p>
+          <div className="auth-trust-banner">
+            <span className="badge-check">✓</span>
+            <span>Chuẩn kiến thức JLPT: Bám sát <strong>Minna no Nihongo</strong>, <strong>Shinkanzen Master</strong> & <strong>Soumatome</strong>.</span>
+          </div>
           <small className="muted">
             Tài khoản mẫu dùng chung trên website này. Đăng ký riêng để lưu tiến độ của bạn.
           </small>
