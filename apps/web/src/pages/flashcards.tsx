@@ -19,6 +19,7 @@ import { api, post, patch, remove } from '../services/api';
 import { useUI } from '../stores/ui';
 import type { Card, Deck } from '../types';
 import { ReviewCardInteractive } from '../components/review-card-interactive';
+import { DeckCoverArt } from '../components/deck-cover-art';
 import {
   AudioButton,
   Button,
@@ -169,11 +170,7 @@ export function Flashcards() {
             const due = deck.cards.filter((c) => new Date(c.due) <= new Date()).length;
             return (
               <Link className="deck-card" key={deck.id} to={'/flashcards/' + deck.id}>
-                <div className={'deck-art tone-' + (i % 3)}>
-                  <span>{['語', '日', '旅'][i % 3]}</span>
-                  <Layers size={22} />
-                  <small>{String(i + 1).padStart(2, '0')}</small>
-                </div>
+                <DeckCoverArt name={deck.name} index={i} />
                 <div className="deck-info">
                   <h3>{deck.name}</h3>
                   <p>{deck.description || 'Một bộ sưu tập từ vựng của riêng bạn.'}</p>

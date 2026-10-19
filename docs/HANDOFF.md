@@ -1,10 +1,42 @@
-# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 18/10/2026)
+# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 19/10/2026)
 
 ## Quy ước làm việc của người dùng
 
 Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải cập nhật `docs/HANDOFF.md` trước khi commit. Ghi rõ thay đổi, kiểm tra đã chạy, kết quả và phần còn hạn chế/chưa hoàn tất; bổ sung lưu ý migration hoặc vận hành nếu có. Đưa cập nhật handoff vào cùng commit với thay đổi tương ứng. Đây là yêu cầu thường xuyên của người dùng, áp dụng cho cả các phiên làm việc sau.
 
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
+
+## Cập nhật ảnh bìa nghệ thuật cho các bộ thẻ nhớ (Deck Cover Art) theo chủ đề — ngày 19/10
+
+- **Yêu cầu người dùng:** Trong phần flashcard, thay đổi ảnh bìa của các tệp thẻ nhớ để trông sinh động hơn, dùng hình ảnh liên quan đến chủ đề của từng tệp, hiển thị bản xem thử trực quan và cập nhật lên web.
+- **Thực hiện kỹ thuật:**
+  - **Component nghệ thuật mới (`apps/web/src/components/deck-cover-art.tsx`):**
+    - Thiết kế hệ thống bìa thích ứng thông minh `DeckCoverArt` dựa theo tên bộ thẻ và chỉ số:
+      - *Hiragana:* Sóng truyền thống Seigaiha, chữ thư pháp `あ` (`ひらがな`), lá trúc xanh Wakaba (`#4e7e59`).
+      - *Katakana:* Họa tiết hình học Asanoha (lá gai), chữ thư pháp dứt khoát `ア` (`カタカナ`), origami hiện đại cam san hô (`#b86642`).
+      - *Kanji · Thiên nhiên:* Núi Phú Sĩ đội nón tuyết trắng, mặt trời đỏ mọc, mây trôi uốn lượn, sông nước cùng chữ `山` (`やま · NÚI`, tone xanh `#3e6f96`).
+      - *Kanji · Số đếm:* Khung bàn tính Soroban, các hạt tính cổ điển, chữ `百` (`ひゃく · TRĂM`, tone nâu ấm `#8c6f4b`).
+      - *Kanji · Động vật và cây cối:* Hoa anh đào Sakura 5 cánh, chim hạc Tsuru gấp giấy, cành lá rừng xanh cùng chữ `花` (`はな · HOA`, tone lục `#5a8549`).
+      - *Kanji · Con người và cơ thể:* Vòng tròn thiền định Enso, nhịp đập trái tim cùng chữ `心` (`こころ · TÂM`, tone hồng đất `#a85365`).
+      - *Kanji · Trường học:* Trang sách mở, bút lông và mầm lá tri thức cùng chữ `学` (`まなぶ · HỌC`, tone xanh mòng két `#477085`).
+      - *Kanji · Thời gian & phương hướng:* Vòng tròn kim thời gian, trăng khuyết và la bàn 4 hướng cùng chữ `時` (`とき · THỜI GIAN`, tone tím thạch anh `#6c568f`).
+      - *Một ngày ở Nhật / Đời sống:* Cổng trời Torii Nhật Bản, vầng thái dương đỏ cùng chữ `旅` (`たび · HÀNH TRÌNH`, tone gạch nung `#b85835`).
+      - *Bộ thủ Kanji:* Nét bút lông đại tự cùng chữ `部` (`ぶしゅ · 214 BỘ`).
+      - *Bộ thẻ tự tạo / Mặc định khác:* Vòng tuần hoàn màu ngọc bích, cam đất, rêu trầm phối hợp mầm lá non Wakaba và chữ `語` / `葉` / `日`.
+    - **100% Vector SVG & CSS:** Không dùng ảnh bitmap nặng ngoài, 0 KB tải mạng phát sinh, hiển thị sắc nét trên mọi độ phân giải.
+    - Tích hợp huy hiệu capsule chủ đề ở góc trên (`BẢNG CHỮ CÁI`, `KANJI · THIÊN NHIÊN`,...) và số thứ tự bộ thẻ.
+  - **Frontend (`apps/web/src/pages/flashcards.tsx`):**
+    - Thay thế khối `deck-art` đơn sắc cũ bằng `<DeckCoverArt name={deck.name} index={i} />`.
+  - **Giao diện & Styling (`apps/web/src/styles.css`):**
+    - Thêm quy tắc `.deck-art-modern`, `.deck-cover-svg`, `.deck-cover-tag`, `.deck-cover-kanji`, `.deck-cover-sub`.
+    - Hiệu ứng hover nhạy bén: phóng nhẹ chữ thư pháp và hình minh họa vector (`scale: 1.06`) tạo cảm giác tương tác tactile sống động.
+    - Hỗ trợ hoàn hảo cả **Light Theme** và **Dark Theme** (nền tối chuyển sang gam màu Washi sâu lắng, tương phản cao, êm dịu mắt).
+- **Kiểm chứng hệ thống:**
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - Vitest toàn hệ thống: 119/119 unit & integration tests hoàn thành xuất sắc (10 test suites đạt 100%).
+  - `npm run build`: Vite build frontend và Node backend esbuild thành công.
+  - Trình duyệt Edge thực tế: Chụp và kiểm chứng bố cục trên Desktop (1440px) và Mobile (390px) trên cả theme Sáng và Tối (`test-results/deck-covers/`).
+- **Tập tin liên quan:** `apps/web/src/components/deck-cover-art.tsx`, `apps/web/src/pages/flashcards.tsx`, `apps/web/src/styles.css`, `docs/HANDOFF.md`.
 
 
 ## Cập nhật bộ cấu trúc ngữ pháp trọng điểm thi JLPT (N5 – N2) — ngày 18/10
