@@ -62,8 +62,19 @@ app.use((_req, res, next) => {
 });
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin) {
-    if (!allowedOrigin(req.headers.origin)) {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  }
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && origin) {
+    if (!allowedOrigin(origin)) {
       res.status(403).json({ error: 'Nguồn yêu cầu không hợp lệ.' });
       return;
     }

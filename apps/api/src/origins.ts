@@ -3,10 +3,11 @@ export function allowedOrigin(origin: string, env = process.env) {
     .split(',').map(value => value.trim());
   if (configured.includes(origin)) return true;
   if (env.RENDER_EXTERNAL_URL && env.RENDER_EXTERNAL_URL === origin) return true;
-  // Cho phép origin trùng với chính domain onrender.com của service
+  // Cho phép origin trùng với chính domain onrender.com của service hoặc vercel.app
   try {
     const url = new URL(origin);
     if (url.hostname.endsWith('.onrender.com')) return true;
+    if (url.hostname.endsWith('.vercel.app')) return true;
   } catch {
     /* ignore invalid url */
   }
