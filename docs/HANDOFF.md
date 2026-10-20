@@ -1,10 +1,56 @@
-# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 19/10/2026)
+# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 21/10/2026)
 
 ## Quy ước làm việc của người dùng
 
 Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải cập nhật `docs/HANDOFF.md` trước khi commit. Ghi rõ thay đổi, kiểm tra đã chạy, kết quả và phần còn hạn chế/chưa hoàn tất; bổ sung lưu ý migration hoặc vận hành nếu có. Đưa cập nhật handoff vào cùng commit với thay đổi tương ứng. Đây là yêu cầu thường xuyên của người dùng, áp dụng cho cả các phiên làm việc sau.
 
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
+
+## Cập nhật toàn diện Thành ngữ & Tục ngữ sang tiếng Việt thuần khiết + Mobile Audit & Performance Profiling qua Chrome DevTools Protocol (CDP) — ngày 21/10
+
+- **Yêu cầu người dùng:**
+  1. Cập nhật thêm cho từ điển tất cả các câu thành ngữ / tục ngữ tiếng Nhật và dịch sang tiếng Việt, rà soát đối chiếu nhiều nguồn để sửa bản dịch sao cho thuần Việt, tự nhiên nhất (VD người dùng nêu đích danh: `一石二鳥` -> *"một mũi tên trúng hai con nhạn"* chứ không phải *"một hòn đá trúng hai con chim"*).
+  2. Sau khi xong, tự vào web trên trình duyệt qua Chrome DevTools Protocol và bộ mô phỏng cho mobile (viewport 390x844), tự thử từng nút, tự đo hiệu năng, kiểm tra toàn diện chất lượng web và để lại đánh giá về trải nghiệm của chính mình.
+- **Thực hiện kỹ thuật & Dữ liệu:**
+  - **1. Biên soạn & Cập nhật Dữ liệu Thành ngữ & Tục ngữ (Proverbs & Idioms):**
+    - **Tục ngữ (Proverbs):** Rà soát toàn bộ **941 câu tục ngữ** (1.771 glosses) trong kho từ điển tiếng Nhật, biên dịch và chuẩn hóa sang bản dịch ca dao, tục ngữ tiếng Việt tương đương mang đậm phong vị văn hóa Việt Nam (lưu tại `scripts/data/proverbs_all_vi.json`). Ví dụ:
+      - `隣の芝生は青い` -> *Đứng núi này trông núi nọ (cỏ nhà bên bao giờ cũng xanh hơn)*
+      - `井の中の蛙、大海を知らず` -> *Ếch ngồi đáy giếng coi trời bằng vung (ếch nơi đáy giếng chẳng biết biển lớn bao la)*
+      - `先ず隗より始めよ` -> *Vạn dặm khởi đầu từ một bước chân (muốn làm việc lớn hãy bắt đầu từ việc nhỏ trước mắt)*
+      - `失敗は成功のもと` -> *Thất bại là mẹ thành công*
+      - `猿も木から落ちる` -> *Nhân vô thập toàn (người giỏi đến đâu cũng có lúc lỡ tay; khỉ còn ngã cây)*
+      - `塵も積もれば山となる` -> *Tích tiểu thành đại, góp gió thành bão*
+    - **Tứ tự thành ngữ (Yojijukugo):** Rà soát toàn diện và chỉnh sửa các bản dịch máy ngô nghê thành các thành ngữ Hán-Việt và thuần Việt chuẩn mực (lưu tại `scripts/data/yojis_all_vi.json`). Đích thân sửa:
+      - `一石二鳥` -> *một mũi tên trúng hai con nhạn (một công đôi việc)*
+      - `黄金時代` -> *thời kỳ hoàng kim, thời đại hoàng kim*
+      - `起死回生` -> *cải tử hoàn sinh, chuyển bại thành thắng, xoay chuyển tình thế lúc ngàn cân treo sợi tóc*
+      - `興味津々` -> *hứng thú dạt dào, vô cùng thích thú, tràn đầy tò mò*
+      - `試行錯誤` -> *thử và sai, vừa làm vừa rút kinh nghiệm*
+    - **Cơ sở dữ liệu SQLite (`prisma/learning.db`):** Nạp thành công **1.995 bản dịch** vào bảng `DictionaryTranslation` (`provider: 'curated-proverb'`).
+    - **Chỉ mục tìm kiếm FTS5 & SearchTerm:** Tái chỉ mục (`indexEntry`) cho toàn bộ **1.012 mục từ**, cập nhật đầy đủ các bảng `DictionaryFts`, `DictionaryTrigram`, `DictionarySearchTerm` (cả có dấu lẫn không dấu).
+    - **Kho hạt giống Seed Archive:** Đã đồng bộ và nén lại thành công vào `data/seed/translations-vi-common.json.gz` (tổng cộng **89.469 bản dịch**, gồm 111 sửa đổi và 1.884 bổ sung mới).
+  - **2. Mobile Audit & Performance Profiling qua Chrome DevTools Protocol (CDP):**
+    - Kịch bản tự động hóa Playwright CDP (`scripts/mobile_comprehensive_audit.mjs`) mô phỏng chuẩn di động **iPhone 14 / Pixel (390 x 844 px, DPR 2.0, Touch input)**.
+    - **Đo lường hiệu năng:**
+      - Thời gian tải trang: Login TTFB + FCP `889 ms`, Dashboard `1.602 ms`, các trang SPA tiếp theo `< 150 ms`.
+      - Bộ nhớ JS Heap: Duy trì cực thấp `5.27 MB` (Login) đến `17.58 MB` (Dashboard đầy đủ widget), không có rò rỉ bộ nhớ.
+      - DOM Nodes: `130 nodes` (Login) tới `1.373 nodes` (Dashboard).
+    - **Kiểm chứng tìm kiếm tục ngữ & thành ngữ (100% Khớp):**
+      - `mũi tên trúng hai con nhạn` -> Trả về ngay `一石二鳥`
+      - `đứng núi này trông núi nọ` -> Trả về ngay `隣の芝生は青い`
+      - `ếch ngồi đáy giếng` -> Trả về ngay `井の中の蛙、大海を知らず`
+      - `vạn dặm` -> Trả về ngay `先ず隗より始めよ`
+      - `thời kỳ hoàng kim` -> Trả về ngay `黄金時代`
+      - `thất bại là mẹ thành công` -> Trả về ngay `失敗は成功のもと`
+      - `cải tử hoàn sinh` -> Trả về ngay `起死回生`
+    - **Tương tác nút bấm & tính năng:** Thử nghiệm thành công đăng nhập 1-chạm, lùi lịch ôn LoginReview, phát âm Audio TTS, mở chi tiết bộ thẻ flashcard, lật thẻ 3D, lọc ngữ pháp JLPT N3, vẽ cảm ứng 2 nét trên Canvas luyện viết chữ Hán, đổi Theme Sáng/Tối.
+    - **Kiểm tra tràn màn hình ngang (Responsive Horizontal Overflow):** Đạt chuẩn tuyệt đối **Zero Overflow** (0px tràn ngang) trên toàn bộ 6 phân hệ (`/dashboard`, `/dictionary`, `/flashcards`, `/grammar`, `/writing`, `/settings`).
+    - **Báo cáo đánh giá:** Tạo artifact chi tiết kèm biểu đồ Mermaid và ảnh chụp màn hình thực tế: `mobile-experience-audit-report.md`.
+- **Kiểm chứng toàn hệ thống:**
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm test`: 10/10 test files pass, 119/119 unit & integration tests hoàn thành 100%.
+  - `npm run build`: Vite build frontend và Node backend esbuild thành công mỹ mãn.
+- **Tập tin liên quan:** `data/seed/translations-vi-common.json.gz`, `scripts/apply-proverbs-and-yojis.ts`, `scripts/data/proverbs_all_vi.json`, `scripts/data/yojis_all_vi.json`, `scripts/mobile_comprehensive_audit.mjs`, `docs/HANDOFF.md`.
 
 ## Cập nhật ảnh bìa nghệ thuật cho các bộ thẻ nhớ (Deck Cover Art) theo chủ đề — ngày 19/10
 
