@@ -6,6 +6,47 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
+## Chế độ thi tập trung (Exam Focus Mode), khóa thanh điều hướng, ẩn tab Google Chrome & Nộp bài sớm — ngày 21/10
+
+- **Yêu cầu người dùng:**
+  1. Khi bắt đầu làm test thì ngăn người dùng chọn vào các thẻ khác trong trang web (khóa toàn bộ thanh điều hướng, sidebar, mobile bottom nav, topbar, mobile drawer).
+  2. Ẩn luôn thanh tab của Google Chrome (kích hoạt chế độ HTML5 Fullscreen `requestFullscreen()` để ẩn tab strip, omnibox và taskbar; có nút/thông báo hướng dẫn bật lại nếu thoát).
+  3. Nếu người dùng muốn dừng bài kiểm tra sẽ có nút **"Nộp bài ngay"** (hiển thị modal xác nhận và nộp bài/chấm điểm ngay lập tức).
+- **Thực hiện kỹ thuật:**
+  - **1. Trạng thái toàn cục (State Management - `apps/web/src/stores/ui.ts`):**
+    - Thêm cờ `examMode: boolean` và setter `setExamMode: (examMode: boolean) => void` vào UI store Zustand.
+  - **2. Khóa giao diện điều hướng (Navigation Lock - `apps/web/src/app.tsx` & `apps/web/src/styles.css`):**
+    - Khi `examMode === true`:
+      - Ẩn hoàn toàn `sidebar` trên desktop, `topbar` trên mobile/tablet, `mobile-bottom-nav` dưới đáy màn hình, `footer`, và drawer mobile.
+      - Thêm class `.is-exam-mode` vào `.app-shell` và `.main-shell`: giải phóng toàn bộ không gian ngang (`margin-left: 0`, `max-width: 1000px`, `padding: 1.25rem 1rem`), căn giữa nội dung làm bài thi tối ưu.
+  - **3. Ẩn thanh tab Google Chrome qua HTML5 Fullscreen API (`apps/web/src/pages/jlpt.tsx` & `apps/web/src/pages/tests.tsx`):**
+    - Tự động gọi `requestFullscreen()` ngay khi người dùng nhấn nút "Bắt đầu làm bài" hoặc "Làm phần tiếp theo" (tuân thủ browser security gesture).
+    - Lắng nghe sự kiện `fullscreenchange` để cập nhật trạng thái hiển thị.
+    - Bổ sung nút bấm trực quan *"Toàn màn hình / Ẩn tab Google"* trên thanh công cụ ghim trên cùng (`.exam-sticky-bar`) cho phép bật lại bất kỳ lúc nào nếu người dùng vô tình bấm `Esc`.
+    - Lắng nghe sự kiện `beforeunload` để cảnh báo ngăn người dùng vô tình đóng tab hoặc reload trang khi đang trong bài thi.
+  - **4. Nút "Nộp bài ngay" & Modal xác nhận (`apps/web/src/pages/jlpt.tsx` & `apps/web/src/pages/tests.tsx`):**
+    - Thêm thanh Sticky Bar đầu trang (`.exam-sticky-bar`) ghim cố định với:
+      - Huy hiệu Chế độ làm bài (`.exam-mode-badge`).
+      - Đồng hồ đếm ngược thời gian làm bài.
+      - Nút chuyển đổi Toàn màn hình (ẩn/hiện tab trình duyệt).
+      - Nút hành động nổi bật **"Nộp bài ngay"** (màu cam/đỏ cảnh báo).
+    - Khi bấm "Nộp bài ngay": Hiển thị modal xác nhận (`.exam-confirm-modal`) cảnh báo số câu đã làm, số câu chưa làm, yêu cầu xác nhận rõ ràng trước khi nộp bài sớm.
+    - Nút "Dừng thi & nộp bài ngay" cũng được tích hợp ở màn hình chuyển tiếp giữa các section của kỳ thi nhiều phần.
+    - Khi xác nhận nộp bài sớm: tự động thoát chế độ Fullscreen, tắt `examMode` (mở khóa lại toàn bộ thanh điều hướng), chuyển đến trang báo cáo kết quả / chấm điểm.
+  - **5. Backend API (`apps/api/src/jlpt.ts`):**
+    - Bổ sung action `'finish-all'` vào schema Zod và hàm điều khiển kỳ thi `advanceExam`.
+    - Khi nhận `'finish-all'`, server tự động hoàn tất tất cả các section còn lại (kể cả những section chưa bắt đầu), tạo báo cáo kết quả `state.report` tổng thể và ghi nhận kết quả bài thi `tx.attempt.create` vào cơ sở dữ liệu.
+- **Kiểm thử & Đảm bảo chất lượng:**
+  - `npm run typecheck`: 0 lỗi TypeScript across workspace.
+  - `npm test`: 10/10 test suites pass, 119/119 tests pass (100%).
+  - `npm run build`: Build thành công cả frontend Vite và backend server.
+  - `scripts/test_exam_focus_mode.mjs`: Kịch bản Playwright kiểm thử tự động toàn diện:
+    - Bắt đầu bài thi -> Kiểm tra ẩn sidebar, topbar, bottom nav.
+    - Kích hoạt modal "Nộp bài ngay" -> Kiểm tra modal hiển thị đầy đủ thông tin cảnh báo.
+    - Xác nhận nộp bài -> Kiểm tra nhận báo cáo điểm số và khôi phục thanh điều hướng bình thường.
+    - Ảnh chụp màn hình: `exam-mode-active.png`, `exam-mode-confirm-modal.png`, `exam-mode-finished-report.png`.
+- **Tập tin liên quan:** `apps/api/src/jlpt.ts`, `apps/web/src/app.tsx`, `apps/web/src/pages/jlpt.tsx`, `apps/web/src/pages/tests.tsx`, `apps/web/src/stores/ui.ts`, `apps/web/src/styles.css`, `docs/HANDOFF.md`, `scripts/test_exam_focus_mode.mjs`.
+
 ## Cập nhật toàn diện Thành ngữ & Tục ngữ sang tiếng Việt thuần khiết + Mobile Audit & Performance Profiling qua Chrome DevTools Protocol (CDP) — ngày 21/10
 
 - **Yêu cầu người dùng:**

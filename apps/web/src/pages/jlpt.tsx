@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Check, Clock3, Volume2, VolumeX, Square, Play, Pause, Headphones } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Clock3, Volume2, VolumeX, Square, Play, Pause, Headphones, Maximize, Minimize, ShieldAlert, CheckCircle } from 'lucide-react';
 import { api, post, patch, speak, stopSpeech } from '../services/api';
+import { useUI } from '../stores/ui';
 import { Button, ErrorState, Loading, Modal, PageHeader } from '../components/ui';
 import { QuestionInput } from './tests';
 import type { JlptRunView, JlptSummary } from '../../../../packages/shared/jlpt-types';
@@ -290,8 +291,60 @@ export function JlptSession() {
   const runRef = useRef<JlptRunView | null>(null);
   runRef.current = run;
 
+  const setExamMode = useUI((s) => s.setExamMode);
+  const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
+  const [earlySubmitConfirm, setEarlySubmitConfirm] = useState(false);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const enterFullscreen = async () => {
+    try {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn('Fullscreen request failed:', err);
+    }
+  };
+
+  const exitFullscreen = async () => {
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.warn('Exit fullscreen failed:', err);
+    }
+  };
+
+  const isExamActive = Boolean(run && !run.finished && !run.report);
+
+  useEffect(() => {
+    setExamMode(isExamActive);
+    return () => {
+      setExamMode(false);
+      void exitFullscreen();
+    };
+  }, [isExamActive, setExamMode]);
+
+  useEffect(() => {
+    if (!isExamActive) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isExamActive]);
+
   async function command(
-    action: 'save' | 'finish' | 'begin',
+    action: 'save' | 'finish' | 'begin' | 'finish-all',
     answers: Record<string, string> = {},
   ) {
     if (!run || locked.current) return;
@@ -299,20 +352,27 @@ export function JlptSession() {
       clearTimeout(saveTimer.current);
       saveTimer.current = null;
     }
+    if (action === 'begin') {
+      void enterFullscreen();
+    }
     locked.current = true;
     setBusy(true);
     setError('');
     try {
       const mergedAnswers = { ...pendingAnswers.current, ...answers };
       pendingAnswers.current = {};
-      apply(
-        await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
-          action,
-          answers: mergedAnswers,
-          revision: run.revision,
-        }),
-      );
+      const res = await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
+        action,
+        answers: mergedAnswers,
+        revision: run.revision,
+      });
+      apply(res);
       setConfirm(false);
+      setEarlySubmitConfirm(false);
+      if (action === 'finish-all' || res.finished) {
+        void exitFullscreen();
+        setExamMode(false);
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -325,6 +385,7 @@ export function JlptSession() {
     locked.current = true;
     setBusy(true);
     setError('');
+    void enterFullscreen();
     try {
       apply(await post<JlptRunView>('/jlpt/papers/' + id + '/start'));
     } catch (e) {
@@ -358,10 +419,62 @@ export function JlptSession() {
   const answered = run ? Object.values(run.answers).filter(Boolean).length : 0;
   return (
     <>
-      <Link className="back-link" to="/tests">
-        <ArrowLeft size={16} />
-        Các đề luyện JLPT
-      </Link>
+      {!isExamActive && (
+        <Link className="back-link" to="/tests">
+          <ArrowLeft size={16} />
+          Các đề luyện JLPT
+        </Link>
+      )}
+      {isExamActive && (
+        <header className="exam-sticky-bar" aria-label="Thanh công cụ bài thi">
+          <div className="exam-sticky-left">
+            <span className="exam-mode-badge">
+              <ShieldAlert size={14} /> Chế độ làm bài
+            </span>
+            <strong>{paper.title}</strong>
+            {run?.startedAt && (
+              <span className="muted">· Phần {run.section + 1}/{run.sections.length} ({run.sectionTitle})</span>
+            )}
+          </div>
+          <div className="exam-sticky-actions">
+            {run?.deadline && !run.finished && (
+              <span className={'timer ' + (remaining < 60 ? 'error-text' : '')}>
+                <Clock3 size={16} />
+                {clock(remaining)}
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={isFullscreen ? exitFullscreen : enterFullscreen}
+              title={isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình (Ẩn thanh tab Google)'}
+            >
+              {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+              <span>{isFullscreen ? 'Thu nhỏ' : 'Ẩn tab Google'}</span>
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              disabled={busy}
+              onClick={() => setEarlySubmitConfirm(true)}
+              title="Dừng bài kiểm tra và nộp bài ngay"
+            >
+              <CheckCircle size={15} />
+              <span>Nộp bài ngay</span>
+            </Button>
+          </div>
+        </header>
+      )}
+      {isExamActive && !isFullscreen && (
+        <aside className="exam-fullscreen-prompt" role="alert">
+          <span>
+            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài kiểm tra.
+          </span>
+          <Button size="small" variant="secondary" onClick={() => void enterFullscreen()}>
+            <Maximize size={14} /> Ẩn thanh tab Google
+          </Button>
+        </aside>
+      )}
       <PageHeader
         eyebrow={paper.isOfficial ? 'JLPT CHÍNH THỨC · ĐỒNG BỘ AUDIO GỐC' : 'THI THỬ · ĐỀ TỰ BIÊN SOẠN'}
         title={paper.title}
@@ -524,10 +637,16 @@ export function JlptSession() {
             Phần tiếp theo: {run.sectionTitle}. Thời gian {run.sections[run.section].minutes} phút.
             Đồng hồ bắt đầu khi bạn chọn nút dưới.
           </p>
-          <Button disabled={busy} onClick={() => void command('begin')}>
-            Bắt đầu phần {run.section + 1}
-            <ArrowRight size={16} />
-          </Button>
+          <div className="inline-actions spaced">
+            <Button disabled={busy} onClick={() => void command('begin')}>
+              Bắt đầu phần {run.section + 1}
+              <ArrowRight size={16} />
+            </Button>
+            <Button variant="secondary" disabled={busy} onClick={() => setEarlySubmitConfirm(true)}>
+              <CheckCircle size={15} />
+              Dừng thi & nộp bài ngay
+            </Button>
+          </div>
         </section>
       ) : (
         <>
@@ -541,13 +660,31 @@ export function JlptSession() {
                 {busy ? 'Đang lưu…' : `${answered}/${run.questions.length} câu đã lưu`}
               </p>
             </div>
-            <Button
-              variant="secondary"
-              disabled={busy || remaining === 0}
-              onClick={() => setConfirm(true)}
-            >
-              Kết thúc phần này
-            </Button>
+            <div className="inline-actions">
+              <Button
+                variant="ghost"
+                onClick={isFullscreen ? exitFullscreen : enterFullscreen}
+                title={isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình (Ẩn thanh tab Google)'}
+              >
+                {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+                <span>{isFullscreen ? 'Thu nhỏ' : 'Ẩn tab Google'}</span>
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => setEarlySubmitConfirm(true)}
+              >
+                <CheckCircle size={15} />
+                Nộp bài ngay
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy || remaining === 0}
+                onClick={() => setConfirm(true)}
+              >
+                Kết thúc phần này
+              </Button>
+            </div>
           </div>
           <div className="jlpt-layout">
             <section className="panel jlpt-question">
@@ -669,6 +806,26 @@ export function JlptSession() {
           <Button disabled={busy} onClick={() => void command('finish')}>
             Xác nhận kết thúc
             <Check size={16} />
+          </Button>
+        </div>
+      </Modal>
+      <Modal open={earlySubmitConfirm} onOpenChange={setEarlySubmitConfirm} title="Dừng bài thi và nộp ngay?">
+        <p>
+          Bạn có chắc chắn muốn dừng bài thi ngay bây giờ không? Các câu hỏi chưa làm trong toàn bộ bài thi sẽ được tính là chưa đúng và hệ thống sẽ chấm điểm kết quả của bạn ngay lập tức.
+        </p>
+        <div className="inline-actions">
+          <Button variant="secondary" disabled={busy} onClick={() => setEarlySubmitConfirm(false)}>
+            Tiếp tục làm bài
+          </Button>
+          <Button
+            disabled={busy}
+            onClick={async () => {
+              setEarlySubmitConfirm(false);
+              await command('finish-all');
+              void exitFullscreen();
+            }}
+          >
+            Xác nhận nộp bài ngay
           </Button>
         </div>
       </Modal>

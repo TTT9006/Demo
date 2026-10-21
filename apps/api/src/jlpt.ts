@@ -57,7 +57,7 @@ function completeSection(state: ExamState, now: number) {
 export function advanceExam(
   state: ExamState,
   now: number,
-  action?: 'save' | 'finish' | 'begin',
+  action?: 'save' | 'finish' | 'begin' | 'finish-all',
   answers: Record<string, string> = {},
   revision?: number,
 ) {
@@ -75,6 +75,17 @@ export function advanceExam(
   if (action === 'begin') {
     if (state.sectionStarted !== null) throw fail('Phần thi đã bắt đầu.');
     state.sectionStarted = now;
+  } else if (action === 'finish-all') {
+    for (const [id, answer] of Object.entries(answers)) {
+      const question = current?.questions.find((q) => q.id === id);
+      if (question && (answer === '' || question.options.includes(answer))) {
+        state.answers[id] = answer;
+      }
+    }
+    while (state.section < state.paper.sections.length) {
+      if (state.sectionStarted === null) state.sectionStarted = now;
+      completeSection(state, now);
+    }
   } else {
     if (state.sectionStarted === null) throw fail('Hãy bắt đầu phần thi tiếp theo.');
     let hasNewAnswer = false;
@@ -127,7 +138,7 @@ async function updateRun(
   userId: string,
   runId: string,
   command?: {
-    action: 'save' | 'finish' | 'begin';
+    action: 'save' | 'finish' | 'begin' | 'finish-all';
     answers: Record<string, string>;
     revision: number;
   },
@@ -201,7 +212,7 @@ jlptRouter.get('/runs/:id', async (req, res) =>
 jlptRouter.patch('/runs/:id', async (req, res) => {
   const command = z
     .object({
-      action: z.enum(['save', 'finish', 'begin']),
+      action: z.enum(['save', 'finish', 'begin', 'finish-all']),
       revision: z.number().int().nonnegative(),
       answers: z.record(z.string(), z.string().max(1000)).default({}),
     })

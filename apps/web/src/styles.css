@@ -4372,3 +4372,92 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   }
 }
 
+/* ==========================================================================
+   Exam Focus Mode & Anti-cheat Lock
+   ========================================================================== */
+.app-shell.is-exam-mode {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.main-shell.is-exam-mode {
+  margin-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+.main-shell.is-exam-mode > main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 32px) clamp(16px, 4vw, 24px);
+}
+.exam-sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+}
+.exam-sticky-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.exam-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #fdf2e9;
+  color: #b85835;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid #f0d5c3;
+}
+[data-theme='dark'] .exam-mode-badge {
+  background: #3a2218;
+  color: #f5a57e;
+  border-color: #5c3222;
+}
+.exam-sticky-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.exam-fullscreen-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #eef7f2;
+  border: 1px solid #b7dfc8;
+  color: #2d5a3f;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  flex-wrap: wrap;
+}
+[data-theme='dark'] .exam-fullscreen-prompt {
+  background: #192d22;
+  border-color: #2b553d;
+  color: #9fe0be;
+}
+
+

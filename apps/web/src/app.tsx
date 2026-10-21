@@ -73,6 +73,7 @@ function Layout() {
   }, []);
   const [search, setSearch] = useState('');
   const notify = useUI((s) => s.notify);
+  const examMode = useUI((s) => s.examMode);
   useEffect(() => {
     setMobile(false);
     window.scrollTo(0, 0);
@@ -156,9 +157,9 @@ function Layout() {
   </>;
   return (
     <Dialog.Root open={mobile} onOpenChange={setMobile}>
-    <div className="app-shell">
-      {!smallScreen && <aside className="sidebar">{sidebar}</aside>}
-      {smallScreen && <Dialog.Portal>
+    <div className={'app-shell ' + (examMode ? 'is-exam-mode' : '')}>
+      {!smallScreen && !examMode && <aside className="sidebar">{sidebar}</aside>}
+      {smallScreen && !examMode && <Dialog.Portal>
         <Dialog.Overlay className="mobile-overlay" />
         <Dialog.Content className="sidebar open mobile-drawer" aria-describedby={undefined}>
           <Dialog.Title className="sr-only">Điều hướng học tập</Dialog.Title>
@@ -166,8 +167,8 @@ function Layout() {
           {sidebar}
         </Dialog.Content>
       </Dialog.Portal>}
-      <div className="main-shell">
-        <header className="topbar">
+      <div className={'main-shell ' + (examMode ? 'is-exam-mode' : '')}>
+        {!examMode && <header className="topbar">
           <Dialog.Trigger asChild><Button
             variant="ghost"
             size="icon"
@@ -202,18 +203,18 @@ function Layout() {
             JLPT {user.level}
             <ArrowUpRight size={14} />
           </Link>
-        </header>
+        </header>}
         <main>
           <Outlet />
         </main>
-        <footer className="footer">
+        {!examMode && <footer className="footer">
           <span>若葉 · Học từng chút, lớn mỗi ngày.</span>
           <Link to="/settings#sources">
             Nguồn dữ liệu & bản quyền <ArrowUpRight size={12} />
           </Link>
-        </footer>
+        </footer>}
       </div>
-      {smallScreen && <nav className="mobile-bottom-nav" aria-label="Truy cập nhanh">
+      {smallScreen && !examMode && <nav className="mobile-bottom-nav" aria-label="Truy cập nhanh">
         {[navigation[0], navigation[3], navigation[1], navigation[4]].map(({ to, label, icon: Icon }) =>
           <NavLink key={to} to={to}><Icon size={21} /><span>{label}</span></NavLink>)}
         <Dialog.Trigger className="mobile-more"><Menu size={21} /><span>Thêm</span></Dialog.Trigger>

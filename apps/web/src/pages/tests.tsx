@@ -4,7 +4,7 @@ import type { JlptSummary } from '../../../../packages/shared/jlpt-types';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Clock3, Check, RotateCcw, Headphones } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock3, Check, RotateCcw, Headphones, Maximize, Minimize, ShieldAlert, CheckCircle } from 'lucide-react';
 import { api, post } from '../services/api';
 import { useUI } from '../stores/ui';
 import type { Attempt, Question, Result } from '../types';
@@ -357,6 +357,7 @@ function LegacyTestSession() {
   const { id } = useParams();
   const client = useQueryClient();
   const notify = useUI((s) => s.notify);
+  const setExamMode = useUI((s) => s.setExamMode);
   const [run, setRun] = useState<{
     runId: string;
     startedAt: string;
@@ -371,6 +372,57 @@ function LegacyTestSession() {
   const [busy, setBusy] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const enterFullscreen = async () => {
+    try {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn('Fullscreen request failed:', err);
+    }
+  };
+
+  const exitFullscreen = async () => {
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.warn('Exit fullscreen failed:', err);
+    }
+  };
+
+  const isExamActive = Boolean(run && !result);
+
+  useEffect(() => {
+    setExamMode(isExamActive);
+    return () => {
+      setExamMode(false);
+      void exitFullscreen();
+    };
+  }, [isExamActive, setExamMode]);
+
+  useEffect(() => {
+    if (!isExamActive) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isExamActive]);
+
   useEffect(() => {
     if (!run || result) return;
     const timer = setInterval(
@@ -382,6 +434,7 @@ function LegacyTestSession() {
   const start = async () => {
     setBusy(true);
     setError('');
+    void enterFullscreen();
     try {
       setRun(await post('/tests/' + id + '/start'));
       setAnswers({});
@@ -399,6 +452,8 @@ function LegacyTestSession() {
       setResult(await post('/tests/' + id + '/submit', { runId: run?.runId, answers }));
       void client.invalidateQueries({ queryKey: ['dashboard'] });
       void client.invalidateQueries({ queryKey: ['test-history'] });
+      void exitFullscreen();
+      setExamMode(false);
     } catch (e) {
       notify((e as Error).message);
     } finally {
@@ -407,10 +462,58 @@ function LegacyTestSession() {
   };
   return (
     <>
-      <Link className="back-link" to="/tests">
-        <ArrowLeft size={16} />
-        Các bài kiểm tra
-      </Link>
+      {!isExamActive && (
+        <Link className="back-link" to="/tests">
+          <ArrowLeft size={16} />
+          Các bài kiểm tra
+        </Link>
+      )}
+      {isExamActive && (
+        <header className="exam-sticky-bar" aria-label="Thanh công cụ bài thi">
+          <div className="exam-sticky-left">
+            <span className="exam-mode-badge">
+              <ShieldAlert size={14} /> Chế độ làm bài
+            </span>
+            <strong>Bài kiểm tra</strong>
+            <span className="muted">· {Object.keys(answers).filter((k) => answers[k]).length}/{run?.questions.length || 0} câu đã trả lời</span>
+          </div>
+          <div className="exam-sticky-actions">
+            <span className="timer">
+              <Clock3 size={16} />
+              {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
+            </span>
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={isFullscreen ? exitFullscreen : enterFullscreen}
+              title={isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình (Ẩn thanh tab Google)'}
+            >
+              {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+              <span>{isFullscreen ? 'Thu nhỏ' : 'Ẩn tab Google'}</span>
+            </Button>
+            <Button
+              variant="secondary"
+              size="small"
+              disabled={busy}
+              onClick={() => setConfirmSubmit(true)}
+              title="Dừng bài kiểm tra và nộp bài ngay"
+            >
+              <CheckCircle size={15} />
+              <span>Nộp bài ngay</span>
+            </Button>
+          </div>
+        </header>
+      )}
+      {isExamActive && !isFullscreen && (
+        <aside className="exam-fullscreen-prompt" role="alert">
+          <span>
+            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài kiểm tra.
+          </span>
+          <Button size="small" variant="secondary" onClick={() => void enterFullscreen()}>
+            <Maximize size={14} /> Ẩn thanh tab Google
+          </Button>
+        </aside>
+      )}
       <PageHeader
         eyebrow="TẬP TRUNG MỘT CHÚT"
         title={result ? 'Bạn đã hoàn thành.' : 'Sẵn sàng thử sức?'}
@@ -509,13 +612,32 @@ function LegacyTestSession() {
           </section>
           <div className="submit-test">
             <p>Câu bỏ trống sẽ được tính là chưa đúng.</p>
-            <Button disabled={busy} onClick={() => void submit()}>
+            <Button disabled={busy} onClick={() => setConfirmSubmit(true)}>
               Nộp bài
               <Check size={17} />
             </Button>
           </div>
         </>
       )}
+      <Modal open={confirmSubmit} onOpenChange={setConfirmSubmit} title="Dừng bài kiểm tra & nộp ngay?">
+        <p>
+          Bạn có chắc chắn muốn dừng bài kiểm tra và nộp bài ngay bây giờ không? Còn {run ? run.questions.length - Object.keys(answers).filter((k) => answers[k]).length : 0} câu chưa trả lời. Các câu bỏ trống sẽ được tính là chưa đúng.
+        </p>
+        <div className="inline-actions">
+          <Button variant="secondary" disabled={busy} onClick={() => setConfirmSubmit(false)}>
+            Tiếp tục làm bài
+          </Button>
+          <Button
+            disabled={busy}
+            onClick={() => {
+              setConfirmSubmit(false);
+              void submit();
+            }}
+          >
+            Xác nhận nộp bài ngay
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }
