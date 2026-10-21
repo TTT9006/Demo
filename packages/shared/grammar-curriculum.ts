@@ -2,6 +2,7 @@ import type { Exercise, LessonContent } from './content';
 import { beginnerRows } from './grammar-beginner';
 import { intermediateRows } from './grammar-intermediate';
 import { alignReading } from './annotation';
+import { curriculumExtraExercises } from './grammar-curriculum-extra-exercises';
 
 // Explicit word boundaries for sentences whose kana anchors admit more than one
 // alignment. These readings are authored together with the examples.
@@ -135,6 +136,7 @@ export const curriculumLessons = entries.map(({ row, level, chapter, id, positio
       answer: second,
       explanation: `${formation}. ${note}`,
     },
+    ...(curriculumExtraExercises[id] || []),
   ];
   const content: LessonContent = {
     meaning: title,

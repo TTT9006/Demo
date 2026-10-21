@@ -36,7 +36,7 @@ function useRefreshGrammar() {
 }
 export function Grammar() {
   const [params, setParams] = useSearchParams();
-  const level = ['N5', 'N4', 'N3', 'N2'].includes(params.get('level') || '')
+  const level = ['N5', 'N4', 'N3', 'N2', 'N1'].includes(params.get('level') || '')
     ? params.get('level')!
     : 'N5';
   const search = params.get('q') || '',
@@ -73,15 +73,15 @@ export function Grammar() {
   return (
     <>
       <PageHeader
-        eyebrow="NGỮ PHÁP · N5 → N2"
+        eyebrow="NGỮ PHÁP · N5 → N1"
         title="Học có thứ tự. Ôn để nhớ lâu."
-        description="Sơ cấp theo mạch 50 bài Minna, tiếp nối bằng các nhóm ngữ pháp trung cấp. Ưu tiên bài đến hạn, củng cố lỗi sai rồi học tiếp."
+        description="Lộ trình toàn diện từ sơ cấp N5 đến cao cấp N1. Phân chia dạng rõ ràng, chú thích phân biệt sâu sắc và thực hành 10 bài tập mỗi điểm ngữ pháp."
       />
       {roadmap.error && <ErrorState error={roadmap.error} />}
       <nav className="grammar-roadmap" aria-label="Lộ trình ngữ pháp">
         {(
           roadmap.data?.levels ||
-          ['N5', 'N4', 'N3', 'N2'].map((level) => ({
+          ['N5', 'N4', 'N3', 'N2', 'N1'].map((level) => ({
             level,
             total: 0,
             mastered: 0,
@@ -102,7 +102,11 @@ export function Grammar() {
                 ? 'Nền tảng · sơ cấp I'
                 : stage.level === 'N4'
                   ? 'Mở rộng · sơ cấp II'
-                  : 'Bổ sung trung cấp'}
+                  : stage.level === 'N3'
+                    ? 'Bổ sung · trung cấp I'
+                    : stage.level === 'N2'
+                      ? 'Nâng cao · trung cấp II'
+                      : 'Chuyên sâu · cao cấp N1'}
             </span>
             <progress
               aria-label={'Tiến độ ' + stage.level}
@@ -250,10 +254,7 @@ export function Grammar() {
       <details className="panel spaced grammar-source">
         <summary>Nội dung và nguồn tham khảo</summary>
         <p>
-          Các mức N là gợi ý học tập. Nội dung sơ cấp được nhóm theo mạch bài Minna; N3–N2 là các
-          nhóm bổ sung, không gán số bài trung cấp của sách khi chưa đối chiếu. Ví dụ và bài tập do
-          Wakaba biên soạn, không phải trích nguyên văn. Danh mục này không được xem là danh sách
-          đầy đủ mọi mục của giáo trình hoặc JLPT.
+          Lộ trình ngữ pháp N5–N1 toàn diện, bao gồm cấu trúc theo mạch Minna và các chuyên đề trọng điểm JLPT N5–N1 được biên soạn chuẩn xác, phân chia theo từng dạng cụ thể, chú thích phân biệt các ngữ pháp dễ nhầm lẫn và 10 bài tập thực hành đa dạng cho mỗi điểm ngữ pháp.
         </p>
         <p>
           <a href="https://www.vnjpclub.com/" target="_blank" rel="noreferrer">

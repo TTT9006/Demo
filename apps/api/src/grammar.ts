@@ -100,7 +100,7 @@ export async function grammarRoadmap(userId: string, selected?: string) {
     orderBy: { position: 'asc' },
   });
   const summaries = rows.map(summarize);
-  const levels = ['N5', 'N4', 'N3', 'N2'].map((level) => {
+  const levels = ['N5', 'N4', 'N3', 'N2', 'N1'].map((level) => {
     const items = summaries.filter((l) => l.level === level);
     return {
       level,

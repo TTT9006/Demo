@@ -248,7 +248,7 @@ describe.sequential('Authenticated learning workflows', () => {
     for (const level of ['N5', 'N4', 'N3', 'N2']) expect(list.body.some((l: {level:string}) => l.level === level)).toBe(true);
     expect(list.body.every((l: {exercises?:unknown; content?:unknown}) => l.exercises === undefined && l.content === undefined)).toBe(true);
     const detail = await session.get('/api/grammar/mnn-50');
-    expect(detail.body.exercises).toHaveLength(3);
+    expect(detail.body.exercises).toHaveLength(10);
     expect(detail.body.exercises.every((q: {answer?:string; explanation?:string; acceptedAnswers?:string[]}) => !q.answer && !q.explanation && !q.acceptedAnswers)).toBe(true);
     expect((await session.get('/api/grammar/desu')).status).toBe(200);
     expect((await session.get('/api/grammar?level=invalid')).status).toBe(400);

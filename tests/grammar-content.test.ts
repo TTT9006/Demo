@@ -61,4 +61,13 @@ describe('Grammar curriculum integrity', () => {
         );
       }
   });
+  it('guarantees every single lesson across N5–N1 has exactly 10 exercises and complete level coverage', () => {
+    for (const level of ['N5', 'N4', 'N3', 'N2', 'N1']) {
+      const levelLessons = lessons.filter((l) => l.level === level);
+      expect(levelLessons.length).toBeGreaterThanOrEqual(40);
+    }
+    for (const l of lessons) {
+      expect(l.exercises, `${l.id} (${l.title}) should have 10 exercises`).toHaveLength(10);
+    }
+  });
 });

@@ -346,7 +346,7 @@ app.get('/api/dashboard', async (_req, res) => {
     db.attempt.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 30 }),
     db.writing.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 90 }),
     db.grammarAnswer.findMany({ where: { userId }, select: { createdAt: true } }),
-    grammarRoadmap(userId, ['N5', 'N4', 'N3', 'N2'].includes(res.locals.user.level) ? res.locals.user.level : undefined),
+    grammarRoadmap(userId, ['N5', 'N4', 'N3', 'N2', 'N1'].includes(res.locals.user.level) ? res.locals.user.level : undefined),
   ]);
   const activity = [
     ...reviews.map((r) => ({ date: r.createdAt, type: 'review' })),
