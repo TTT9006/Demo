@@ -25,7 +25,7 @@ type Release = {
 async function download() {
   const response = await fetch(
     'https://api.github.com/repos/scriptin/jmdict-simplified/releases/latest',
-    { headers: { 'User-Agent': 'Komorebi-local-dictionary' } },
+    { headers: { 'User-Agent': 'Wakaba-local-dictionary' } },
   );
   if (!response.ok) throw Error(`GitHub: ${response.status}`);
   const release = (await response.json()) as Release;

@@ -102,16 +102,18 @@ async function session(res: Response, userId: string) {
   await db.session.create({
     data: { token: digest(token), userId, expires: new Date(Date.now() + 30 * 86400000) },
   });
-  res.cookie('komorebi_session', token, {
+  const cookieOpts = {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 30 * 86400000,
     path: '/',
-  });
+  };
+  res.cookie('wakaba_session', token, cookieOpts);
+  res.cookie('komorebi_session', token, cookieOpts);
 }
 async function auth(req: Request, res: Response, next: NextFunction) {
-  const token = req.cookies.komorebi_session as string | undefined;
+  const token = (req.cookies.wakaba_session || req.cookies.komorebi_session) as string | undefined;
   if (!token) {
     res.status(401).json({ error: 'Vui lòng đăng nhập để tiếp tục.' });
     return;
@@ -153,13 +155,22 @@ app.get('/api/health', async (_req, res) => {
   });
 });
 app.post('/api/auth/register', sensitive, async (req, res) => {
-  const data = credentials.extend({ name: z.string().trim().min(1).max(60) }).parse(req.body);
+  const registerSchema = credentials.extend({
+    name: z.string().trim().min(1).max(60),
+    legalConsent: z.boolean().optional(),
+    legalAcceptedAt: z.string().optional(),
+  });
+  const data = registerSchema.parse(req.body);
   if (await db.user.findUnique({ where: { email: data.email } })) {
     res.status(409).json({ error: 'Email này đã được đăng ký.' });
     return;
   }
   const user = await db.user.create({
-    data: { ...data, password: await bcrypt.hash(data.password, 12) },
+    data: {
+      email: data.email,
+      name: data.name,
+      password: await bcrypt.hash(data.password, 12),
+    },
   });
   await db.deck.create({
     data: {
@@ -183,7 +194,9 @@ app.post('/api/auth/login', sensitive, async (req, res) => {
   res.json(safeUser(user));
 });
 app.post('/api/auth/demo', sensitive, async (_req, res) => {
-  const user = await db.user.findUnique({ where: { email: 'demo@komorebi.local' } });
+  const user = await db.user.findFirst({
+    where: { email: { in: ['demo@wakaba.local', 'demo@komorebi.local'] } },
+  });
   if (!user) {
     res.status(503).json({ error: 'Chưa có tài khoản mẫu. Hãy chạy db:setup.' });
     return;
@@ -197,8 +210,10 @@ app.post('/api/auth/demo', sensitive, async (_req, res) => {
   res.json(safeUser(user));
 });
 app.post('/api/auth/logout', async (req, res) => {
-  if (req.cookies.komorebi_session)
-    await db.session.deleteMany({ where: { token: digest(String(req.cookies.komorebi_session)) } });
+  const token = req.cookies.wakaba_session || req.cookies.komorebi_session;
+  if (token)
+    await db.session.deleteMany({ where: { token: digest(String(token)) } });
+  res.clearCookie('wakaba_session', { path: '/' });
   res.clearCookie('komorebi_session', { path: '/' });
   res.json({ ok: true });
 });
@@ -329,6 +344,68 @@ app.post('/api/profile/password', sensitive, async (req, res) => {
   ]);
   await session(res, res.locals.user.id);
   res.json({ ok: true });
+});
+app.get('/api/profile/export', async (_req, res) => {
+  const userId = res.locals.user.id;
+  const [user, decks, reviews, grammarProgress, attempts, testRuns, writings, searches, radicals] =
+    await Promise.all([
+      db.user.findUnique({ where: { id: userId } }),
+      db.deck.findMany({ where: { userId }, include: { cards: true } }),
+      db.review.findMany({ where: { userId } }),
+      db.grammarProgress.findMany({
+        where: { userId },
+        include: { grammar: { select: { pattern: true, title: true, level: true } } },
+      }),
+      db.attempt.findMany({ where: { userId } }),
+      db.testRun.findMany({ where: { userId } }),
+      db.writing.findMany({ where: { userId } }),
+      db.searchHistory.findMany({ where: { userId } }),
+      db.radicalProgress.findMany({ where: { userId } }),
+    ]);
+
+  if (!user) {
+    res.status(404).json({ error: 'Không tìm thấy thông tin người dùng.' });
+    return;
+  }
+
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    legalNotice:
+      'Dữ liệu cá nhân được xuất theo Quyền được cung cấp dữ liệu của chủ thể dữ liệu quy định tại Điều 9 Khoản 7 Nghị định số 13/2023/NĐ-CP của Chính phủ.',
+    user: safeUser(user),
+    learningData: {
+      decks,
+      reviewsCount: reviews.length,
+      grammarProgress,
+      testAttempts: attempts,
+      testRuns,
+      writings,
+      searches,
+      radicals,
+    },
+  };
+
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="wakaba-user-data.json"');
+  res.json(exportPayload);
+});
+app.delete('/api/profile', async (_req, res) => {
+  const user = res.locals.user;
+  if (user.email === 'demo@wakaba.local' || user.email === 'demo@komorebi.local') {
+    res.status(403).json({ error: 'Không thể xóa tài khoản mẫu của hệ thống.' });
+    return;
+  }
+  await db.user.delete({ where: { id: user.id } });
+  const token = _req.cookies.wakaba_session || _req.cookies.komorebi_session;
+  if (token) {
+    await db.session.deleteMany({ where: { token: digest(String(token)) } });
+  }
+  res.clearCookie('wakaba_session', { path: '/' });
+  res.clearCookie('komorebi_session', { path: '/' });
+  res.json({
+    ok: true,
+    message: 'Tài khoản và toàn bộ dữ liệu cá nhân liên quan đã được xóa vĩnh viễn theo Nghị định 13/2023/NĐ-CP.',
+  });
 });
 const localDay = (d: Date) =>
   new Intl.DateTimeFormat('en-CA', {

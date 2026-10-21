@@ -340,6 +340,35 @@ describe.sequential('Authenticated learning workflows', () => {
       });
     expect(res.status).toBe(400);
   });
+  it('exports user data and deletes accounts per Decree 13/2023/ND-CP', async () => {
+    const userAgent = request.agent(app);
+    const reg = await userAgent.post('/api/auth/register').send({
+      name: 'Nguyen Van A',
+      email: 'nguyenvana@example.com',
+      password: 'strong-password-123',
+      legalConsent: true,
+      legalAcceptedAt: new Date().toISOString(),
+    });
+    expect(reg.status).toBe(201);
+    expect(reg.body.name).toBe('Nguyen Van A');
+
+    // Test Decree 13 Article 9 clause 7: Right to data portability / export
+    const exportRes = await userAgent.get('/api/profile/export');
+    expect(exportRes.status).toBe(200);
+    expect(exportRes.body.legalNotice).toContain('Nghị định số 13/2023/NĐ-CP');
+    expect(exportRes.body.user.email).toBe('nguyenvana@example.com');
+    expect(exportRes.body.learningData.decks).toBeDefined();
+
+    // Test Decree 13 Article 9 clause 5 & Article 16: Right to erasure / account deletion
+    const delRes = await userAgent.delete('/api/profile');
+    expect(delRes.status).toBe(200);
+    expect(delRes.body.ok).toBe(true);
+
+    // Verify user no longer exists
+    expect(await db.user.findUnique({ where: { email: 'nguyenvana@example.com' } })).toBeNull();
+    // And session is invalid
+    expect((await userAgent.get('/api/auth/me')).status).toBe(401);
+  });
 });
 describe.sequential('Dictionary import, search and resumable translation', () => {
   it('imports official data idempotently while preserving English', async () => {

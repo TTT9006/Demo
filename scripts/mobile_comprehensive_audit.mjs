@@ -316,7 +316,7 @@ async function runMobileAudit() {
     // -------------------------------------------------------------------------
     auditReport.uxEvaluation = {
       overallScore: '9.9 / 10',
-      summary: 'Komorebi trên màn hình di động mang lại trải nghiệm học tiếng Nhật xuất sắc, tinh tế, mượt mà và đậm chất Nhật Bản.',
+      summary: 'Wakaba trên màn hình di động mang lại trải nghiệm học tiếng Nhật xuất sắc, tinh tế, mượt mà và đậm chất Nhật Bản.',
       keyStrengths: [
         'Tốc độ vượt trội: Thời gian tải các trang dao động từ 120ms - 400ms, bộ nhớ JS Heap duy trì mức cực kỳ tiết kiệm (~5MB).',
         'Tìm kiếm từ điển & thành ngữ thông minh: Hỗ trợ tìm kiếm cả tiếng Nhật, Romaji lẫn câu thành ngữ tiếng Việt tự nhiên ("mũi tên trúng hai con nhạn", "đứng núi này trông núi nọ", "vạn dặm", "thất bại là mẹ thành công"...). Tốc độ trả về kết quả FTS5 ngay lập tức dưới 10ms.',

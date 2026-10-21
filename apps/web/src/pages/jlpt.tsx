@@ -527,7 +527,7 @@ export function JlptSession() {
         </aside>
       )}
       <PageHeader
-        eyebrow={paper.isOfficial ? 'JLPT CHÍNH THỨC · ĐỒNG BỘ AUDIO GỐC' : 'THI THỬ · ĐỀ TỰ BIÊN SOẠN'}
+        eyebrow={paper.isOfficial ? 'JLPT CHÍNH THỨC · ĐỒNG BỘ AUDIO GỐC' : 'THI THỬ · ĐỀ TỔNG HỢP BÁM SÁT JLPT'}
         title={paper.title}
         description={`${paper.total} câu · ${paper.minutes} phút làm bài · ${paper.sections.length} phần`}
         action={

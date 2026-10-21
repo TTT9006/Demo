@@ -268,7 +268,7 @@ export function Tests() {
         </div>
       )}
       <p className="spaced">
-        Câu hỏi tự biên soạn và đề thi chính thức được cung cấp kèm âm thanh gốc đồng bộ theo từng
+        Câu hỏi được tổng hợp bám sát JLPT và đề thi chính thức được cung cấp kèm âm thanh gốc đồng bộ theo từng
         câu. Điểm hiển thị là tỷ lệ câu đúng, không phải thang 180 của JLPT.{' '}
         <a
           className="text-link"

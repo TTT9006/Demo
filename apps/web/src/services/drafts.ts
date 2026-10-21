@@ -9,7 +9,7 @@ export type WritingDraft = {
 let connection: Promise<IDBDatabase> | undefined;
 function openDrafts() {
   return connection ??= new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('komorebi-drafts', 1);
+    const request = indexedDB.open('wakaba-drafts', 1);
     request.onupgradeneeded = () => request.result.createObjectStore('writing');
     request.onerror = () => { connection = undefined; reject(request.error); };
     request.onblocked = () => { connection = undefined; reject(new Error('Kho bản nháp đang bận.')); };

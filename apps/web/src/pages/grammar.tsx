@@ -254,7 +254,7 @@ export function Grammar() {
       <details className="panel spaced grammar-source">
         <summary>Nội dung và nguồn tham khảo</summary>
         <p>
-          Lộ trình ngữ pháp N5–N1 toàn diện, bao gồm cấu trúc theo mạch Minna và các chuyên đề trọng điểm JLPT N5–N1 được biên soạn chuẩn xác, phân chia theo từng dạng cụ thể, chú thích phân biệt các ngữ pháp dễ nhầm lẫn và 10 bài tập thực hành đa dạng cho mỗi điểm ngữ pháp.
+          Lộ trình ngữ pháp N5–N1 toàn diện, bao gồm cấu trúc theo mạch Minna và các chuyên đề trọng điểm JLPT N5–N1 được tổng hợp bám sát JLPT chuẩn xác, phân chia theo từng dạng cụ thể, chú thích phân biệt các ngữ pháp dễ nhầm lẫn và 10 bài tập thực hành đa dạng cho mỗi điểm ngữ pháp.
         </p>
         <p>
           <a href="https://www.vnjpclub.com/" target="_blank" rel="noreferrer">
@@ -447,7 +447,7 @@ function Lesson({ id }: { id: string }) {
           </div>
           {lesson.curriculum && (
             <p className="muted">
-              Ví dụ và bài tập biên soạn riêng.{' '}
+              Ví dụ và bài tập được tổng hợp bám sát JLPT.{' '}
               <a href={lesson.curriculum.sourceUrl} target="_blank" rel="noreferrer">
                 {lesson.curriculum.sourceLabel} ↗
               </a>

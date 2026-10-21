@@ -12,7 +12,7 @@ import { api, patch } from '../services/api';
 import { useUser } from '../app';
 import type { User } from '../types';
 import { useUI } from '../stores/ui';
-const event = 'komorebi-annotation-mode';
+const event = 'wakaba-annotation-mode';
 function subscribe(callback: () => void) {
   window.addEventListener('storage', callback);
   window.addEventListener(event, callback);
@@ -23,7 +23,9 @@ function subscribe(callback: () => void) {
 }
 function guestMode(): AnnotationMode {
   try {
-    return localStorage.getItem(event) === 'romanized' ? 'romanized' : 'japanese';
+    return (localStorage.getItem(event) || localStorage.getItem('komorebi-annotation-mode')) === 'romanized'
+      ? 'romanized'
+      : 'japanese';
   } catch {
     return 'japanese';
   }
