@@ -45,7 +45,7 @@ export async function ensureTranslations() {
     console.log(`✓ Đã có sẵn ${count} bản dịch tiếng Việt hoàn tất.`);
     return;
   }
-  console.log(`Từ điển hiện có ${count} bản dịch. Bắt đầu khôi phục toàn bộ 87.585 bản dịch tiếng Việt chuẩn Mazii...`);
+  console.log(`Từ điển hiện có ${count} bản dịch. Bắt đầu khôi phục toàn bộ bản dịch tiếng Việt chuẩn Mazii & Thành ngữ tục ngữ...`);
   const { DatabaseSync } = await import('node:sqlite');
   const { databaseLocation } = await import('../packages/shared/database-location');
   const { readFileSync } = await import('node:fs');
@@ -63,6 +63,11 @@ export async function ensureTranslations() {
     sourceHash: string;
   }>;
 
+  // Thu thập danh sách các glossId hiện có trong database để đảm bảo toàn vẹn ràng buộc khóa ngoại (FOREIGN KEY)
+  const existingGlosses = new Set(
+    (dbSync.prepare('SELECT id FROM DictionaryGloss').all() as Array<{ id: string }>).map((r) => r.id)
+  );
+
   const insert = dbSync.prepare(`
     INSERT INTO DictionaryTranslation(id, glossId, targetLanguage, translatedText, status, provider, model, sourceHash, translatedAt, reviewedAt)
     VALUES(?, ?, 'vi', ?, 'completed', ?, ?, ?, datetime('now'), datetime('now'))
@@ -75,13 +80,41 @@ export async function ensureTranslations() {
   `);
 
   dbSync.exec('BEGIN TRANSACTION;');
+  let inserted = 0;
   for (const item of items) {
+    if (!existingGlosses.has(item.glossId)) continue;
     insert.run(`trans_${item.glossId}`, item.glossId, item.translatedText, item.provider, item.model, item.sourceHash);
+    inserted++;
   }
   dbSync.exec('COMMIT;');
   dbSync.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+
+  // Cập nhật lại cột vietnamese trong DictionaryFts cho các từ vừa được nạp bản dịch
+  try {
+    dbSync.exec(`
+      UPDATE DictionaryFts
+      SET vietnamese = (
+        SELECT group_concat(t.translatedText, ' ')
+        FROM DictionaryTranslation t
+        JOIN DictionaryGloss g ON g.id = t.glossId
+        JOIN DictionarySense s ON s.id = g.senseId
+        WHERE s.entryId = DictionaryFts.entryId AND t.status = 'completed'
+      )
+      WHERE entryId IN (
+        SELECT DISTINCT s.entryId
+        FROM DictionaryTranslation t
+        JOIN DictionaryGloss g ON g.id = t.glossId
+        JOIN DictionarySense s ON s.id = g.senseId
+        WHERE t.status = 'completed'
+      );
+    `);
+    dbSync.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+  } catch (ftsErr) {
+    console.warn('Lưu ý khi cập nhật FTS tiếng Việt:', ftsErr);
+  }
+
   dbSync.close();
-  console.log(`✓ Đã nạp thành công ${items.length} bản dịch tiếng Việt chuẩn vào từ điển!`);
+  console.log(`✓ Đã nạp thành công ${inserted}/${items.length} bản dịch tiếng Việt chuẩn vào từ điển!`);
 }
 
 export async function ensureFullDictionary() {
@@ -102,7 +135,7 @@ export async function ensureFullDictionary() {
     return;
   }
 
-  console.log(`Từ điển hiện có ${count} từ. Bắt đầu nạp 22.645 từ thông dụng N5-N1 từ gói dữ liệu đóng gói sẵn...`);
+  console.log(`Từ điển hiện có ${count} từ. Bắt đầu nạp ${SEED_ARCHIVE.includes('common') ? '23.623 từ thông dụng & thành ngữ N5-N1' : 'từ vựng'} từ gói dữ liệu đóng gói sẵn...`);
 
   let targetJson = '';
   if (existsSync(RAW_DIR)) {
@@ -151,7 +184,7 @@ export async function ensureFullDictionary() {
 
   importer.close();
   const totalElapsed = ((Date.now() - start) / 1000).toFixed(1);
-  console.log(`✓ Đã nạp thành công toàn bộ ${importedCount} từ vựng thông dụng N5-N1 trong ${totalElapsed}s!`);
+  console.log(`✓ Đã nạp thành công toàn bộ ${importedCount} từ vựng thông dụng & thành ngữ trong ${totalElapsed}s!`);
 
   // Checkpoint WAL và VACUUM để database được ghi trọn vẹn vào learning.db
   try {
@@ -179,7 +212,7 @@ export async function ensureFullDictionary() {
         data: {
           version,
           source: 'https://github.com/scriptin/jmdict-simplified',
-          checksum: 'jmdict-eng-common-3.6.2 (Mức A - 22.645 từ thông dụng)',
+          checksum: 'jmdict-eng-common-3.6.2 (Mức A - 23.623 từ thông dụng & thành ngữ tục ngữ)',
           count: importedCount,
           status: 'completed',
           importedAt: new Date(),
@@ -190,7 +223,7 @@ export async function ensureFullDictionary() {
         data: {
           version,
           source: 'https://github.com/scriptin/jmdict-simplified',
-          checksum: 'jmdict-eng-common-3.6.2 (Mức A - 22.645 từ thông dụng)',
+          checksum: 'jmdict-eng-common-3.6.2 (Mức A - 23.623 từ thông dụng & thành ngữ tục ngữ)',
           count: importedCount,
           status: 'completed',
           importedAt: new Date(),

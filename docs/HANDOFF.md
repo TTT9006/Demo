@@ -6,6 +6,36 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
+## Khắc phục lỗi nạp từ điển trên Vercel build (FOREIGN KEY constraint failed) — ngày 21/10
+
+- **Hiện tượng & Báo cáo lỗi:**
+  - Khi triển khai môi trường sạch trên Vercel (`npm run build`), lệnh `tsx scripts/ensure-full-dictionary.ts` bị dừng với lỗi:
+    `Lỗi khi nạp từ điển: Error: FOREIGN KEY constraint failed at ensureTranslations (scripts/ensure-full-dictionary.ts:79:12)`.
+- **Nguyên nhân gốc rễ:**
+  - Trong bản cập nhật trước, 1.884 bản dịch thành ngữ & tục ngữ mới đã được nạp vào kho lưu trữ bản dịch nén `data/seed/translations-vi-common.json.gz` (nâng tổng lên 89.469 bản dịch).
+  - Tuy nhiên, tệp hạt giống từ vựng tiếng Nhật `data/seed/jmdict-eng-common.json.tgz` trước đó chỉ chứa 22.645 từ thông dụng (`common: true`), trong khi 978 mục từ thành ngữ & tục ngữ tương ứng trong JMDict mang cờ `common: false` nên chưa được đóng gói vào hạt giống.
+  - Khi Vercel build từ database trống, sau khi nạp xong 22.645 từ vào bảng `DictionaryGloss`, hàm `ensureTranslations()` cố gắng nạp các bản dịch có `glossId` thuộc về 978 từ này, dẫn đến vi phạm ràng buộc khóa ngoại `DictionaryTranslation.glossId -> DictionaryGloss.id`.
+- **Thực hiện kỹ thuật:**
+  - **1. Đóng gói đầy đủ từ vựng thành ngữ & tục ngữ vào hạt giống (`data/seed/jmdict-eng-common.json.tgz`):**
+    - Bổ sung toàn bộ 978 mục từ thành ngữ, tục ngữ và tứ tự thành ngữ vào tệp hạt giống, nâng tổng số từ vựng Mức A từ 22.645 lên **23.623 mục từ**.
+    - Dung lượng tệp nén chỉ tăng nhẹ từ 1.38 MB lên 1.46 MB.
+    - Nhờ đó, 100% bản dịch trong `translations-vi-common.json.gz` đều có `DictionaryGloss` tương ứng (khớp chính xác 89.469/89.469 bản dịch, 0 bản dịch bị thiếu).
+  - **2. Cơ chế bảo vệ toàn vẹn khóa ngoại (Foreign Key Defense-in-depth) trong `scripts/ensure-full-dictionary.ts`:**
+    - Hàm `ensureTranslations()` lấy tập hợp `existingGlosses = new Set(dbSync.prepare('SELECT id FROM DictionaryGloss').all())`.
+    - Kiểm tra `if (!existingGlosses.has(item.glossId)) continue;` trước khi thực thi lệnh chèn, ngăn chặn hoàn toàn khả năng phát sinh lỗi `FOREIGN KEY constraint failed`.
+  - **3. Cập nhật chỉ mục tìm kiếm FTS5 tiếng Việt tức thời sau khi nạp bản dịch:**
+    - Thực thi truy vấn cập nhật cột `vietnamese` trong `DictionaryFts` ngay sau khi nạp bản dịch, bảo đảm người dùng trên bản build sạch có thể tra cứu tức thì các câu thành ngữ như "mũi tên trúng hai con nhạn", "đứng núi này trông núi nọ", "ếch ngồi đáy giếng" mà không cần chạy lại backfill thủ công.
+- **Kiểm chứng hệ thống:**
+  - Mô phỏng toàn diện Vercel clean build trên cơ sở dữ liệu trắng (`prisma/test_clean_build.db`):
+    - Nạp thành công 23.623 từ vựng trong 9.6s.
+    - Nạp thành công 89.469/89.469 bản dịch tiếng Việt vào `DictionaryTranslation` (0 lỗi).
+    - Cập nhật 23.622 bản ghi FTS5 tiếng Việt.
+    - Kiểm tra truy vấn tìm kiếm FTS5 `"mũi tên"` lập tức trả về `一石二鳥` (1164160).
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm test`: 10/10 test files pass, 119/119 tests pass (100%).
+  - `npm run build`: Build hoàn tất thành công.
+- **Tập tin liên quan:** `data/seed/jmdict-eng-common.json.tgz`, `scripts/ensure-full-dictionary.ts`, `docs/HANDOFF.md`.
+
 ## Chế độ thi tập trung (Exam Focus Mode), khóa thanh điều hướng, ẩn tab Google Chrome & Nộp bài sớm — ngày 21/10
 
 - **Yêu cầu người dùng:**
