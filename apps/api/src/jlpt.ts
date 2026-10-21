@@ -213,7 +213,7 @@ jlptRouter.patch('/runs/:id', async (req, res) => {
   const command = z
     .object({
       action: z.enum(['save', 'finish', 'begin', 'finish-all']),
-      revision: z.number().int().nonnegative(),
+      revision: z.coerce.number().int().nonnegative().default(0),
       answers: z.record(z.string(), z.string().max(1000)).default({}),
     })
     .parse(req.body);

@@ -259,7 +259,7 @@ export function JlptSession() {
       const updated = await patch<JlptRunView>('/jlpt/runs/' + currentRun.runId, {
         action: 'save',
         answers: toSave,
-        revision: currentRun.revision,
+        revision: currentRun.revision ?? 0,
       });
       // Clear saved keys from pending
       for (const k of Object.keys(toSave)) {
@@ -361,15 +361,66 @@ export function JlptSession() {
     try {
       const mergedAnswers = { ...pendingAnswers.current, ...answers };
       pendingAnswers.current = {};
+
+      if (action === 'finish-all') {
+        try {
+          const res = await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
+            action: 'finish-all',
+            answers: mergedAnswers,
+            revision: run.revision ?? 0,
+          });
+          apply(res);
+          setConfirm(false);
+          setEarlySubmitConfirm(false);
+          void exitFullscreen();
+          setExamMode(false);
+          return;
+        } catch (finishAllErr: unknown) {
+          // Fallback an toàn nếu máy chủ backend chưa cập nhật action 'finish-all'
+          let updated: JlptRunView | null = null;
+          try {
+            updated = await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
+              action: 'finish',
+              answers: mergedAnswers,
+              revision: run.revision ?? 0,
+            });
+            while (updated && !updated.finished && updated.section < updated.sections.length) {
+              updated = await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
+                action: 'begin',
+                answers: {},
+                revision: updated.revision ?? 0,
+              });
+              if (updated.finished) break;
+              updated = await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
+                action: 'finish',
+                answers: {},
+                revision: updated.revision ?? 0,
+              });
+            }
+          } catch {
+            throw finishAllErr;
+          }
+          if (updated) {
+            apply(updated);
+            setConfirm(false);
+            setEarlySubmitConfirm(false);
+            void exitFullscreen();
+            setExamMode(false);
+            return;
+          }
+          throw finishAllErr;
+        }
+      }
+
       const res = await patch<JlptRunView>('/jlpt/runs/' + run.runId, {
         action,
         answers: mergedAnswers,
-        revision: run.revision,
+        revision: run.revision ?? 0,
       });
       apply(res);
       setConfirm(false);
       setEarlySubmitConfirm(false);
-      if (action === 'finish-all' || res.finished) {
+      if (res.finished) {
         void exitFullscreen();
         setExamMode(false);
       }

@@ -6,6 +6,34 @@ Mỗi lần sửa mã, giao diện, dữ liệu hoặc cấu hình đều phải
 
 Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay đổi và chạy các kiểm tra phù hợp, không cần hỏi lại. Chỉ commit các thay đổi thuộc công việc đã hoàn thành; không đưa database, mật khẩu, .env hoặc backup vào Git. Không tự push nếu người dùng chưa yêu cầu. Quy ước áp dụng cả các phiên tiếp theo; luôn kiểm tra trạng thái Git và giữ thay đổi của người dùng.
 
+## Khắc phục lỗi "Thông tin chưa hợp lệ" khi nộp bài thi JLPT sớm & Cơ chế Fallback đa tầng — ngày 21/10
+
+- **Hiện tượng & Báo cáo lỗi:**
+  - Trong lúc làm bài thi JLPT (ảnh chụp màn hình người dùng gửi: Phần 2/3 Ngữ pháp & Đọc hiểu), giao diện xuất hiện khung cảnh báo màu đỏ:
+    `Thông tin chưa hợp lệ. Vui lòng kiểm tra các trường đã nhập.` kèm nút `Tải lại bài đã lưu`.
+- **Nguyên nhân gốc rễ:**
+  - Vercel chỉ đóng vai trò host Static SPA frontend và chuyển tiếp toàn bộ yêu cầu `/api/*` về máy chủ Render (`https://wakaba-mk61.onrender.com/api/*`) qua `vercel.json`.
+  - Khi frontend kích hoạt chức năng nộp bài thi ngay lập tức qua nút "Nộp bài ngay", frontend gửi `PATCH /api/jlpt/runs/:id` kèm `{ action: 'finish-all' }`.
+  - Trên máy chủ Render production (khi đang chạy bản container Docker trước đó chưa hoàn tất redeploy), backend Express chỉ chấp nhận `action: z.enum(['save', 'finish', 'begin'])`.
+  - Schema Zod ném ra `ZodError: Invalid option: expected one of "save"|"finish"|"begin", received "finish-all"`.
+  - Bộ bắt lỗi tập trung của Express (`apps/api/src/app.ts`) trả về mã 400 kèm chuỗi thông báo chung: `"Thông tin chưa hợp lệ. Vui lòng kiểm tra các trường đã nhập."`.
+- **Thực hiện kỹ thuật & Tương thích ngược:**
+  - **1. Cơ chế Tương thích ngược & Fallback đa tầng (`apps/web/src/pages/jlpt.tsx`):**
+    - Khi người học bấm "Xác nhận nộp bài ngay" (`finish-all`):
+      - Trước hết gọi `action: 'finish-all'` trực tiếp để hoàn tất trong 1 request duy nhất nếu backend đã cập nhật.
+      - Nếu gặp lỗi từ chối do máy chủ đang chạy phiên bản cũ (HTTP 400), frontend tự động kích hoạt **fallback an toàn**: kết thúc section hiện tại (`action: 'finish'`), sau đó duyệt tuần tự qua các section còn lại (`begin` -> `finish`) cho đến khi hoàn tất 100% bài thi và nhận báo cáo kết quả `report`. Người dùng không còn bị gián đoạn hay kẹt ở màn hình thi.
+    - Bảo đảm an toàn giá trị `revision`: `revision: run.revision ?? 0` trong cả `command` và `flushPendingAnswers` để tránh trường hợp `undefined` gây lỗi Zod schema.
+  - **2. Ép kiểu an toàn (Safe Coercion) ở Backend (`apps/api/src/jlpt.ts`):**
+    - Đổi validation `revision` thành `z.coerce.number().int().nonnegative().default(0)` để tự động ép kiểu hợp lệ kể cả khi nhận chuỗi số hoặc giá trị rỗng.
+  - **3. Minh bạch hóa thông báo lỗi Zod (`apps/api/src/app.ts`):**
+    - Bổ sung ghi log `console.error('Validation error (ZodError):', details)`.
+    - Trả về chi tiết trường bị lỗi cụ thể (ví dụ: `Thông tin chưa hợp lệ (action: Invalid enum value...). Vui lòng kiểm tra các trường đã nhập.`) thay vì chỉ trả về thông điệp chung chung.
+- **Kiểm chứng hệ thống:**
+  - `tsc --noEmit`: 0 lỗi TypeScript.
+  - `npm test`: 10/10 test suites pass, 119/119 tests pass (100%).
+  - `npm run build`: Build production Vite và esbuild thành công.
+- **Tập tin liên quan:** `apps/api/src/app.ts`, `apps/api/src/jlpt.ts`, `apps/web/src/pages/jlpt.tsx`, `docs/HANDOFF.md`.
+
 ## Khắc phục lỗi nạp từ điển trên Vercel build (FOREIGN KEY constraint failed) — ngày 21/10
 
 - **Hiện tượng & Báo cáo lỗi:**

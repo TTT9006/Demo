@@ -799,8 +799,10 @@ if (process.env.NODE_ENV === 'production') {
 }
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (error instanceof ZodError) {
+    const details = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ');
+    console.error('Validation error (ZodError):', details);
     res.status(400).json({
-      error: 'Thông tin chưa hợp lệ. Vui lòng kiểm tra các trường đã nhập.',
+      error: `Thông tin chưa hợp lệ (${details}). Vui lòng kiểm tra các trường đã nhập.`,
       details: error.issues.map((i) => ({ path: i.path, message: i.message })),
     });
     return;
