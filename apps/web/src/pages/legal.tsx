@@ -38,15 +38,15 @@ export function LegalLayout({ title, subtitle, activeTab, lastUpdated = '21/10/2
             <Brand tagline />
           </Link>
           <div className="legal-header-actions">
-            <Button variant="ghost" onClick={handlePrint} className="legal-action-btn" aria-label="In văn bản pháp lý">
+            <Button variant="ghost" onClick={handlePrint} className="legal-action-btn" aria-label="In văn bản pháp lý" title="In văn bản pháp lý">
               <Printer size={16} />
               <span>In văn bản</span>
             </Button>
-            <Button variant="secondary" onClick={handleCopyLink} className="legal-action-btn">
+            <Button variant="secondary" onClick={handleCopyLink} className="legal-action-btn" aria-label="Chia sẻ liên kết" title="Chia sẻ liên kết">
               {copied ? <CheckCircle size={16} /> : <FileText size={16} />}
               <span>{copied ? 'Đã sao chép liên kết' : 'Chia sẻ'}</span>
             </Button>
-            <Link to="/login" className="legal-back-link">
+            <Link to="/login" className="legal-back-link" aria-label="Quay lại" title="Quay lại">
               <ArrowLeft size={16} />
               <span>Quay lại</span>
             </Link>

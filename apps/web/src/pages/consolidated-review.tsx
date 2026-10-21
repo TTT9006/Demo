@@ -10,6 +10,8 @@ import {
   XCircle,
   Layers,
   BookOpen,
+  Check,
+  X,
 } from 'lucide-react';
 import { api, post } from '../services/api';
 import { PageHeader, Loading, ErrorState, Empty, Button } from '../components/ui';
@@ -299,31 +301,25 @@ export function ConsolidatedReview() {
                 eyebrowFront="ÔN TẬP TỔNG HỢP · TỪ VỰNG"
                 eyebrowBack="ĐÁP ÁN TỪ VỰNG"
               />
-              <div className="inline-actions" style={{ justifyContent: 'center', gap: '12px', marginTop: '16px', flexWrap: 'wrap' }}>
+              <div className="review-card-controls">
                 <Button className="flip-button" onClick={() => setCardFlipped(!cardFlipped)}>
                   <RotateCcw size={16} />
-                  {cardFlipped ? 'Lật lại mặt trước' : 'Lật thẻ xem đáp án'}
+                  <span>{cardFlipped ? 'Lật lại mặt trước' : 'Lật thẻ xem đáp án'}</span>
                 </Button>
-                {cardFlipped && (
-                  <>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleCardRate(0)}
-                      disabled={cardMutation.isPending}
-                    >
-                      ✕ Quên từ này
-                    </Button>
-                    <Button
-                      onClick={() => handleCardRate(2)}
-                      disabled={cardMutation.isPending}
-                    >
-                      ✓ Đã nhớ
-                    </Button>
-                  </>
-                )}
+              </div>
+              <div className="review-swipe-guide" aria-label="Hướng dẫn vuốt thẻ">
+                <span className="guide-item guide-forgot">
+                  <ArrowLeft size={16} aria-hidden="true" />
+                  <span>Vuốt trái: <strong>Quên</strong></span>
+                </span>
+                <span className="guide-dot" aria-hidden="true">•</span>
+                <span className="guide-item guide-remember">
+                  <span>Vuốt phải: <strong>Nhớ</strong></span>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </span>
               </div>
               <p className="review-footnote">
-                Vuốt phải để Nhớ · Vuốt trái nếu Quên. Lịch SRS sẽ tự động cập nhật ngay.
+                Kéo thẻ sang trái nếu Quên, sang phải nếu Nhớ · Lịch SRS sẽ tự động cập nhật ngay.
               </p>
             </div>
           ) : (

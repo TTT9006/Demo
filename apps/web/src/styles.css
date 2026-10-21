@@ -2226,12 +2226,62 @@ main {
 
 /* Tactile Buttons */
 .flip-button {
-  margin-top: 22px;
+  margin-top: 18px;
   min-width: 180px;
   transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s ease;
 }
 .flip-button:active {
   transform: translateY(2px) scale(0.96);
+}
+
+.review-card-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.review-swipe-guide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--muted);
+  user-select: none;
+}
+
+.review-swipe-guide .guide-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.review-swipe-guide .guide-forgot svg {
+  color: #b67f72;
+}
+
+.review-swipe-guide .guide-forgot strong {
+  color: #b67f72;
+  font-weight: 600;
+}
+
+.review-swipe-guide .guide-remember svg {
+  color: var(--jade);
+}
+
+.review-swipe-guide .guide-remember strong {
+  color: var(--jade);
+  font-weight: 600;
+}
+
+.review-swipe-guide .guide-dot {
+  color: var(--muted);
+  opacity: 0.4;
+  font-size: 14px;
 }
 .rating-buttons {
   display: grid;
@@ -2261,8 +2311,9 @@ main {
 }
 .review-footnote {
   font-size: 11px;
-  margin-top: 25px;
+  margin-top: 10px;
   color: var(--muted);
+  opacity: 0.8;
 }
 .grammar-grid {
   display: grid;
@@ -4464,6 +4515,9 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   color: var(--ink);
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .legal-header {
@@ -4621,6 +4675,8 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   padding: 40px;
   line-height: 1.8;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .legal-document section {
@@ -4727,7 +4783,10 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 }
 
 .legal-table-wrap {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin: 18px 0 24px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -5423,20 +5482,50 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 }
 
 @media (max-width: 640px) {
+  .legal-header {
+    padding: 10px 14px;
+  }
+  .legal-header-inner {
+    gap: 8px;
+  }
+  .legal-header-actions {
+    gap: 6px;
+  }
+  .legal-action-btn span,
+  .legal-back-link span {
+    display: none;
+  }
+  .legal-action-btn,
+  .legal-back-link {
+    padding: 7px 10px;
+    min-width: 36px;
+    justify-content: center;
+  }
+  .legal-container {
+    padding: 20px 12px 60px;
+  }
   .legal-card.legal-document {
-    padding: 24px 18px;
+    padding: 20px 14px;
+    border-radius: 12px;
   }
   .legal-modal-scroll-area {
-    padding: 18px 20px;
+    padding: 18px 16px;
   }
   .legal-modal-footer {
-    padding: 16px 20px;
+    padding: 14px 16px;
   }
   .cookie-banner {
     bottom: 12px;
     left: 12px;
     right: 12px;
     padding: 14px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .cookie-banner-actions {
+    display: flex;
+    justify-content: flex-end;
   }
 }
 

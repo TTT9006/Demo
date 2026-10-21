@@ -81,7 +81,7 @@ export async function defaultDecks() {
           materialType: 'kanji',
           english: info.meanings.join('; '),
           note:
-            `Bộ thủ: ${info.radicalForm || radical.character} · ${radical.character} (#${radical.id})` +
+            `Bộ thủ: ${info.radicalForm && info.radicalForm !== radical.character ? `${info.radicalForm} · ` : ''}${radical.character} (#${radical.id})` +
             `${radical.vietnameseNames.length ? ' · ' + radical.vietnameseNames.join(' / ') : ''}` +
             ` — ${radical.name}. Chữ có ${info.strokes ?? '?'} nét.`,
         };

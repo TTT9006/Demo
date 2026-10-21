@@ -13,6 +13,7 @@ import {
   Trash2,
   RotateCcw,
   Check,
+  X,
   Upload,
 } from 'lucide-react';
 import { api, post, patch, remove } from '../services/api';
@@ -669,12 +670,25 @@ export function Review() {
               {mutation.error.message}
             </p>
           )}
-          <Button className="flip-button" onClick={() => setFlipped(!flipped)}>
-            <RotateCcw size={17} />
-            {flipped ? 'Lật lại mặt trước' : 'Lật thẻ'}
-          </Button>
+          <div className="review-card-controls">
+            <Button className="flip-button" onClick={() => setFlipped(!flipped)}>
+              <RotateCcw size={17} />
+              <span>{flipped ? 'Lật lại mặt trước' : 'Lật thẻ xem đáp án'}</span>
+            </Button>
+          </div>
+          <div className="review-swipe-guide" aria-label="Hướng dẫn vuốt thẻ">
+            <span className="guide-item guide-forgot">
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>Vuốt trái: <strong>Quên</strong></span>
+            </span>
+            <span className="guide-dot" aria-hidden="true">•</span>
+            <span className="guide-item guide-remember">
+              <span>Vuốt phải: <strong>Nhớ</strong></span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </span>
+          </div>
           <p className="review-footnote">
-            Vuốt phải để Nhớ · Vuốt trái nếu Quên. Lịch ôn SM-2 sẽ tự động điều chỉnh theo lần ôn này.
+            Kéo thẻ sang trái nếu Quên, sang phải nếu Nhớ · Lịch ôn SM-2 sẽ tự động điều chỉnh theo lần ôn này.
           </p>
         </div>
       ) : (
