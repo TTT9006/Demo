@@ -4,6 +4,7 @@ import { Button, Modal } from './ui';
 import { api, post } from '../services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUI } from '../stores/ui';
+import { parsePptxBuffer } from '../services/client-pptx-parser';
 
 export interface ParsedCardItem {
   term: string;
@@ -59,31 +60,51 @@ export function VocabularyImportModal({
     onOpenChange(nextOpen);
   };
 
-  // Upload and parse PPTX files (supports multiple)
+  // Upload and parse PPTX files (instant client-side parsing + server fallback)
   const handlePptxUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setIsProcessing(true);
-    const form = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      form.append('files', files[i]);
-    }
 
     try {
-      const res = await api<{
-        results: ParsedDeckGroup[];
-        totalDecks: number;
-        totalCards: number;
-        message: string;
-      }>('/flashcards/pptx/preview', {
-        method: 'POST',
-        body: form,
-      });
+      // 1. TỐI ƯU SIÊU TỐC: Phân tích trực tiếp trên client (0ms network delay, tức thì)
+      const clientResults: ParsedDeckGroup[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const arrayBuffer = await file.arrayBuffer();
+        const parsed = await parsePptxBuffer(arrayBuffer, file.name);
+        clientResults.push(parsed);
+      }
 
-      setParsedDecks(res.results);
+      const totalCards = clientResults.reduce((acc, r) => acc + r.cards.length, 0);
+      setParsedDecks(clientResults);
       setActiveDeckIndex(0);
-      notify(res.message);
-    } catch (err) {
-      notify((err as Error).message);
+      notify(`Đã quét siêu tốc thành công ${totalCards} từ vựng từ ${clientResults.length} tệp bài giảng.`);
+    } catch (clientErr) {
+      console.warn('Client-side PPTX parsing failed, falling back to server API...', clientErr);
+
+      // 2. Dự phòng: Gửi lên máy chủ nếu trình duyệt gặp lỗi
+      const form = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        form.append('files', files[i]);
+      }
+
+      try {
+        const res = await api<{
+          results: ParsedDeckGroup[];
+          totalDecks: number;
+          totalCards: number;
+          message: string;
+        }>('/flashcards/pptx/preview', {
+          method: 'POST',
+          body: form,
+        });
+
+        setParsedDecks(res.results);
+        setActiveDeckIndex(0);
+        notify(res.message);
+      } catch (err) {
+        notify((err as Error).message);
+      }
     } finally {
       setIsProcessing(false);
     }

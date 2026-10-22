@@ -269,12 +269,17 @@ export async function parsePptxBuffer(buffer: Buffer, originalFilename = 'Vocab.
   const cards: ExtractedCard[] = [];
   let skipped = 0;
 
-  for (let i = 0; i < sortedFiles.length; i++) {
-    const fileName = sortedFiles[i];
-    const xml = await zip.files[fileName].async('text');
-    const paras = extractParagraphsFromSlideXml(xml);
-    const card = parseVocabularySlide(paras, i + 1);
+  // Optimize speed: Read and parse all slides in parallel with Promise.all
+  const slideContents = await Promise.all(
+    sortedFiles.map(async (fileName, i) => {
+      const xml = await zip.files[fileName].async('text');
+      const paras = extractParagraphsFromSlideXml(xml);
+      return { paras, slideIndex: i + 1 };
+    })
+  );
 
+  for (const { paras, slideIndex } of slideContents) {
+    const card = parseVocabularySlide(paras, slideIndex);
     if (card) {
       cards.push(card);
     } else {

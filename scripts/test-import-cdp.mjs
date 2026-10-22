@@ -68,8 +68,12 @@ async function main() {
 
   // Bắt lỗi console và lỗi trang
   const pageErrors = [];
-  page.on('pageerror', (err) => pageErrors.push(err.message));
+  page.on('pageerror', (err) => {
+    console.error('BROWSER ERROR:', err.message);
+    pageErrors.push(err.message);
+  });
   page.on('console', (msg) => {
+    console.log('BROWSER LOG [' + msg.type() + ']:', msg.text());
     if (msg.type() === 'error') {
       pageErrors.push(msg.text());
     }
