@@ -5547,8 +5547,12 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 900px;
   width: 100%;
+}
+
+.import-dialog-large {
+  width: 960px !important;
+  max-width: calc(100vw - 32px) !important;
 }
 
 .import-type-selector {
@@ -5706,9 +5710,10 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .import-table-wrapper {
   max-height: 440px;
   overflow-y: auto;
+  overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--surface);
+  background: var(--card);
 }
 
 .import-preview-table {
@@ -5721,21 +5726,23 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 .import-preview-table th {
   position: sticky;
   top: 0;
-  background: var(--surface-muted);
+  background-color: var(--surface);
+  color: var(--ink);
   padding: 10px 12px;
   font-weight: 600;
-  color: var(--muted);
-  border-bottom: 1px solid var(--line);
-  z-index: 1;
+  border-bottom: 2px solid var(--line);
+  z-index: 2;
+  box-shadow: 0 1px 0 var(--line);
 }
 
 .import-preview-table td {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--line);
+  background-color: var(--card);
 }
 
-.import-preview-table tr:hover {
-  background: var(--surface-muted);
+.import-preview-table tr:hover td {
+  background-color: var(--surface);
 }
 
 .table-input {

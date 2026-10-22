@@ -241,6 +241,7 @@ export function VocabularyImportModal({
       open={open}
       onOpenChange={handleClose}
       title="Nhập Flashcard thông minh (PowerPoint / PDF)"
+      className="import-dialog-large"
     >
       <div className="import-modal-content">
         {parsedDecks.length === 0 ? (
@@ -393,12 +394,12 @@ export function VocabularyImportModal({
                   <table className="import-preview-table">
                     <thead>
                       <tr>
-                        <th style={{ width: '48px' }}>STT</th>
-                        <th style={{ width: '180px' }}>Từ vựng (Term)</th>
-                        <th style={{ width: '180px' }}>Cách đọc (Reading)</th>
-                        <th style={{ width: '140px' }}>Âm Hán Việt</th>
-                        <th>Nghĩa tiếng Việt</th>
-                        <th style={{ width: '40px' }}></th>
+                        <th style={{ width: '48px', minWidth: '48px' }}>STT</th>
+                        <th style={{ width: '220px', minWidth: '180px' }}>Từ vựng (Term)</th>
+                        <th style={{ width: '220px', minWidth: '180px' }}>Cách đọc (Reading)</th>
+                        <th style={{ width: '150px', minWidth: '130px' }}>Âm Hán Việt</th>
+                        <th style={{ minWidth: '220px' }}>Nghĩa tiếng Việt</th>
+                        <th style={{ width: '44px', minWidth: '44px' }}></th>
                       </tr>
                     </thead>
                     <tbody>

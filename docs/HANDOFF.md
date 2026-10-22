@@ -9,6 +9,33 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 **Quy định kiểm thử thực tế qua Chrome DevTools Protocol (CDP) — Cập nhật 21/10/2026:**
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
 
+## Khắc phục lỗi chồng giao diện bảng xem trước Flashcard khi cuộn (Sticky Header & Layout Clipping) — ngày 22/10
+
+- **Hiện tượng & Báo cáo lỗi từ người dùng:**
+  - Trong modal xem trước từ vựng bóc tách (Preview Table), khi cuộn danh sách từ vựng xuống, các dòng chữ từ vựng (hàng 8, 9, 10...) bị trồi lên và đè trực tiếp lên tiêu đề các cột (`STT`, `Từ vựng (Term)`, `Cách đọc (Reading)`, `Âm Hán Việt`, `Nghĩa tiếng Việt`), tạo ra hiện tượng chồng chữ rối mắt, khó đọc.
+- **Nguyên nhân cốt lõi:**
+  - Header bảng `.import-preview-table th` được đặt `position: sticky; top: 0;`, tuy nhiên background của `th` sử dụng biến `var(--surface-muted)` vốn chưa được định nghĩa độc lập trong `:root` (hoặc có độ mờ/trong suốt), khiến phần nền của tiêu đề cột bị trong suốt (transparent).
+  - Khi người dùng cuộn nội dung các hàng `td` bên dưới lên, các dòng chữ bên dưới hiển thị xuyên qua tiêu đề cột bị sticky.
+  - Đồng thời, chiều rộng modal mặc định của component `Modal` (`560px`) quá hẹp so với bảng 5 cột dữ liệu phức tạp, khiến các cột bị bóp méo và tràn viền.
+- **Thực hiện kỹ thuật & Khắc phục triệt để:**
+  - **1. Nền đục tuyệt đối & Đổ bóng phân tách cho Sticky Header (`apps/web/src/styles.css`):**
+    - Cấu hình nền `background-color: var(--surface)` đặc đục cho `.import-preview-table th` kèm viền phân cách `border-bottom: 2px solid var(--line)` và `box-shadow: 0 1px 0 var(--line)`.
+    - Nâng lớp hiển thị `z-index: 2` cho các thẻ `th` và đặt nền đục `background-color: var(--card)` cho tất cả các ô `td`. Khi cuộn, toàn bộ nội dung trượt gọn gàng bên dưới header mà không bị lộ bất kỳ nét chữ nào.
+  - **2. Mở rộng không gian hiển thị Modal (`.import-dialog-large`):**
+    - Cho phép component `Modal` nhận `className` tùy biến (`apps/web/src/components/ui.tsx`).
+    - Modal bóc tách từ vựng được mở rộng thành `width: 960px` (thay vì 560px), giúp bảng xem trước rộng rãi, thoáng đãng, các cột từ vựng, cách đọc và nghĩa tiếng Việt hiển thị đầy đủ không bị co cụm.
+  - **3. Cố định chiều rộng tối thiểu (min-width) cho từng cột:**
+    - Đặt `minWidth: 180px` cho Từ vựng, `minWidth: 180px` cho Cách đọc, `minWidth: 130px` cho Âm Hán Việt, và `minWidth: 220px` cho Nghĩa tiếng Việt.
+- **Kiểm chứng hệ thống:**
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm test`: 10/10 test suites pass, 122/122 tests pass (100%).
+  - `npm run build`: Vite build frontend và esbuild backend thành công.
+  - **Kiểm thử trực quan qua Chrome DevTools Protocol (CDP) (`scripts/test-scroll-cdp.mjs`):**
+    - Khởi chạy trình duyệt Chrome thật qua CDP, tải file bài giảng `語彙5A.pptx` (33 slides) vào hệ thống.
+    - Tự động cuộn bảng xuống vị trí 350px.
+    - Chụp ảnh màn hình thực tế: `test-results/table-scrolled.png` xác nhận tiêu đề cột hiển thị nổi bật, nền che phủ hoàn toàn các hàng bên dưới, 100% không còn hiện tượng chồng chéo chữ.
+- **Tập tin liên quan:** `apps/web/src/styles.css`, `apps/web/src/components/ui.tsx`, `apps/web/src/components/vocabulary-import-modal.tsx`, `scripts/test-scroll-cdp.mjs`, `docs/HANDOFF.md`.
+
 ## Tối ưu hóa siêu tốc bóc tách PDF phía Client (pdfjs-dist) & Khắc phục lỗi "Không tìm thấy từ vựng nào có cấu trúc hợp lệ" — ngày 22/10
 
 - **Hiện tượng & Báo cáo lỗi từ người dùng:**

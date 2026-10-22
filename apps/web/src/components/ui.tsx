@@ -27,17 +27,22 @@ export function Modal({
   onOpenChange,
   title,
   children,
+  className,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   children: ReactNode;
+  className?: string;
 }) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="dialog-overlay" />
-        <DialogPrimitive.Content className="dialog-content" aria-describedby={undefined}>
+        <DialogPrimitive.Content
+          className={cn('dialog-content', className)}
+          aria-describedby={undefined}
+        >
           <DialogPrimitive.Title className="dialog-title">{title}</DialogPrimitive.Title>
           <DialogPrimitive.Close className="dialog-close" aria-label="Đóng">
             <X size={20} />
