@@ -713,22 +713,6 @@ export function JlptSession() {
             </div>
             <div className="inline-actions">
               <Button
-                variant="ghost"
-                onClick={isFullscreen ? exitFullscreen : enterFullscreen}
-                title={isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình (Ẩn thanh tab Google)'}
-              >
-                {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
-                <span>{isFullscreen ? 'Thu nhỏ' : 'Ẩn tab Google'}</span>
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={busy}
-                onClick={() => setEarlySubmitConfirm(true)}
-              >
-                <CheckCircle size={15} />
-                Nộp bài ngay
-              </Button>
-              <Button
                 variant="secondary"
                 disabled={busy || remaining === 0}
                 onClick={() => setConfirm(true)}

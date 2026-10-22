@@ -2605,11 +2605,15 @@ main {
   text-align: left;
 }
 .timer {
-  display: flex;
+  display: inline-flex;
   gap: 8px;
   align-items: center;
   font-size: 13px;
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: nowrap;
 }
 .submit-test {
   display: flex;
@@ -4464,6 +4468,8 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 .exam-mode-badge {
   display: inline-flex;
@@ -4489,6 +4495,10 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.exam-sticky-actions .timer {
+  min-width: 68px;
 }
 .exam-fullscreen-prompt {
   display: flex;
