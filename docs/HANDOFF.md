@@ -1,4 +1,4 @@
-# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 22/10/2026)
+# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 23/10/2026)
 
 ## Quy ước làm việc của người dùng
 
@@ -8,6 +8,83 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 
 **Quy định kiểm thử thực tế qua Chrome DevTools Protocol (CDP) & Bắt buộc chụp ảnh màn hình — Cập nhật 22/10/2026:**
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). **BẮT BUỘC chụp ảnh màn hình (screenshot) kết quả kiểm thử thực tế trên cả Desktop và Mobile, lưu lại và hiển thị trực tiếp trong artifact / báo cáo để người dùng kiểm tra trực quan.** Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
+
+## Ra mắt Tính năng Luyện thi JLPT Chuẩn & Luyện kỹ năng Chuyên sâu 4 Kỹ năng (N5–N2) — ngày 23/10
+
+- **Mục tiêu & Yêu cầu từ Người dùng:**
+  - 1. **Phân định rõ ràng 2 chế độ học tập:**
+    - **Luyện thi JLPT (Đề chuẩn):** Chỉ các đề hội tụ đủ cấu trúc JLPT chuẩn: đủ 3 phần (Từ vựng–Chữ Hán, Ngữ pháp–Đọc hiểu, Nghe hiểu kèm audio cắt chuẩn theo từng câu) và có đáp án đối soát.
+      - 5 đề ứng viên chuẩn: **N5 2010–2011**, **N5 12/2012**, **N5 7/2013**, **N5 2018**, **N5 12/2021**.
+      - Đề N5 07/2017 có nội dung nghe trùng 97.35% với đề 2010–2011 nên không tính là đề nghe độc lập (được gắn cờ tham khảo `isDuplicateAudio: true`).
+      - Tuyển tập đề N2 (40 đề) và N3 (26 đề) do chưa có file audio đối ứng cho phần nghe nên được chuyển trọn vẹn sang mục "Luyện kỹ năng" (Đọc hiểu, Ngữ pháp, Từ vựng) để đảm bảo chất lượng luyện thi.
+      - Nhãn đáp án: Đề có file đáp án gốc gắn `"Đáp án gốc"`; đề tổng hợp đối chiếu gắn `"Đáp án tham khảo"`.
+      - Chế độ thi: Bấm giờ theo từng phần, chấm điểm ở server, xem lại câu sai, lưu lịch sử bài làm.
+    - **Luyện kỹ năng theo cấp độ (N5, N4, N3, N2):**
+      - **Nghe hiểu (聴解):** Audio cắt sẵn từng câu qua ffmpeg, hỗ trợ nghe lại, chỉnh tốc độ (0.8x, 1.0x, 1.2x), hiển thị transcript máy sau khi nộp bài. Khai thác giáo trình chuẩn: Goukaku Dekiru (N4–N5), Speed Master (N3), Shin Kanzen (N2) chia theo CD/track và dạng bài.
+      - **Đọc hiểu (読解):** Bài đọc trích xuất từ đề thi thực tế kèm câu hỏi và đáp án giải thích chi tiết.
+      - **Từ vựng (文字・語彙):** Bài test nhiều dạng (đọc Kanji, ngữ cảnh, từ đồng nghĩa, cách dùng từ). Tích hợp nút 1-chạm đưa toàn bộ từ làm sai vào Flashcards ôn tập theo thuật toán ngắt quãng SM-2 (`POST /api/flashcards/cards`).
+      - **Ngữ pháp (文法):** Mở rộng lên N4–N2 tự biên soạn nguyên bản (không sao chép nguyên văn sách), giải thích cặn kẽ mẫu câu, bài tập sắp xếp sao (*) và đọc hiểu ngữ pháp đoạn văn.
+  - 2. **Cắt và đồng bộ Audio theo từng câu hỏi:**
+    - Cắt audio bằng ffmpeg vào thư mục dẫn xuất `public/audio/jlpt/`, tuyệt đối không ghi đè hay xóa file gốc.
+    - Gắn trạng thái đồng bộ: `chưa kiểm`, `khớp tự động`, `đã soát thủ công` (chỉ đặt khi người dùng xác nhận).
+    - Viết script kiểm tra tự động (`scripts/verify-audio-slices.ts`): đảm bảo số đoạn = số câu hỏi (24 câu/đề x 5 đề = 120 files), không chồng lấn, không đoạn rỗng, thứ tự đúng; xuất danh sách nghi ngờ `docs/flagged-audio-review.md` và `docs/flagged-audio-review.json`.
+  - 3. **Bản quyền:**
+    - Repo public: Tuyệt đối không commit PDF hay file audio lên Git. Cấu hình `.gitignore` triệt để và gỡ bỏ cache audio khỏi Git.
+  - 4. **Tối ưu hóa hiệu năng Web:**
+    - Khắc phục hiện tượng lag giật giao diện trong phòng thi: Cô lập interval đếm giờ (1s/lần) ra component con `<JlptCountdown>` để không re-render toàn bộ cây DOM 89 câu hỏi và audio player. Cấu hình `preload="metadata"` cho audio player.
+
+- **Thực hiện Kỹ thuật & Chi tiết Kiến trúc:**
+  - **1. Đồng bộ và Cắt Audio qua ffmpeg:**
+    - Cắt chuẩn 120 files audio cho 5 đề N5:
+      - `public/audio/jlpt/n5-2010-2011/q01.mp3` .. `q24.mp3`
+      - `public/audio/jlpt/n5-2012-12/q01.mp3` .. `q24.mp3`
+      - `public/audio/jlpt/n5-2013-07/q01.mp3` .. `q24.mp3`
+      - `public/audio/jlpt/n5-2018/q01.mp3` .. `q24.mp3`
+      - `public/audio/jlpt/n5-2021-12/q01.mp3` .. `q24.mp3`
+    - Script kiểm tra tự động `scripts/verify-audio-slices.ts` chạy thành công 100%: 120/120 files tồn tại, dung lượng hợp lệ (> 10KB), thứ tự thời gian tăng dần, 0 lỗi chồng lấn, 0 đoạn rỗng.
+  - **2. Schema & Dữ liệu Đề thi Chuẩn (`packages/shared/jlpt-*.ts`):**
+    - Bổ sung trường `keySource: 'Đáp án gốc' | 'Đáp án tham khảo'`, `isPracticeExam: boolean`, `isDuplicateAudio: boolean`, `duplicateNote: string`, `syncStatus: SyncStatus`.
+    - Xây dựng đầy đủ 89 câu hỏi kèm đáp án giải thích cho `jlpt-papers-n5-2010-2011.ts`, `jlpt-papers-n5-2012-12.ts`, `jlpt-papers-n5-2018.ts`, `jlpt-papers-n5-2013-07.ts`, `jlpt-papers-n5-2021-12.ts`.
+    - Đánh dấu `isDuplicateAudio: true`, `isPracticeExam: false` cho đề `jlpt-papers-n5-2017-07.ts`.
+  - **3. Schema & Dữ liệu Kỹ năng Chuyên sâu (`packages/shared/jlpt-skills.ts`):**
+    - Cung cấp các bộ bài tập đa dạng cho 4 kỹ năng (Listening, Reading, Vocabulary, Grammar) qua các cấp độ N5, N4, N3, N2 theo cấu trúc giáo trình (Goukaku Dekiru, Speed Master, Shin Kanzen).
+  - **4. Backend API (`apps/api/src/jlpt.ts`):**
+    - `GET /api/jlpt/skills`: Trả về danh mục 4 kỹ năng và cấp độ.
+    - `GET /api/jlpt/skills/:skill/:level`: Trả về danh sách bài tập của kỹ năng và cấp độ tương ứng.
+    - `POST /api/jlpt/skills/submit`: Chấm điểm server-side, lưu lịch sử (`db.attempt`), trả về kết quả, giải thích, transcript và tự động bóc tách danh sách từ vựng làm sai (`failedVocab`) cho tính năng Flashcards SM-2.
+  - **5. Frontend Giao diện Đỉnh cao (`apps/web/src/pages/tests.tsx`, `skill-practice-modal.tsx`, `styles.css`):**
+    - Bộ chuyển đổi chế độ Segmented Switcher trực quan: `[ 🏆 Luyện thi JLPT (Đề chuẩn) ]` và `[ 🎯 Luyện kỹ năng ]`.
+    - Tab Luyện thi: Hiển thị bảng quy chuẩn rõ ràng, lọc theo cấp độ, thẻ đề thi với badge `[Đáp án gốc]`, `[Audio gốc · khớp tự động]`, danh sách các phần thi và thời gian chi tiết.
+    - Tab Luyện kỹ năng: 4 tab kỹ năng kèm biểu tượng, các pill cấp độ N5-N2, banner hướng dẫn định hướng luyện tập và danh sách thẻ bài tập hiển thị giáo trình, dạng bài, số câu và nút "Luyện tập ngay".
+    - Component `SkillPracticeModal`: Trình làm bài tương tác đầy đủ tính năng:
+      - Trình phát audio riêng biệt kèm tùy chọn tốc độ nghe 0.8x, 1.0x, 1.2x và nút nghe lại.
+      - Màn hình kết quả hiển thị tỷ lệ %, giải thích chi tiết từng câu, tự động hiển thị transcript đối chiếu.
+      - Nút hành động 1-chạm **"Thêm [X] từ vào Flashcard (SM-2)"** tự động tạo deck và lưu thẻ kèm từ, cách đọc, nghĩa và ghi chú thuật toán SM-2.
+  - **6. Tối ưu Hiệu năng Web (`apps/web/src/pages/jlpt.tsx`):**
+    - Tách logic đếm ngược đồng hồ thành `<JlptCountdown>`: Chỉ re-render duy nhất phần tử hiển thị phút:giây trên thanh công cụ và header, loại bỏ hoàn toàn 60 lần re-render toàn màn hình mỗi phút trong suốt quá trình làm bài thi.
+    - Sử dụng `preload="metadata"` cho audio element để giảm tải bộ nhớ và dữ liệu mạng.
+
+- **Kiểm chứng Hệ thống:**
+  - `npm.cmd run typecheck`: **0 lỗi TypeScript**.
+  - `npm.cmd test`: **14 test suites, 137 tests passing (100%)**.
+  - `npm.cmd run build`: Vite frontend build và esbuild API server build thành công 100%.
+  - **Kiểm thử thực tế qua Chrome DevTools Protocol (CDP) (`scripts/test-skills-and-exams-cdp.mjs`):**
+    - Chạy trên Chrome thật cho cả 2 môi trường Desktop (1280x800) và Mobile (390x844).
+    - Thử nghiệm đăng nhập tài khoản mẫu, điều hướng `/tests`.
+    - Chụp ảnh màn hình thực tế:
+      - `test-results/desktop-exams.png`: Màn hình Luyện thi JLPT chuẩn với bảng quy chuẩn, bộ lọc cấp độ, thẻ đề thi kèm badge `[Đáp án gốc]`, `[Audio gốc · khớp tự động]`.
+      - `test-results/desktop-skills.png`: Màn hình Luyện kỹ năng với 4 tab kỹ năng, cấp độ N5-N2, các thẻ bài tập giáo trình Goukaku Dekiru.
+      - `test-results/skill-results.png`: Modal kết quả làm bài tương tác, chấm điểm server, hiển thị transcript và banner Flashcards SM-2.
+      - `test-results/mobile-skills.png`: Giao diện di động responsive mượt mà trên màn hình nhỏ 390px.
+
+- **Tập tin liên quan:**
+  - `packages/shared/jlpt-types.ts`, `packages/shared/jlpt-papers.ts`, `packages/shared/jlpt-skills.ts`
+  - `packages/shared/jlpt-papers-n5-2010-2011.ts`, `packages/shared/jlpt-papers-n5-2012-12.ts`, `packages/shared/jlpt-papers-n5-2013-07.ts`, `packages/shared/jlpt-papers-n5-2018.ts`, `packages/shared/jlpt-papers-n5-2021-12.ts`, `packages/shared/jlpt-papers-n5-2017-07.ts`
+  - `apps/api/src/jlpt.ts`, `apps/web/src/pages/tests.tsx`, `apps/web/src/pages/jlpt.tsx`
+  - `apps/web/src/components/skill-practice-modal.tsx`, `apps/web/src/styles.css`
+  - `scripts/verify-audio-slices.ts`, `scripts/test-skills-and-exams-cdp.mjs`, `tests/skills-and-jlpt-exam.test.ts`
+  - `docs/flagged-audio-review.md`, `docs/flagged-audio-review.json`, `docs/HANDOFF.md`
+
 
 ## Tối ưu hóa toàn diện giao diện Mobile (Điện thoại) cho tính năng Import Flashcard — ngày 22/10
 

@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { db } from './db';
 import { jlptPapers, paperSummary } from '../../../packages/shared/jlpt-papers';
-import type { JlptPaper, JlptReport, JlptRunView } from '../../../packages/shared/jlpt-types';
+import { skillCategories, getSkillExercises } from '../../../packages/shared/jlpt-skills';
+import type { JlptLevel, SkillType, JlptPaper, JlptReport, JlptRunView } from '../../../packages/shared/jlpt-types';
 
 export const jlptRouter = Router();
 export type ExamState = {
@@ -231,4 +232,84 @@ jlptRouter.get('/runs/:id/audio/:questionId', async (req, res) => {
   );
   if (!question?.transcript) throw fail('Không tìm thấy nội dung nghe.', 404);
   res.json({ text: question.transcript });
+});
+
+// Skills Practice API (Nghe, Đọc, Từ vựng, Ngữ pháp theo cấp độ N5, N4, N3, N2)
+jlptRouter.get('/skills', (_req, res) => {
+  res.json(skillCategories);
+});
+
+jlptRouter.get('/skills/:skill/:level', (req, res) => {
+  const skill = req.params.skill as SkillType;
+  const level = req.params.level.toUpperCase() as JlptLevel;
+  if (!['listening', 'reading', 'vocabulary', 'grammar'].includes(skill)) {
+    throw fail('Kỹ năng không hợp lệ.', 400);
+  }
+  if (!['N5', 'N4', 'N3', 'N2'].includes(level)) {
+    throw fail('Cấp độ không hợp lệ.', 400);
+  }
+  const sets = getSkillExercises(skill, level);
+  res.json(sets);
+});
+
+jlptRouter.post('/skills/submit', async (req, res) => {
+  const schema = z.object({
+    setId: z.string(),
+    skill: z.enum(['listening', 'reading', 'vocabulary', 'grammar']),
+    level: z.enum(['N5', 'N4', 'N3', 'N2']),
+    answers: z.record(z.string(), z.string()).default({}),
+  });
+  const { setId, skill, level, answers } = schema.parse(req.body);
+  const sets = getSkillExercises(skill, level);
+  const targetSet = sets.find((s) => s.id === setId);
+  if (!targetSet) throw fail('Không tìm thấy bài luyện tập này.', 404);
+
+  const results = targetSet.questions.map((q) => {
+    const given = answers[q.id] || '';
+    const correct = given === q.answer;
+    return {
+      ...q,
+      given,
+      correct,
+    };
+  });
+
+  const correctCount = results.filter((r) => r.correct).length;
+  const score = Math.round((correctCount / results.length) * 100);
+
+  // Extract failed vocabulary items for direct SM-2 flashcard addition
+  const failedVocab = results
+    .filter((r) => !r.correct && (r.term || r.category === 'vocabulary'))
+    .map((r) => ({
+      term: r.term || r.prompt.replace(/.*「(.*?)」.*/, '$1') || r.answer,
+      reading: r.reading || r.answer,
+      meaning: r.meaning || r.explanation,
+      questionId: r.id,
+    }));
+
+  // Save attempt to user's history
+  try {
+    await db.attempt.create({
+      data: {
+        userId: res.locals.user.id,
+        testId: `skill-${skill}-${level}-${setId}`,
+        score,
+        duration: 0,
+        answers: JSON.stringify(results),
+      },
+    });
+  } catch (err) {
+    console.warn('Could not save skill practice attempt:', err);
+  }
+
+  res.json({
+    setId,
+    skill,
+    level,
+    score,
+    total: results.length,
+    correctCount,
+    results,
+    failedVocab,
+  });
 });

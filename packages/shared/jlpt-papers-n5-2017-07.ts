@@ -2,10 +2,13 @@ import type { JlptPaper } from './jlpt-types';
 
 export const jlptN5Paper201707: JlptPaper = {
   "id": "jlpt-n5-2017-07",
-  "title": "JLPT N5 · Đề thi tháng 07-2017 (Đề thật)",
+  "title": "JLPT N5 · Đề thi tháng 07-2017 (Bản sao đề 2010–2011)",
   "level": "N5",
-  "description": "Đề thi JLPT N5 chính thức tháng 07/2017. Đầy đủ 3 phần thi chữ - từ vựng, ngữ pháp - đọc hiểu và nghe hiểu kèm âm thanh gốc đồng bộ theo từng câu hỏi.",
+  "description": "Bản in lại tháng 07/2017 có nội dung nghe và câu hỏi trùng khớp đề 2010–2011 (~97.35%). Không tính là đề nghe độc lập.",
   "isOfficial": true,
+  "isPracticeExam": false,
+  "isDuplicateAudio": true,
+  "duplicateNote": "Nội dung nghe trùng với đề 2010–2011 (~97.35%) — Không tính đề nghe độc lập",
   "sections": [
     {
       "id": "vocabulary",

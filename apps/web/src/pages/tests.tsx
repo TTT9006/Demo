@@ -1,10 +1,31 @@
 import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';
 import { JlptSession } from './jlpt';
-import type { JlptSummary } from '../../../../packages/shared/jlpt-types';
+import type { JlptSummary, JlptLevel, SkillType } from '../../../../packages/shared/jlpt-types';
+import type { SkillExerciseSet } from '../../../../packages/shared/jlpt-skills';
+import { SkillPracticeModal } from '../components/skill-practice-modal';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Clock3, Check, RotateCcw, Headphones, Maximize, Minimize, ShieldAlert, CheckCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Clock3,
+  Check,
+  RotateCcw,
+  Headphones,
+  Maximize,
+  Minimize,
+  ShieldAlert,
+  CheckCircle,
+  Trophy,
+  Target,
+  BookOpen,
+  Sparkles,
+  FileText,
+  Info,
+  Layers,
+  GraduationCap,
+} from 'lucide-react';
 import { api, post } from '../services/api';
 import { useUI } from '../stores/ui';
 import type { Attempt, Question, Result } from '../types';
@@ -123,8 +144,16 @@ export function QuestionInput({
   );
 }
 export function Tests() {
+  const [mainTab, setMainTab] = useState<'exams' | 'skills'>('exams');
   const [review, setReview] = useState<Attempt | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<string>('all');
+  const [selectedExamLevel, setSelectedExamLevel] = useState<string>('all');
+
+  // Skills practice state
+  const [activeSkill, setActiveSkill] = useState<SkillType>('listening');
+  const [activeSkillLevel, setActiveSkillLevel] = useState<JlptLevel>('N5');
+  const [activeSet, setActiveSet] = useState<SkillExerciseSet | null>(null);
+  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['tests'],
     queryFn: () => api<Test[]>('/tests'),
@@ -134,139 +163,363 @@ export function Tests() {
     queryFn: () => api<Attempt[]>('/tests/history'),
   });
 
-  const levels = ['N5', 'N4', 'N3', 'N2'] as const;
-  const counts = {
-    all: data?.length || 0,
-    N5: data?.filter((t) => t.level === 'N5').length || 0,
-    N4: data?.filter((t) => t.level === 'N4').length || 0,
-    N3: data?.filter((t) => t.level === 'N3').length || 0,
-    N2: data?.filter((t) => t.level === 'N2').length || 0,
+  const {
+    data: skillSets,
+    isLoading: isLoadingSkills,
+    error: skillsError,
+  } = useQuery({
+    queryKey: ['skill-sets', activeSkill, activeSkillLevel],
+    queryFn: () => api<SkillExerciseSet[]>(`/jlpt/skills/${activeSkill}/${activeSkillLevel}`),
+    enabled: mainTab === 'skills',
+  });
+
+  const examLevels = ['N5', 'N4', 'N3', 'N2'] as const;
+  const practiceExams = (data || []).filter((t) => t.isPracticeExam);
+  const examCounts = {
+    all: practiceExams.length,
+    N5: practiceExams.filter((t) => t.level === 'N5').length,
+    N4: practiceExams.filter((t) => t.level === 'N4').length,
+    N3: practiceExams.filter((t) => t.level === 'N3').length,
+    N2: practiceExams.filter((t) => t.level === 'N2').length,
   };
-  const activeLevels =
-    selectedLevel === 'all'
-      ? levels
-      : levels.filter((lvl) => lvl === selectedLevel);
+
+  const filteredExams =
+    selectedExamLevel === 'all'
+      ? practiceExams
+      : practiceExams.filter((t) => t.level === selectedExamLevel);
+
+  const skillOptions: Array<{ id: SkillType; label: string; icon: any; desc: string }> = [
+    {
+      id: 'listening',
+      label: 'Nghe hiểu (聴解)',
+      icon: Headphones,
+      desc: 'Kho bài nghe chuẩn hóa theo giáo trình Goukaku Dekiru (N4–N5), Speed Master (N3), Shin Kanzen (N2) chia theo dạng bài/CD/track. Hỗ trợ tua lại, chọn tốc độ (0.8x, 1.0x, 1.2x) và hiển thị bản chép lời (transcript) sau khi nộp bài.',
+    },
+    {
+      id: 'reading',
+      label: 'Đọc hiểu (読解)',
+      icon: BookOpen,
+      desc: 'Trích xuất bài đọc hiểu thực tế từ các kỳ thi JLPT kèm câu hỏi, từ vựng và đáp án giải thích chi tiết.',
+    },
+    {
+      id: 'vocabulary',
+      label: 'Từ vựng (文字・語彙)',
+      icon: Sparkles,
+      desc: 'Luyện tập đa dạng: cách đọc Kanji, ngữ cảnh câu, từ đồng nghĩa và cách dùng từ trong câu. Tích hợp nút 1-chạm đưa toàn bộ từ làm sai vào Flashcard (SM-2) để ghi nhớ ngắt quãng!',
+    },
+    {
+      id: 'grammar',
+      label: 'Ngữ pháp (文法)',
+      icon: FileText,
+      desc: 'Ngữ pháp N5–N2 tự biên soạn nguyên bản (không sao chép nguyên văn), đầy đủ dạng bài lựa chọn mẫu câu, sắp xếp sao (*) và đọc hiểu ngữ pháp đoạn văn.',
+    },
+  ];
+
+  const currentSkillInfo = skillOptions.find((s) => s.id === activeSkill) || skillOptions[0];
 
   return (
     <>
       <PageHeader
         eyebrow="BIẾT MÌNH ĐÃ ĐI ĐƯỢC BAO XA"
-        title="Thi thử JLPT từ N5 đến N2."
-        description="Đề đầy đủ thời gian, chia phần theo cấu trúc JLPT. Lưu bài đang làm và xem lại kết quả từng nhóm."
+        title="Luyện thi JLPT & Kỹ năng chuyên sâu"
+        description="Đề thi đầy đủ thời gian theo cấu trúc chuẩn JLPT và hệ thống luyện 4 kỹ năng Nghe, Đọc, Từ vựng, Ngữ pháp từ N5 đến N2."
       />
-      <div className="tabs inline-actions spaced" role="tablist" aria-label="Lọc cấp độ đề thi" style={{ marginBlock: '20px', flexWrap: 'wrap' }}>
+
+      {/* Segmented Mode Switcher */}
+      <div className="test-mode-switcher" role="tablist" aria-label="Chế độ luyện tập">
         <button
+          type="button"
           role="tab"
-          aria-selected={selectedLevel === 'all'}
-          className={selectedLevel === 'all' ? 'active' : ''}
-          onClick={() => setSelectedLevel('all')}
+          aria-selected={mainTab === 'exams'}
+          className={`test-mode-btn ${mainTab === 'exams' ? 'active' : ''}`}
+          onClick={() => setMainTab('exams')}
         >
-          <span>Tất cả</span>
-          <span className="tab-badge">{counts.all}</span>
+          <Trophy size={18} style={{ color: mainTab === 'exams' ? 'var(--jade)' : 'inherit' }} />
+          <span>Luyện thi JLPT (Đề chuẩn)</span>
+          <span className="tab-badge">{practiceExams.length}</span>
         </button>
-        {levels.map((lvl) => (
-          <button
-            key={lvl}
-            role="tab"
-            aria-selected={selectedLevel === lvl}
-            className={selectedLevel === lvl ? 'active' : ''}
-            onClick={() => setSelectedLevel(lvl)}
-          >
-            <span>JLPT {lvl}</span>
-            <span className="tab-badge">{counts[lvl]}</span>
-          </button>
-        ))}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mainTab === 'skills'}
+          className={`test-mode-btn ${mainTab === 'skills' ? 'active' : ''}`}
+          onClick={() => setMainTab('skills')}
+        >
+          <Target size={18} style={{ color: mainTab === 'skills' ? 'var(--jade)' : 'inherit' }} />
+          <span>Luyện kỹ năng (Nghe · Đọc · Từ vựng · Ngữ pháp)</span>
+        </button>
       </div>
-      {isLoading ? (
-        <Loading />
-      ) : error ? (
-        <ErrorState error={error} />
-      ) : (
-        <div className="jlpt-groups-container">
-          {activeLevels.map((lvl) => {
-            const papers = (data?.filter((t) => t.level === lvl) || []).slice().sort((a, b) => {
-              if (a.isOfficial && !b.isOfficial) return -1;
-              if (!a.isOfficial && b.isOfficial) return 1;
-              return b.title.localeCompare(a.title);
-            });
-            if (!papers.length) return null;
-            const officialCount = papers.filter((p) => p.isOfficial).length;
-            const practiceCount = papers.filter((p) => !p.isOfficial).length;
-            return (
-              <section key={lvl} className="spaced" style={{ marginBlock: '28px' }}>
-                <div className="section-heading">
-                  <div>
-                    <h2 style={{ fontSize: '20px', marginBottom: '4px' }}>Cấp độ JLPT {lvl}</h2>
-                    <span className="muted" style={{ fontSize: '13px' }}>
-                      {papers.length} bộ đề
-                      {officialCount > 0
-                        ? ` · ${officialCount} đề thi thật (audio đồng bộ gốc) · ${practiceCount} đề luyện tập`
-                        : ` · ${practiceCount} đề luyện tập`}
+
+      {mainTab === 'exams' ? (
+        /* ==================== 1. LUYỆN THI JLPT (ĐỀ CHUẨN) ==================== */
+        <div>
+          {/* Policy / Qualification notice */}
+          <div className="jlpt-policy-box">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Info size={17} style={{ color: 'var(--jade)' }} />
+              <strong>Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)</strong>
+            </div>
+            <p style={{ margin: 0 }}>
+              Mục này chỉ hiển thị các đề hội tụ đủ 3 phần chuẩn JLPT: <strong>Kiến thức ngôn ngữ (Từ vựng–Chữ Hán)</strong>, <strong>Ngữ pháp–Đọc hiểu</strong>, và <strong>Nghe hiểu</strong> (file audio cắt chuẩn từng câu) kèm đáp án gốc đã đối chiếu.
+            </p>
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)' }}>
+              <li>
+                <strong>Đề ứng viên đạt chuẩn:</strong> N5 2010–2011, 12/2012, 7/2013, 2018, 12/2021.
+              </li>
+              <li>
+                <strong>Lưu ý đề N5 07/2017:</strong> Toàn bộ phần nghe trùng 97.35% với đề 2010–2011 nên không tính là đề nghe độc lập.
+              </li>
+              <li>
+                <strong>Tuyển tập N2 (40 đề) và N3 (26 đề):</strong> Do chưa có file audio đối ứng cho phần nghe hiểu nên toàn bộ câu hỏi được phân bổ vào mục <strong>Luyện kỹ năng</strong> (Đọc hiểu, Ngữ pháp, Từ vựng) để đảm bảo bài thi luôn trọn vẹn.
+              </li>
+            </ul>
+          </div>
+
+          {/* Level Filter Bar */}
+          <div className="tabs inline-actions spaced" role="tablist" aria-label="Lọc cấp độ đề thi" style={{ marginBlock: '16px', flexWrap: 'wrap' }}>
+            <button
+              role="tab"
+              aria-selected={selectedExamLevel === 'all'}
+              className={selectedExamLevel === 'all' ? 'active' : ''}
+              onClick={() => setSelectedExamLevel('all')}
+            >
+              <span>Tất cả</span>
+              <span className="tab-badge">{examCounts.all}</span>
+            </button>
+            {examLevels.map((lvl) => (
+              <button
+                key={lvl}
+                role="tab"
+                aria-selected={selectedExamLevel === lvl}
+                className={selectedExamLevel === lvl ? 'active' : ''}
+                onClick={() => setSelectedExamLevel(lvl)}
+              >
+                <span>JLPT {lvl}</span>
+                <span className="tab-badge">{examCounts[lvl]}</span>
+              </button>
+            ))}
+          </div>
+
+          {isLoading ? (
+            <Loading />
+          ) : error ? (
+            <ErrorState error={error} />
+          ) : filteredExams.length === 0 ? (
+            <div className="panel" style={{ textAlign: 'center', padding: '36px 20px', marginBlock: '20px' }}>
+              <GraduationCap size={36} style={{ color: 'var(--muted)', margin: '0 auto 12px auto' }} />
+              <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>Chưa có đề thi trọn gói 3 phần cho JLPT {selectedExamLevel}</h3>
+              <p style={{ color: 'var(--muted)', maxWidth: '540px', margin: '0 auto 18px auto', fontSize: '14px' }}>
+                Tuyển tập đề thi JLPT {selectedExamLevel} hiện đã được đưa vào phần <strong>Luyện kỹ năng</strong> (Đọc hiểu, Ngữ pháp, Từ vựng) để bạn luyện tập từng cấu trúc chuyên sâu.
+              </p>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setMainTab('skills');
+                  setActiveSkillLevel(selectedExamLevel as JlptLevel);
+                }}
+              >
+                <Target size={16} /> Chuyển sang Luyện kỹ năng JLPT {selectedExamLevel}
+              </Button>
+            </div>
+          ) : (
+            <div className="test-grid">
+              {filteredExams.map((t, i) => (
+                <Link
+                  className="test-card test-card-official"
+                  to={'/tests/' + t.id}
+                  key={t.id}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px',
+                      gap: '8px',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <span className="eyebrow" style={{ margin: 0, color: 'var(--jade)', fontWeight: 700 }}>
+                      {t.level} · ĐỀ THI CHUẨN
                     </span>
-                  </div>
-                </div>
-                <div className="test-grid">
-                  {papers.map((t, i) => (
-                    <Link
-                      className={`test-card ${t.isOfficial ? 'test-card-official' : ''}`}
-                      to={'/tests/' + t.id}
-                      key={t.id}
-                    >
-                      <div
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <span
+                        className="tag"
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          marginBottom: '8px',
+                          gap: '4px',
+                          color: t.keySource === 'Đáp án tham khảo' ? 'var(--peach)' : 'var(--jade)',
+                          borderColor: t.keySource === 'Đáp án tham khảo' ? 'var(--peach)' : 'var(--jade)',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
                         }}
                       >
-                        <span className="eyebrow" style={{ margin: 0 }}>
-                          {t.level} · {t.isOfficial ? 'ĐỀ THI THẬT' : 'ĐỀ LUYỆN TẬP'}
-                        </span>
-                        {t.isOfficial && (
-                          <span
-                            className="tag"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              color: 'var(--jade)',
-                              borderColor: 'var(--jade)',
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: 600,
-                            }}
-                          >
-                            <Headphones size={13} />
-                            Audio gốc
-                          </span>
-                        )}
-                      </div>
-                      <span className="test-number">{String(i + 1).padStart(2, '0')}</span>
-                      <h2>{t.title}</h2>
-                      <p>
-                        {t.total} câu · {t.minutes} phút · {t.sections.length} phần
-                      </p>
-                      <ul className="jlpt-card-sections">
-                        {t.sections.map((s) => (
-                          <li key={s.id}>
-                            {s.title}: {s.minutes} phút ({s.count} câu)
-                          </li>
-                        ))}
-                      </ul>
-                      <div>
-                        <span>Xem đề & tiếp tục bài đang làm</span>
-                        <ArrowRight size={19} />
-                      </div>
-                    </Link>
-                  ))}
+                        {t.keySource || 'Đáp án gốc'}
+                      </span>
+                      <span
+                        className="tag"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          color: 'var(--ocean)',
+                          borderColor: 'var(--ocean)',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Headphones size={12} />
+                        Audio gốc · khớp tự động
+                      </span>
+                    </div>
+                  </div>
+                  <span className="test-number">{String(i + 1).padStart(2, '0')}</span>
+                  <h2>{t.title}</h2>
+                  <p>
+                    {t.total} câu · {t.minutes} phút · {t.sections.length} phần
+                  </p>
+                  <ul className="jlpt-card-sections">
+                    {t.sections.map((s) => (
+                      <li key={s.id}>
+                        {s.title}: {s.minutes} phút ({s.count} câu)
+                      </li>
+                    ))}
+                  </ul>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                    <span>Vào phòng thi & bấm giờ</span>
+                    <ArrowRight size={19} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ==================== 2. LUYỆN KỸ NĂNG THEO CẤP ĐỘ ==================== */
+        <div>
+          {/* Skill Selector Tabs */}
+          <div className="skill-tabs-bar" role="tablist" aria-label="Chọn kỹ năng luyện tập">
+            {skillOptions.map((opt) => {
+              const Icon = opt.icon;
+              const isActive = activeSkill === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  className={`skill-tab-pill ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveSkill(opt.id)}
+                >
+                  <Icon size={16} />
+                  <span>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Level Filter Bar for Skills */}
+          <div className="tabs inline-actions spaced" role="tablist" aria-label="Chọn cấp độ kỹ năng" style={{ marginBlock: '12px 18px' }}>
+            {(['N5', 'N4', 'N3', 'N2'] as const).map((lvl) => (
+              <button
+                key={lvl}
+                type="button"
+                role="tab"
+                aria-selected={activeSkillLevel === lvl}
+                className={activeSkillLevel === lvl ? 'active' : ''}
+                onClick={() => setActiveSkillLevel(lvl)}
+              >
+                <span>JLPT {lvl}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Guide Banner for active skill */}
+          <div
+            style={{
+              padding: '14px 18px',
+              backgroundColor: 'var(--surface)',
+              borderRadius: '8px',
+              border: '1px solid var(--line)',
+              marginBottom: '20px',
+              fontSize: '13.5px',
+              lineHeight: '1.6',
+              color: 'var(--ink)',
+            }}
+          >
+            <strong>💡 Định hướng luyện {currentSkillInfo.label} — Cấp độ {activeSkillLevel}:</strong> {currentSkillInfo.desc}
+          </div>
+
+          {/* Exercises Grid */}
+          {isLoadingSkills ? (
+            <Loading />
+          ) : skillsError ? (
+            <ErrorState error={skillsError} />
+          ) : !skillSets?.length ? (
+            <Empty title="Chưa có bài tập cho kỹ năng này" />
+          ) : (
+            <div className="skill-card-grid">
+              {skillSets.map((set) => (
+                <div key={set.id} className="skill-card">
+                  <div className="skill-card-header">
+                    <span className="level-pill" style={{ padding: '2px 8px', fontSize: '11px' }}>
+                      JLPT {set.level}
+                    </span>
+                    {set.book && (
+                      <span className="tag" style={{ fontSize: '11px', color: 'var(--ocean)' }}>
+                        <BookOpen size={12} /> {set.book}
+                      </span>
+                    )}
+                    <span
+                      className="tag"
+                      style={{
+                        fontSize: '11px',
+                        color: set.syncStatus === 'khớp tự động' ? 'var(--jade)' : 'var(--muted)',
+                        borderColor: set.syncStatus === 'khớp tự động' ? 'var(--jade)' : 'var(--line)',
+                      }}
+                    >
+                      Trạng thái: {set.syncStatus}
+                    </span>
+                  </div>
+                  <h3 className="skill-card-title">{set.title}</h3>
+                  <p className="skill-card-desc">{set.description}</p>
+                  <div className="skill-card-footer">
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                      {set.questions.length} câu hỏi · {set.subCategory || 'Bài luyện'}
+                    </span>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        setActiveSet(set);
+                        setIsSkillModalOpen(true);
+                      }}
+                    >
+                      Luyện tập ngay
+                      <ArrowRight size={14} />
+                    </Button>
+                  </div>
                 </div>
-              </section>
-            );
-          })}
+              ))}
+            </div>
+          )}
+
+          {/* Interactive Skill Practice Modal */}
+          <SkillPracticeModal
+            open={isSkillModalOpen}
+            onOpenChange={setIsSkillModalOpen}
+            set={activeSet}
+            onComplete={() => {
+              void history.refetch();
+            }}
+          />
         </div>
       )}
+
       <p className="spaced">
         Câu hỏi được tổng hợp bám sát JLPT và đề thi chính thức được cung cấp kèm âm thanh gốc đồng bộ theo từng
         câu. Điểm hiển thị là tỷ lệ câu đúng, không phải thang 180 của JLPT.{' '}
@@ -280,6 +533,8 @@ export function Tests() {
         </a>
         .
       </p>
+
+      {/* Recent Attempts History */}
       <section className="panel spaced">
         <h2>Những lần thử gần đây</h2>
         {history.data?.length ? (
@@ -298,6 +553,8 @@ export function Tests() {
           <p className="muted">Kết quả đầu tiên của bạn sẽ xuất hiện ở đây.</p>
         )}
       </section>
+
+      {/* Review Modal for past attempts */}
       <Modal
         open={review !== null}
         onOpenChange={(o) => !o && setReview(null)}

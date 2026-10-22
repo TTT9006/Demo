@@ -202,15 +202,21 @@ function makePaper(level: JlptLevel): JlptPaper {
 }
 import { jlptN5Paper202407 } from './jlpt-papers-n5-2024-07';
 import { jlptN5Paper202112 } from './jlpt-papers-n5-2021-12';
+import { jlptN5Paper2018 } from './jlpt-papers-n5-2018';
 import { jlptN5Paper201707 } from './jlpt-papers-n5-2017-07';
 import { jlptN5Paper201307 } from './jlpt-papers-n5-2013-07';
+import { jlptN5Paper201212 } from './jlpt-papers-n5-2012-12';
+import { jlptN5Paper20102011 } from './jlpt-papers-n5-2010-2011';
 
 export const jlptPracticePapers = (['N5', 'N4', 'N3', 'N2'] as const).map(makePaper);
 export const jlptOfficialPapers: JlptPaper[] = [
   jlptN5Paper202407,
   jlptN5Paper202112,
+  jlptN5Paper2018,
   jlptN5Paper201707,
   jlptN5Paper201307,
+  jlptN5Paper201212,
+  jlptN5Paper20102011,
 ];
 export const jlptPapers: JlptPaper[] = [...jlptPracticePapers, ...jlptOfficialPapers];
 export function paperSummary(p: JlptPaper): JlptSummary {
@@ -220,6 +226,10 @@ export function paperSummary(p: JlptPaper): JlptSummary {
     level: p.level,
     kind: 'jlpt',
     isOfficial: p.isOfficial,
+    keySource: p.keySource || p.answerSource,
+    isPracticeExam: p.isPracticeExam,
+    isDuplicateAudio: p.isDuplicateAudio,
+    duplicateNote: p.duplicateNote,
     description:
       p.description ?? 'Đề tự biên soạn, đủ phần và thời gian thi; không phải đề JLPT chính thức.',
     total: p.sections.reduce((n, s) => n + s.questions.length, 0),

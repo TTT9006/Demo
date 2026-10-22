@@ -1,0 +1,1530 @@
+import type { JlptPaper } from './jlpt-types';
+
+export const jlptN5Paper201212: JlptPaper = {
+  "id": "jlpt-n5-2012-12",
+  "title": "JLPT N5 · Đề thi tháng 12-2012 (Đề thật)",
+  "level": "N5",
+  "description": "Đề thi JLPT N5 chính thức tháng 12/2012. Đầy đủ 3 phần thi chữ - từ vựng, ngữ pháp - đọc hiểu và nghe hiểu kèm âm thanh gốc đồng bộ theo từng câu hỏi.",
+  "isOfficial": true,
+  "isPracticeExam": true,
+  "keySource": "Đáp án gốc",
+  "sections": [
+    {
+      "id": "vocabulary",
+      "title": "文字・語彙 — Chữ & Từ vựng",
+      "minutes": 20,
+      "questions": [
+        {
+          "id": "n5-2012-12-v01",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "すみません、（水）を ください。",
+          "options": [
+            "みす",
+            "かす",
+            "みず",
+            "かず"
+          ],
+          "answer": "みず",
+          "explanation": "「水」 đọc là 「みず」 (nước uống).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v02",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "まいあさ（学校）へ いきます。",
+          "options": [
+            "がこう",
+            "がくこう",
+            "がっこう",
+            "かっこう"
+          ],
+          "answer": "がっこう",
+          "explanation": "「学校」 đọc là 「がっこう」 (trường học).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v03",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "この トマトは（甘い）ですね。",
+          "options": [
+            "からい",
+            "あまい",
+            "すっぱい",
+            "にがい"
+          ],
+          "answer": "あまい",
+          "explanation": "「甘い」 đọc là 「あまい」 (ngọt).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v04",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "きょうは しゅくだいが（少な）いです。",
+          "options": [
+            "おおい",
+            "すくない",
+            "ちいさい",
+            "すこし"
+          ],
+          "answer": "すくない",
+          "explanation": "「少ない」 đọc là 「すくない」 (ít).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v05",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "この ふくは（六万円）です。",
+          "options": [
+            "ろくせんえん",
+            "ろくまんえん",
+            "よんせんえん",
+            "よんまんえん"
+          ],
+          "answer": "ろくまんえん",
+          "explanation": "「六万円」 đọc là 「ろくまんえん」 (6 vạn yên = 60,000 yên).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v06",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "その かどを（左）に まがって ください。",
+          "options": [
+            "みぎ",
+            "ひだり",
+            "きた",
+            "みなみ"
+          ],
+          "answer": "ひだり",
+          "explanation": "「左」 đọc là 「ひだり」 (bên trái).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v07",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "えんぴつを（三本）かして ください。",
+          "options": [
+            "さんぼん",
+            "さんぽん",
+            "さんほん",
+            "さんぶん"
+          ],
+          "answer": "さんぼん",
+          "explanation": "「三本」 đọc là 「さんぼん」 (3 cái bút, đếm vật thon dài đọc biến âm là ぼん).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v08",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "さとうさんは（先月）けっこんしました。",
+          "options": [
+            "せんげつ",
+            "こんげつ",
+            "らいげつ",
+            "せんしゅう"
+          ],
+          "answer": "せんげつ",
+          "explanation": "「先月」 đọc là 「せんげつ」 (tháng trước).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v09",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "あの（山）の なまえは なんですか。",
+          "options": [
+            "やま",
+            "かわ",
+            "いけ",
+            "うみ"
+          ],
+          "answer": "やま",
+          "explanation": "「山」 đọc là 「やま」 (núi).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v10",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "かんじを（九つ）おぼえました。",
+          "options": [
+            "ここのつ",
+            "やつ",
+            "ななつ",
+            "むっつ"
+          ],
+          "answer": "ここのつ",
+          "explanation": "「九つ」 đọc là 「ここのつ」 (9 cái/9 chữ).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v11",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "これは どこの くにの（お金）ですか。",
+          "options": [
+            "おかね",
+            "おみず",
+            "おちゃ",
+            "おさけ"
+          ],
+          "answer": "おかね",
+          "explanation": "「お金」 đọc là 「おかね」 (tiền bạc).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v12",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách đọc Kanji",
+          "prompt": "どうぞ（飲んで）ください。",
+          "options": [
+            "たべて",
+            "のんで",
+            "すんで",
+            "よんで"
+          ],
+          "answer": "のんで",
+          "explanation": "「飲んで」 đọc là 「のんで」 (thể te của 飲む: uống).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v13",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "あれが この まちで いちばん（たかい）ビルです。",
+          "options": [
+            "古い",
+            "安い",
+            "高い",
+            "広い"
+          ],
+          "answer": "高い",
+          "explanation": "「たかい」 viết chữ Hán là 「高い」 (cao, đắt).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v14",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "すずきさんは（えいご）が できますか。",
+          "options": [
+            "英語",
+            "英吾",
+            "映語",
+            "央語"
+          ],
+          "answer": "英語",
+          "explanation": "「えいご」 viết là 「英語」 (tiếng Anh).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v15",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "たなかさんは きのう（やすみ）ました。",
+          "options": [
+            "体み",
+            "休み",
+            "保み",
+            "林み"
+          ],
+          "answer": "休み",
+          "explanation": "「やすみ」 viết là 「休み」 (nghỉ ngơi).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v16",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "わたしは きょうとに（うまれ）ました。",
+          "options": [
+            "生まれ",
+            "生きれ",
+            "生れ",
+            "主まれ"
+          ],
+          "answer": "生まれ",
+          "explanation": "「うまれ」 viết là 「生まれ」 (sinh ra).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v17",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "あさから（あめ）が ふっています。",
+          "options": [
+            "雪",
+            "雲",
+            "雨",
+            "電"
+          ],
+          "answer": "雨",
+          "explanation": "「あめ」 viết là 「雨」 (mưa).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v18",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "さとうさんと はなさんの（あいだ）に たって ください。",
+          "options": [
+            "中",
+            "間",
+            "門",
+            "前"
+          ],
+          "answer": "間",
+          "explanation": "「あいだ」 viết là 「間」 (khoảng giữa).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v19",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "えきの（みなみがわ）に としょかんが あります。",
+          "options": [
+            "南側",
+            "東側",
+            "西側",
+            "北側"
+          ],
+          "answer": "南側",
+          "explanation": "「みなみがわ」 viết là 「南側」 (phía nam).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v20",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Cách viết Kanji",
+          "prompt": "しろい（しゃつ）を ください。",
+          "options": [
+            "シャシ",
+            "シャツ",
+            "ツャツ",
+            "ツャシ"
+          ],
+          "answer": "シャツ",
+          "explanation": "Áo sơ mi katakana là 「シャツ」 (chú ý chữ ャ nhỏ và ツ).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v21",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "ともだちから ざっしを（　）かりました。",
+          "options": [
+            "１まい",
+            "１さつ",
+            "１ぽん",
+            "１こ"
+          ],
+          "answer": "１さつ",
+          "explanation": "Đếm sách vở, tạp chí dùng đơn vị 「冊（さつ）」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v22",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "でんきを つけましたから、へやが（　）なりました。",
+          "options": [
+            "あかるく",
+            "くらぐ",
+            "あたたかく",
+            "すずしく"
+          ],
+          "answer": "あかるく",
+          "explanation": "Bật đèn lên nên phòng trở nên sáng sủa: 「あかるく」 (sáng).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v23",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "びょういんは えきから（　）ですから、バスで いきましょう。",
+          "options": [
+            "ちかい",
+            "とおい",
+            "ながい",
+            "ひろい"
+          ],
+          "answer": "とおい",
+          "explanation": "Vì bệnh viện xa ga nên đi bằng xe buýt: 「とおい」 (xa).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v24",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "（　）が ありませんから、じかんが わかりません。",
+          "options": [
+            "とけい",
+            "めがね",
+            "さいふ",
+            "かぎ"
+          ],
+          "answer": "とけい",
+          "explanation": "Không có đồng hồ nên không biết thời gian: 「とけい」 (đồng hồ).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v25",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "かばんは いすの うえに（　）ください。",
+          "options": [
+            "おいて",
+            "はいって",
+            "のって",
+            "かけて"
+          ],
+          "answer": "おいて",
+          "explanation": "Đặt túi xách lên trên ghế: 「おいて」 (đặt, để).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v26",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "あそこの しんごうで（　）を わたしましょう。",
+          "options": [
+            "みち",
+            "はし",
+            "かわ",
+            "えき"
+          ],
+          "answer": "みち",
+          "explanation": "Băng qua đường ở cột đèn giao thông: 「みちを わたる」 (băng qua đường).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v27",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "この でんしゃは とうきょうえきを ９じに（　）。",
+          "options": [
+            "つきました",
+            "でました",
+            "あきました",
+            "とまりました"
+          ],
+          "answer": "でました",
+          "explanation": "Rời ga Tokyo lúc 9 giờ: 「とうきょうえきを でました」 (rời khỏi đâu dùng を出る).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v28",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "ごぜんちゅうは（　）が たくさん ありました。",
+          "options": [
+            "しごと",
+            "やすみ",
+            "あそび",
+            "じかん"
+          ],
+          "answer": "しごと",
+          "explanation": "Trong buổi sáng có rất nhiều công việc: 「しごと」 (công việc).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v29",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "まどを（　）ください。かぜが はいって きます。",
+          "options": [
+            "あけて",
+            "しめて",
+            "つけて",
+            "けして"
+          ],
+          "answer": "しめて",
+          "explanation": "Gió lùa vào nên hãy đóng cửa sổ lại: 「しめて」 (đóng).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v30",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Từ trong ngữ cảnh",
+          "prompt": "あしたは（　）あめが ふるでしょう。",
+          "options": [
+            "たぶん",
+            "いつも",
+            "あまり",
+            "もっと"
+          ],
+          "answer": "たぶん",
+          "explanation": "Đi với phỏng đoán 「でしょう」 thường dùng phó từ 「たぶん」 (có lẽ).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v31",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Diễn đạt tương đương",
+          "prompt": "きのうは ひまでした。",
+          "options": [
+            "きのうは いそがしくなかったです。",
+            "きのうは いそがしかったです。",
+            "きのうは あまり ねませんでした。",
+            "きのうは たくさん はたらきました。"
+          ],
+          "answer": "きのうは いそがしくなかったです。",
+          "explanation": "「ひま（rảnh rỗi）」 đồng nghĩa với 「いそがしくない（không bận）」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v32",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Diễn đạt tương đương",
+          "prompt": "この 本は つまらないです。",
+          "options": [
+            "この 本は おもしろくないです。",
+            "この 本は むずかしくないです。",
+            "この 本は とても おもしろいです。",
+            "この 本は とても むずかしいです。"
+          ],
+          "answer": "この 本は おもしろくないです。",
+          "explanation": "「つまらない（chán）」 đồng nghĩa với 「おもしろくない（không thú vị）」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-v33",
+          "type": "choice",
+          "category": "vocabulary",
+          "group": "Diễn đạt tương đương",
+          "prompt": "あの ひとは きょうだいです。",
+          "options": [
+            "あの ひとは わたしの あにです。",
+            "あの ひとは わたしの ともだちです。",
+            "あの ひとは わたしの せんせいです。",
+            "あの ひとは わたしの ちちです。"
+          ],
+          "answer": "あの ひとは わたしの あにです。",
+          "explanation": "「きょうだい（anh chị em）」 trong các lựa chọn tương ứng là 「あに（anh trai tôi）」.",
+          "annotationDisabled": true
+        }
+      ]
+    },
+    {
+      "id": "grammar-reading",
+      "title": "文法・読解 — Ngữ pháp & Đọc hiểu",
+      "minutes": 40,
+      "questions": [
+        {
+          "id": "n5-2012-12-g01",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "西川「もしもし、銀行（　）西川です。」",
+          "options": [
+            "に",
+            "で",
+            "と",
+            "の"
+          ],
+          "answer": "の",
+          "explanation": "Thuộc tổ chức, cơ quan: 「銀行の西川」 (Nishikawa của ngân hàng).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g02",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "大山先生は きのう 私（　）花を くれました。",
+          "options": [
+            "に",
+            "を",
+            "で",
+            "から"
+          ],
+          "answer": "に",
+          "explanation": "Tặng cho tôi: 「私に〜をくれる」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g03",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "この 帽子（　）私が 去年 デパートで 買ったのです。",
+          "options": [
+            "が",
+            "で",
+            "に",
+            "は"
+          ],
+          "answer": "は",
+          "explanation": "Trợ từ 「は」 dùng để đưa danh từ lên làm chủ đề câu.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g04",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "今日は 風（　）とても 強いです。",
+          "options": [
+            "は",
+            "を",
+            "が",
+            "に"
+          ],
+          "answer": "が",
+          "explanation": "Miêu tả hiện tượng tự nhiên khách quan dùng trợ từ 「が」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g05",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "毎朝 １時間（　）散歩します。",
+          "options": [
+            "ごろ",
+            "ずつ",
+            "だけ",
+            "ぐらい"
+          ],
+          "answer": "ぐらい",
+          "explanation": "Khoảng thời lượng: 「１時間ぐらい」 (khoảng 1 tiếng).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g06",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "教室（　）帽子を 取って ください。",
+          "options": [
+            "では",
+            "には",
+            "へは",
+            "とは"
+          ],
+          "answer": "では",
+          "explanation": "Hành động diễn ra ở trong lớp học: 「教室では」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g07",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "A「映画の 切符が あります。だれ（　）行きませんか。」\nB「はい、行きたいです。」",
+          "options": [
+            "か",
+            "も",
+            "に",
+            "と"
+          ],
+          "answer": "か",
+          "explanation": "Từ nghi vấn kết hợp 「か」 biểu thị không xác định: 「だれか（ai đó）」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g08",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "仕事が 終わってから、（　）病院へ 行きました。",
+          "options": [
+            "すぐに",
+            "あまり",
+            "よく",
+            "もう"
+          ],
+          "answer": "すぐに",
+          "explanation": "Lập tức đi bệnh viện: 「すぐに」 (ngay lập tức).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g09",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "A「早く、出かけましょう。」\nB「あ、（　）待って ください。」",
+          "options": [
+            "とても",
+            "あまり",
+            "ぜんぜん",
+            "ちょっと"
+          ],
+          "answer": "ちょっと",
+          "explanation": "Nhờ người khác đợi một lát: 「ちょっと待ってください」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g10",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "料理を 作りますが、あまり（　）。",
+          "options": [
+            "上手でした",
+            "上手です",
+            "上手じゃありませんでした",
+            "上手じゃありません"
+          ],
+          "answer": "上手じゃありません",
+          "explanation": "Đi cùng 「あまり」 ở hiện tại phủ định: 「上手じゃありません」 (không giỏi lắm).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g11",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "（　）とき、外国に 住んでいました。",
+          "options": [
+            "小さい",
+            "小さく",
+            "小さかった",
+            "小さくて"
+          ],
+          "answer": "小さかった",
+          "explanation": "Thời điểm trong quá khứ khi còn nhỏ: tính từ đuôi い ở quá khứ bổ nghĩa cho とき: 「小さかったとき」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g12",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "日本の 食べ物で（　）が いちばん 好きですか。",
+          "options": [
+            "どれ",
+            "なに",
+            "どの",
+            "どちら"
+          ],
+          "answer": "なに",
+          "explanation": "Hỏi trong món ăn thích cái gì nhất: 「なにがいちばん好きですか」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g13",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "電話で「はい、山下です。（　）ですか。」",
+          "options": [
+            "どなた",
+            "どの人",
+            "だれが",
+            "なにか"
+          ],
+          "answer": "どなた",
+          "explanation": "Cách hỏi lịch sự qua điện thoại ai đang gọi: 「どなたですか」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g14",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "A「電車で 行かないで、バスで 行きましょう。」\nB「（　）ですか。」\nA「バスの ほうが 安いですから。」",
+          "options": [
+            "どこ",
+            "どうして",
+            "どちら",
+            "いつ"
+          ],
+          "answer": "どうして",
+          "explanation": "Hỏi lý do khi câu trả lời có 「〜ですから」: 「どうしてですか」 (tại sao vậy?).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g15",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "家へ（　）から、宿題を します。",
+          "options": [
+            "帰る",
+            "帰って",
+            "帰った",
+            "帰り"
+          ],
+          "answer": "帰って",
+          "explanation": "Mẫu câu 「〜てから」 (sau khi làm gì): 「帰ってから」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g16",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Chọn mẫu ngữ pháp",
+          "prompt": "食堂で「私は しょうゆラーメン（　）します。」",
+          "options": [
+            "を",
+            "に",
+            "で",
+            "へ"
+          ],
+          "answer": "に",
+          "explanation": "Mẫu câu gọi món/lựa chọn: Danh từ + 「にする」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g17",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Sắp xếp câu ★",
+          "prompt": "毎日 私は ＿＿ ＿＿ ★ ＿＿ 歯を みがきます。",
+          "options": [
+            "朝ご飯の",
+            "前に",
+            "食べた",
+            "あとで"
+          ],
+          "answer": "前に",
+          "explanation": "Thứ tự đúng: 毎日 私は【朝ご飯の】【前に】★【歯を】みがきます -> Câu hoàn chỉnh: 朝ご飯の 前に.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g18",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Sắp xếp câu ★",
+          "prompt": "きのうは ＿＿ ＿＿ ★ ＿＿ 晴れましたね。",
+          "options": [
+            "雨でしたが",
+            "今日は",
+            "とても",
+            "よく"
+          ],
+          "answer": "今日は",
+          "explanation": "Thứ tự đúng: きのうは【雨でしたが】【今日は】★【とても】晴れましたね.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g19",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Sắp xếp câu ★",
+          "prompt": "海に ＿＿ ＿＿ ★ ＿＿ 住みたいです。",
+          "options": [
+            "近くて",
+            "大きい",
+            "家に",
+            "静かな"
+          ],
+          "answer": "大きい",
+          "explanation": "Thứ tự đúng: 海に【近くて】【大きい】★【家に】住みたいです.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g20",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Sắp xếp câu ★",
+          "prompt": "駅の ＿＿ ＿＿ ★ ＿＿ 本屋で 雑誌を 買いました。",
+          "options": [
+            "近くに",
+            "ある",
+            "小さな",
+            "あの"
+          ],
+          "answer": "ある",
+          "explanation": "Thứ tự đúng: 駅の【近くに】【ある】★【小さな】本屋で 雑誌を 買いました.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g21",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Sắp xếp câu ★",
+          "prompt": "毎週 水曜日と 土曜日は ＿＿ ＿＿ ★ ＿＿ 来てください。",
+          "options": [
+            "ここで",
+            "練習して",
+            "いますから",
+            "ぜひ"
+          ],
+          "answer": "いますから",
+          "explanation": "Thứ tự đúng: 毎週 水曜日と 土曜日は【ここで】【練習して】★【いますから】【ぜひ】来てください.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g22",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Ngữ pháp văn bản",
+          "prompt": "文章の（２２）に入るものは どれですか。",
+          "passage": "南駅は 大きい 駅です。駅の 前には たくさんの 店が あります。（２２）いつも 人が 大勢 います。南駅の 近くに 公園が あります。今、桜の 花が きれいに 咲いています。春休みに 一緒に（２３）か。",
+          "options": [
+            "だれも",
+            "ですから",
+            "しかし",
+            "どこも"
+          ],
+          "answer": "ですから",
+          "explanation": "Trước là lý do ga lớn nhiều cửa hàng, sau là kết quả đông người -> dùng liên từ 「ですから」 (vì vậy).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g23",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Ngữ pháp văn bản",
+          "prompt": "文章の（２３）に入るものは どれですか。",
+          "passage": "南駅は 大きい 駅です。駅の 前には たくさんの 店が あります。（２２）いつも 人が 大勢 います。南駅の 近くに 公園が あります。今、桜の 花が きれいに 咲いています。春休みに 一緒に（２３）か。",
+          "options": [
+            "行きません",
+            "行きましょう",
+            "行きます",
+            "行かない"
+          ],
+          "answer": "行きません",
+          "explanation": "Rủ rê người khác cùng đi: 「〜ませんか」 -> 「行きませんか」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g24",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Ngữ pháp văn bản",
+          "prompt": "文章の（２４）に入るものは どれですか。",
+          "passage": "公園の 桜を 見てから、駅の レストランで 美味しい 料理を 食べましょう。それから、新しい 映画を（２４）いかがですか。",
+          "options": [
+            "見るのは",
+            "見ては",
+            "見ると",
+            "見たら"
+          ],
+          "answer": "見るのは",
+          "explanation": "Đề xuất danh từ hóa hành động: 「動詞辞書形＋のはいかがですか」 -> 「見るのは」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g25",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Ngữ pháp văn bản",
+          "prompt": "文章の（２５）に入るものは どれですか。",
+          "passage": "桜は とても きれいです。花が 散る 前に、（２５）公園へ 来てください。楽しみに 待っています。",
+          "options": [
+            "ぜひ",
+            "あまり",
+            "ぜんぜん",
+            "だんだん"
+          ],
+          "answer": "ぜひ",
+          "explanation": "Nhấn mạnh lời mời nhiệt tình, thiết tha đi với ください: 「ぜひ」 (nhất định hãy...).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-g26",
+          "type": "choice",
+          "category": "grammar",
+          "group": "Ngữ pháp văn bản",
+          "prompt": "文章の（２６）に入るものは どれですか。",
+          "passage": "では、来週の 土曜日に 駅の 改札で（２６）。時間は １０時です。",
+          "options": [
+            "会いましょう",
+            "会いました",
+            "会いませんでした",
+            "会っています"
+          ],
+          "answer": "会いましょう",
+          "explanation": "Hẹn gặp lúc 10h ở cửa soát vé: 「会いましょう」 (hẹn gặp nhé).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-r27",
+          "type": "choice",
+          "category": "reading",
+          "group": "Đoạn văn ngắn",
+          "prompt": "大学の 隣に 何が ありますか。",
+          "passage": "私の 大学は 駅の 近くに あります。大学の まわりには 本屋や 喫茶店が あります。そして、大学の すぐ 隣には とても 大きい 公園が あります。学生は 昼休みに よく その 公園で 散歩を します。",
+          "options": [
+            "本屋",
+            "駅",
+            "喫茶店",
+            "公園"
+          ],
+          "answer": "公園",
+          "explanation": "Đoạn văn ghi: 「大学の すぐ 隣には とても 大きい 公園が あります」 -> Đáp án: 公園.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-r28",
+          "type": "choice",
+          "category": "reading",
+          "group": "Đoạn văn ngắn",
+          "prompt": "Aクラスの 学生は 来週の 水曜日の 午後、どこへ 行きますか。",
+          "passage": "【クラスの みなさんへ】\n来週の 水曜日は 午前と 午後で 教室が 違います。\n午前は １０５教室で DVDを 見ます。\n午後は １０３教室で 日本語の 授業を します。\n間違えないで ください。",
+          "options": [
+            "１０１教室",
+            "１０２教室",
+            "１０３教室",
+            "１０５教室"
+          ],
+          "answer": "１０３教室",
+          "explanation": "Đoạn văn ghi: 「午後は １０３教室で 日本語の 授業を します」 -> 103教室.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-r29",
+          "type": "choice",
+          "category": "reading",
+          "group": "Đoạn văn ngắn",
+          "prompt": "エイミーさんの 机の 上に だれの 切符が ありますか。",
+          "passage": "エイミーさんへ\n明日 乗る 電車の 切符を 買いました。エイミーさんの 切符と 高木先生の 切符を、エイミーさんの 机の 上に 置いて おきます。あした 駅で 会いましょう。\n大西より",
+          "options": [
+            "エイミーさんと 大西さん",
+            "高木先生と 大西さん",
+            "エイミーさんと 高木先生",
+            "エイミーさんだけ"
+          ],
+          "answer": "エイミーさんと 高木先生",
+          "explanation": "Đoạn văn ghi: 「エイミーさんの 切符と 高木先生の 切符を、エイミーさんの 机の 上に 置いて おきます」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-r30",
+          "type": "choice",
+          "category": "reading",
+          "group": "Đoạn văn trung bình",
+          "prompt": "ラジャさんは 先週、何を しましたか。",
+          "passage": "田中さんのお母さんへ\n先週は いろいろ ありがとうございました。みなさんと 一緒の 夏休みは とても 楽しかったです。京子さんと プールで 泳いだり、お母さんと 日本の 料理を 作ったり しました。お母さんの 作った みそ汁は とても 美味しかったです。みなさんと 撮った 写真を 見ながら、この 手紙を 書いています。\nラジャより",
+          "options": [
+            "一人で 旅行を しました。",
+            "プールで 泳いだり、料理を 作ったり しました。",
+            "ずっと 写真を 撮っていました。",
+            "日本語の 勉強だけ しました。"
+          ],
+          "answer": "プールで 泳いだり、料理を 作ったり しました。",
+          "explanation": "Đoạn văn ghi: 「京子さんと プールで 泳いだり、お母さんと 日本の 料理を 作ったり しました」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-r31",
+          "type": "choice",
+          "category": "reading",
+          "group": "Đoạn văn trung bình",
+          "prompt": "ラジャさんが この 手紙で いちばん 言いたいことは 何ですか。",
+          "passage": "田中さんのお母さんへ\n先週は いろいろ ありがとうございました。みなさんと 一緒の 夏休みは とても 楽しかったです。京子さんと プールで 泳いだり、お母さんと 日本の 料理を 作ったり しました。お母さんの 作った みそ汁は とても 美味しかったです。みなさんと 撮った 写真を 見ながら、この 手紙を 書いています。\nラジャより",
+          "options": [
+            "料理の 作り方を 教えて ほしいこと",
+            "写真を 送って ほしいこと",
+            "楽しい 夏休みの お礼と 感謝の 気持ち",
+            "もう一度 プールへ 行きたいこと"
+          ],
+          "answer": "楽しい 夏休みの お礼と 感謝の 気持ち",
+          "explanation": "Bức thư cảm ơn vì kỳ nghỉ hè rất vui cùng mọi người 「先週は いろいろ ありがとうございました」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-r32",
+          "type": "choice",
+          "category": "reading",
+          "group": "Tìm kiếm thông tin",
+          "prompt": "アンさんは Ｃクラスの 学生です。「歓迎パーティー」に 何を 持って 行きますか。",
+          "passage": "【留学生 歓迎パーティーの お知らせ】\n日時：１０月２０日（土）１２：００〜１４：００\n場所：学生ホール\n持ち物：\n・Ａクラス：飲み物（お茶か ジュース）\n・Ｂクラス：お菓子\n・Ｃクラス：くだもの（バナナや りんご）\n・Ｄクラス：紙コップと 紙皿",
+          "options": [
+            "お茶",
+            "お菓子",
+            "くだもの",
+            "紙コップ"
+          ],
+          "answer": "くだもの",
+          "explanation": "Trong bảng ghi: 「Ｃクラス：くだもの（バナナや りんご）」 -> Đáp án: くだもの.",
+          "annotationDisabled": true
+        }
+      ]
+    },
+    {
+      "id": "listening",
+      "title": "聴解 — Nghe hiểu",
+      "minutes": 30,
+      "questions": [
+        {
+          "id": "n5-2012-12-l01",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu chủ đề",
+          "syncStatus": "khớp tự động",
+          "prompt": "男の人はどれを取りますか。",
+          "options": [
+            "小さい白いカップ",
+            "小さいカップの隣の白いカップ",
+            "黒いカップ",
+            "大きい黒いカップ"
+          ],
+          "answer": "小さいカップの隣の白いカップ",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q01.mp3",
+          "transcript": "女の人と男の人が話しています。男の人はどれを取りますか。\nＦ：すみません、その白いカップを取ってください。\nＭ：どちらですか。\nＦ：小さいカップの隣のです。\n男の人はどれを取りますか。",
+          "explanation": "Người nữ nhờ lấy cốc màu trắng ở cạnh chiếc cốc nhỏ: 「小さいカップの隣のです」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l02",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu chủ đề",
+          "syncStatus": "khớp tự động",
+          "prompt": "学生は明日何を持ってきますか。",
+          "options": [
+            "葉書とペン",
+            "葉書と鉛筆",
+            "切手とペン",
+            "切手と鉛筆"
+          ],
+          "answer": "葉書とペン",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q02.mp3",
+          "transcript": "教室で先生が話しています。学生は明日何を持ってきますか。\nＭ：明日の授業で葉書の書き方を練習します。明日は葉書を持ってきてください。切手は入りません。それから、鉛筆じゃなくて、ペンで書きますから、ペンも忘れないでください。\n学生は明日何を持ってきますか。",
+          "explanation": "Thầy dặn mang bưu thiếp và bút mực, không dùng bút chì và không cần tem: 「葉書とペン」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l03",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu chủ đề",
+          "syncStatus": "khớp tự động",
+          "prompt": "男の人はこれから何をしますか。",
+          "options": [
+            "肉を切る",
+            "野菜を切る",
+            "カレーを食べる",
+            "買い物に行く"
+          ],
+          "answer": "肉を切る",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q03.mp3",
+          "transcript": "料理教室で先生と男の人が話しています。男の人はこれから何をしますか。\nＦ：では、これからカレーを作りましょう。\nＭ：先生、私は野菜を切りましょうか。\nＦ：いいえ、野菜じゃなくて、肉を切ってください。\nＭ：はい。\n男の学生はこの後すぐ何をしますか。",
+          "explanation": "Cô giáo bảo cắt thịt chứ không phải rau: 「肉を切ってください」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l04",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu chủ đề",
+          "syncStatus": "khớp tự động",
+          "prompt": "女の人はどの靴下を買いますか。",
+          "options": [
+            "長い動物の絵の靴下",
+            "短い動物の絵の靴下",
+            "長い果物の絵の靴下",
+            "短い果物の絵の靴下"
+          ],
+          "answer": "長い動物の絵の靴下",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q04.mp3",
+          "transcript": "靴下の店で女の人が話しています。女の人はどの靴下を買いますか。\nＦ：子供の靴下、ありますか。\nＭ：はい。長いのですか、短いのですか。\nＦ：長いのをください。動物の絵のをください。\n女の人はどの靴下を買いますか。",
+          "explanation": "Người mẹ chọn đôi tất dài và có hình con vật: 「長い動物の絵の靴下」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l05",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu chủ đề",
+          "syncStatus": "khớp tự động",
+          "prompt": "女の人は来週いつ病院へ来ますか。",
+          "options": [
+            "月曜日の３時",
+            "火曜日の３時半",
+            "火曜日の３時",
+            "水曜日の３時半"
+          ],
+          "answer": "火曜日の３時半",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q05.mp3",
+          "transcript": "病院で医者と女の人が話しています。女の人は来週いつ病院へ来ますか。\nＭ：来週の月曜日の３時にまた来てください。\nＦ：すみません、月曜日は忙しいです。\nＭ：そうですか。火曜日はどうですか。\nＦ：大丈夫です。\nＭ：じゃ、３時半に来てください。\n女の人は来週いつ病院へ来ますか。",
+          "explanation": "Hẹn lại vào chiều thứ ba lúc 3 giờ rưỡi: 「火曜日の３時半」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l06",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu chủ đề",
+          "syncStatus": "khớp tự động",
+          "prompt": "男の学生はこの後どこへ行きますか。",
+          "options": [
+            "３階の教室",
+            "２階の教室",
+            "事務室",
+            "図書館"
+          ],
+          "answer": "３階の教室",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q06.mp3",
+          "transcript": "学校で女の人と男の学生が話しています。男の学生はこの後どこへ行きますか。\nＦ：山田先生の授業ですね。今週から３階の教室になりましたよ。\nＭ：そうですか。ありがとうございます。\n男の学生はこの後どこへ行きますか。",
+          "explanation": "Phòng học của thầy Yamada tuần này chuyển lên tầng 3: 「３階の教室」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l07",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu chủ đề",
+          "syncStatus": "khớp tự động",
+          "prompt": "二人はどの果物を使いますか。",
+          "options": [
+            "リンゴとミカン",
+            "リンゴとバナナ",
+            "ミカンとバナナ",
+            "リンゴだけ"
+          ],
+          "answer": "リンゴとミカン",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q07.mp3",
+          "transcript": "ジュースを作っています。二人はどの果物を使いますか。\nＦ：リンゴは好きですか。\nＭ：はい。\nＦ：ミカンもありますよ。\nＭ：じゃあ、ミカンも入れてください。バナナはありますか。\nＦ：バナナはありません。\n二人はどの果物を使いますか。",
+          "explanation": "Cho táo và quýt, không có chuối: 「リンゴとミカン」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l08",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu điểm cốt lõi",
+          "syncStatus": "khớp tự động",
+          "prompt": "男の人は何を飲みますか。",
+          "options": [
+            "冷たいお茶",
+            "熱いお茶",
+            "冷たいコーヒー",
+            "熱いコーヒー"
+          ],
+          "answer": "冷たいお茶",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q08.mp3",
+          "transcript": "女の人と男の人が話しています。男の人は何を飲みますか。\nＦ：昨日友達にもらったお茶があります。熱いのがいいですか、冷たいのがいいですか。\nＭ：冷たいのをお願いします。\n男の人は何を飲みますか。",
+          "explanation": "Người nam muốn uống trà lạnh: 「冷たいお茶」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l09",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu điểm cốt lõi",
+          "syncStatus": "khớp tự động",
+          "prompt": "女の人は何番のバスに乗りますか。",
+          "options": [
+            "１番のバス",
+            "２番のバス",
+            "３番のバス",
+            "４番のバス"
+          ],
+          "answer": "２番のバス",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q09.mp3",
+          "transcript": "バス停で女の人と男の人が話しています。女の人は何番のバスに乗りますか。\nＦ：南高校へ行きたいんですが。\nＭ：南高校なら２番のバスですよ。\n女の人は何番のバスに乗りますか。",
+          "explanation": "Muốn đến trường THPT Minami thì đi xe buýt số 2: 「２番のバス」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l10",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu điểm cốt lõi",
+          "syncStatus": "khớp tự động",
+          "prompt": "二人はどこで晩ご飯を食べますか。",
+          "options": [
+            "駅の前のレストラン",
+            "デパートのレストラン",
+            "家",
+            "大学の食堂"
+          ],
+          "answer": "駅の前のレストラン",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q10.mp3",
+          "transcript": "男の人と女の人が話しています。二人はどこで晩ご飯を食べますか。\nＭ：今日の晩ご飯、どこで食べる？\nＦ：駅の前の新しいレストランに行ってみない？\nＭ：いいね。そうしよう。\n二人はどこで晩ご飯を食べますか。",
+          "explanation": "Quyết định ăn ở nhà hàng mới trước ga: 「駅の前のレストラン」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l11",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu điểm cốt lõi",
+          "syncStatus": "khớp tự động",
+          "prompt": "男の人はどうして遅れましたか。",
+          "options": [
+            "電車が止まったから",
+            "道に迷ったから",
+            "朝寝坊したから",
+            "バスが来なかったから"
+          ],
+          "answer": "電車が止まったから",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q11.mp3",
+          "transcript": "会社で男の人と女の人が話しています。男の人はどうして遅れましたか。\nＭ：すみません、遅れました。\nＦ：どうしたんですか。\nＭ：事故で電車が止まってしまったんです。\n男の人はどうして遅れましたか。",
+          "explanation": "Do tàu điện gặp sự cố dừng lại: 「電車が止まったから」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l12",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu điểm cốt lõi",
+          "syncStatus": "khớp tự động",
+          "prompt": "土曜日、図書館は何時から何時までですか。",
+          "options": [
+            "９時から５時まで",
+            "９時から７時まで",
+            "１０時から５時まで",
+            "１０時から７時まで"
+          ],
+          "answer": "９時から５時まで",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q12.mp3",
+          "transcript": "図書館で男の人と係の人が話しています。土曜日、図書館は何時から何時までですか。\nＭ：土曜日は何時まで開いていますか。\nＦ：土曜日は午前９時から午後５時までです。\n土曜日、図書館は何時から何時までですか。",
+          "explanation": "Thứ 7 mở cửa từ 9h sáng đến 5h chiều: 「９時から５時まで」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l13",
+          "type": "choice",
+          "category": "listening",
+          "group": "Hiểu điểm cốt lõi",
+          "syncStatus": "khớp tự động",
+          "prompt": "女の人は昨日だれと映画を見ましたか。",
+          "options": [
+            "一人で見た",
+            "友達と見た",
+            "兄と見た",
+            "母と見た"
+          ],
+          "answer": "兄と見た",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q13.mp3",
+          "transcript": "女の人と男の人が話しています。女の人は昨日だれと映画を見ましたか。\nＭ：昨日、映画に行ったんだって？\nＦ：ええ、兄と一緒に行ってきました。\n女の人は昨日だれと映画を見ましたか。",
+          "explanation": "Đi xem phim cùng với anh trai: 「兄と見た」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l14",
+          "type": "choice",
+          "category": "listening",
+          "group": "Diễn đạt bằng lời nói",
+          "syncStatus": "khớp tự động",
+          "prompt": "友達の誕生日です。何と言いますか。",
+          "options": [
+            "おめでとう",
+            "どうぞよろしく",
+            "どういたしまして"
+          ],
+          "answer": "おめでとう",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q14.mp3",
+          "transcript": "友達の誕生日です。何と言いますか。\n１　おめでとう。\n２　どうぞよろしく。\n３　どういたしまして。",
+          "explanation": "Chúc mừng sinh nhật bạn bè: 「おめでとう」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l15",
+          "type": "choice",
+          "category": "listening",
+          "group": "Diễn đạt bằng lời nói",
+          "syncStatus": "khớp tự động",
+          "prompt": "熱いお茶が買いたいです。店の人に何と言いますか。",
+          "options": [
+            "熱いお茶をどうぞ",
+            "熱いお茶はありますか",
+            "熱いお茶を飲みました"
+          ],
+          "answer": "熱いお茶はありますか",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q15.mp3",
+          "transcript": "熱いお茶が買いたいです。店の人に何と言いますか。\n１　熱いお茶をどうぞ。\n２　熱いお茶はありますか。\n３　熱いお茶を飲みました。",
+          "explanation": "Hỏi xem quán có bán trà nóng không: 「熱いお茶はありますか」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l16",
+          "type": "choice",
+          "category": "listening",
+          "group": "Diễn đạt bằng lời nói",
+          "syncStatus": "khớp tự động",
+          "prompt": "友達が荷物をたくさん持っています。何と言いますか。",
+          "options": [
+            "持ちましょうか",
+            "持ちませんか",
+            "持ってください"
+          ],
+          "answer": "持ちましょうか",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q16.mp3",
+          "transcript": "友達が荷物をたくさん持っています。何と言いますか。\n１　持ちましょうか。\n２　持ちませんか。\n３　持ってください。",
+          "explanation": "Ngỏ ý xách giúp hành lý: 「持ちましょうか」 (Để tớ cầm giúp nhé).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l17",
+          "type": "choice",
+          "category": "listening",
+          "group": "Diễn đạt bằng lời nói",
+          "syncStatus": "khớp tự động",
+          "prompt": "今からクラスの人たちに話したいです。何と言いますか。",
+          "options": [
+            "話しますか",
+            "わかりましたね",
+            "聞いてください"
+          ],
+          "answer": "聞いてください",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q17.mp3",
+          "transcript": "今からクラスの人たちに話したいです。何と言いますか。\n１　話しますか。\n２　わかりましたね。\n３　聞いてください。",
+          "explanation": "Kêu gọi mọi người chú ý lắng nghe: 「聞いてください」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l18",
+          "type": "choice",
+          "category": "listening",
+          "group": "Diễn đạt bằng lời nói",
+          "syncStatus": "khớp tự động",
+          "prompt": "昼ご飯が食べたいです。友達と店を選びます。何と言いますか。",
+          "options": [
+            "誰と食べますか",
+            "いつ店に行きますか",
+            "どの店がいいですか"
+          ],
+          "answer": "どの店がいいですか",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q18.mp3",
+          "transcript": "昼ご飯が食べたいです。友達と店を選びます。何と言いますか。\n１　誰と食べますか。\n２　いつ店に行きますか。\n３　どの店がいいですか。",
+          "explanation": "Hỏi ý kiến bạn chọn quán nào: 「どの店がいいですか」.",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l19",
+          "type": "choice",
+          "category": "listening",
+          "group": "Phản xạ nhanh",
+          "syncStatus": "khớp tự động",
+          "prompt": "日本語のテストは難しかったですか。",
+          "options": [
+            "とても安かったです",
+            "あまり難しくなかったです",
+            "よく勉強しますね"
+          ],
+          "answer": "あまり難しくなかったです",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q19.mp3",
+          "transcript": "日本語のテストは難しかったですか。\n１　とても安かったです。\n２　あまり難しくなかったです。\n３　よく勉強しますね。",
+          "explanation": "Trả lời độ khó của bài thi: 「あまり難しくなかったです」 (Không khó lắm).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l20",
+          "type": "choice",
+          "category": "listening",
+          "group": "Phản xạ nhanh",
+          "syncStatus": "khớp tự động",
+          "prompt": "スポーツは何が一番好きですか。",
+          "options": [
+            "はい、とても好きです",
+            "サッカーです",
+            "運動場です"
+          ],
+          "answer": "サッカーです",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q20.mp3",
+          "transcript": "スポーツは何が一番好きですか。\n１　はい、とても好きです。\n２　サッカーです。\n３　運動場です。",
+          "explanation": "Hỏi môn thể thao nào thích nhất: 「サッカーです」 (Bóng đá).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l21",
+          "type": "choice",
+          "category": "listening",
+          "group": "Phản xạ nhanh",
+          "syncStatus": "khớp tự động",
+          "prompt": "いつ、日本へ来ましたか。",
+          "options": [
+            "去年の春です",
+            "はい、来ました",
+            "６時間ぐらいです"
+          ],
+          "answer": "去年の春です",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q21.mp3",
+          "transcript": "いつ、日本へ来ましたか。\n１　去年の春です。\n２　はい、来ました。\n３　６時間ぐらいです。",
+          "explanation": "Hỏi thời điểm đến Nhật: 「去年の春です」 (Mùa xuân năm ngoái).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l22",
+          "type": "choice",
+          "category": "listening",
+          "group": "Phản xạ nhanh",
+          "syncStatus": "khớp tự động",
+          "prompt": "すみません、ペンを貸してください。",
+          "options": [
+            "はい、どうぞ",
+            "いいえ、貸しません",
+            "借りてください"
+          ],
+          "answer": "はい、どうぞ",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q22.mp3",
+          "transcript": "すみません、ペンを貸してください。\n１　はい、どうぞ。\n２　いいえ、貸しません。\n３　借りてください。",
+          "explanation": "Đồng ý cho mượn bút: 「はい、どうぞ」 (Vâng, xin mời).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l23",
+          "type": "choice",
+          "category": "listening",
+          "group": "Phản xạ nhanh",
+          "syncStatus": "khớp tự động",
+          "prompt": "明日は雨が降るそうですよ。",
+          "options": [
+            "晴れるといいですね",
+            "傘はどこですか",
+            "雨が好きでした"
+          ],
+          "answer": "晴れるといいですね",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q23.mp3",
+          "transcript": "明日は雨が降るそうですよ。\n１　晴れるといいですね。\n２　傘はどこですか。\n３　雨が好きでした。",
+          "explanation": "Đáp lại nghe nói mai mưa: 「晴れるといいですね」 (Trời nắng thì tốt biết mấy).",
+          "annotationDisabled": true
+        },
+        {
+          "id": "n5-2012-12-l24",
+          "type": "choice",
+          "category": "listening",
+          "group": "Phản xạ nhanh",
+          "syncStatus": "khớp tự động",
+          "prompt": "もう宿題は終わりましたか。",
+          "options": [
+            "いいえ、まだです",
+            "はい、終わります",
+            "きのうからです"
+          ],
+          "answer": "いいえ、まだです",
+          "audioUrl": "/audio/jlpt/n5-2012-12/q24.mp3",
+          "transcript": "もう宿題は終わりましたか。\n１　いいえ、まだです。\n２　はい、終わります。\n３　きのうからです。",
+          "explanation": "Trả lời câu hỏi đã xong chưa: 「いいえ、まだです」 (Chưa, vẫn chưa xong).",
+          "annotationDisabled": true
+        }
+      ]
+    }
+  ]
+};

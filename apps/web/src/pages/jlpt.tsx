@@ -100,7 +100,7 @@ function ExamAudioPlayer({ src, questionId }: { src: string; questionId: string 
       <audio
         ref={audioRef}
         src={src}
-        preload="auto"
+        preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onSeeking={handleSeeking}
         onLoadedMetadata={handleLoadedMetadata}
@@ -158,6 +158,45 @@ function ExamAudioPlayer({ src, questionId }: { src: string; questionId: string 
   );
 }
 
+export function JlptCountdown({
+  deadline,
+  offset,
+  onExpire,
+}: {
+  deadline: string | null;
+  offset: number;
+  onExpire?: () => void;
+}) {
+  const [now, setNow] = useState(Date.now());
+  const triggered = useRef(false);
+
+  useEffect(() => {
+    triggered.current = false;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [deadline]);
+
+  const remaining = deadline
+    ? Math.max(0, Math.ceil((new Date(deadline).getTime() - (now + offset)) / 1000))
+    : 0;
+
+  useEffect(() => {
+    if (deadline && remaining <= 0 && !triggered.current) {
+      triggered.current = true;
+      if (onExpire) onExpire();
+    }
+  }, [remaining, deadline, onExpire]);
+
+  if (!deadline) return null;
+
+  return (
+    <span className={'timer ' + (remaining < 60 ? 'error-text' : '')} role="timer" aria-label="Thời gian còn lại">
+      <Clock3 size={16} />
+      {clock(remaining)}
+    </span>
+  );
+}
+
 export function JlptSession() {
   const { id } = useParams();
   const client = useQueryClient();
@@ -173,7 +212,7 @@ export function JlptSession() {
     [error, setError] = useState(''),
     [confirm, setConfirm] = useState(false),
     [speaking, setSpeaking] = useState(false),
-    [now, setNow] = useState(Date.now());
+    [isExpired, setIsExpired] = useState(false);
   const offset = useRef(0),
     nextPoll = useRef(0),
     locked = useRef(false),
@@ -181,6 +220,7 @@ export function JlptSession() {
     pendingAnswers = useRef<Record<string, string>>({});
   function apply(next: JlptRunView) {
     offset.current = new Date(next.serverNow).getTime() - Date.now();
+    setIsExpired(false);
     if (next.section !== run?.section) {
       setIndex(0);
       stopSpeech();
@@ -203,7 +243,6 @@ export function JlptSession() {
         },
       };
     });
-    setNow(Date.now());
     if (next.finished) {
       void client.invalidateQueries({ queryKey: ['test-history'] });
       void client.invalidateQueries({ queryKey: ['dashboard'] });
@@ -215,31 +254,15 @@ export function JlptSession() {
       setRun(query.data.run);
     }
   }, [query.data]);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => {
-      clearInterval(timer);
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      stopSpeech();
-    };
-  }, []);
-  const remaining = run?.deadline
-    ? Math.max(0, Math.ceil((new Date(run.deadline).getTime() - (now + offset.current)) / 1000))
-    : 0;
-  useEffect(() => {
-    if (
-      !run?.deadline ||
-      run.finished ||
-      remaining > 0 ||
-      locked.current ||
-      Date.now() < nextPoll.current
-    )
-      return;
-    nextPoll.current = Date.now() + 5000;
-    locked.current = true;
-    setBusy(true);
+
+  const handleExpire = () => {
+    if (locked.current || isExpired) return;
+    setIsExpired(true);
     stopSpeech();
     setSpeaking(false);
+    if (!run?.runId || run.finished) return;
+    locked.current = true;
+    setBusy(true);
     void api<JlptRunView>('/jlpt/runs/' + run.runId)
       .then(apply)
       .catch((e) => setError(e.message))
@@ -247,7 +270,7 @@ export function JlptSession() {
         locked.current = false;
         setBusy(false);
       });
-  }, [remaining, now, run?.runId, run?.deadline, run?.finished]);
+  };
   async function flushPendingAnswers(currentRun: JlptRunView) {
     if (saveTimer.current) {
       clearTimeout(saveTimer.current);
@@ -273,7 +296,7 @@ export function JlptSession() {
     }
   }
   function handleAnswer(questionId: string, value: string) {
-    if (!run || remaining === 0) return;
+    if (!run || isExpired) return;
     if (run.answers[questionId] === value) return; // Ignore clicking the already selected option
 
     // Optimistic UI update
@@ -489,10 +512,11 @@ export function JlptSession() {
           </div>
           <div className="exam-sticky-actions">
             {run?.deadline && !run.finished && (
-              <span className={'timer ' + (remaining < 60 ? 'error-text' : '')}>
-                <Clock3 size={16} />
-                {clock(remaining)}
-              </span>
+              <JlptCountdown
+                deadline={run.deadline}
+                offset={offset.current}
+                onExpire={handleExpire}
+              />
             )}
             <Button
               variant="ghost"
@@ -532,14 +556,11 @@ export function JlptSession() {
         description={`${paper.total} câu · ${paper.minutes} phút làm bài · ${paper.sections.length} phần`}
         action={
           run?.deadline && !run.finished ? (
-            <span
-              className={'timer ' + (remaining < 60 ? 'error-text' : '')}
-              role="timer"
-              aria-label="Thời gian còn lại"
-            >
-              <Clock3 size={17} />
-              {clock(remaining)}
-            </span>
+            <JlptCountdown
+              deadline={run.deadline}
+              offset={offset.current}
+              onExpire={handleExpire}
+            />
           ) : undefined
         }
       />
@@ -714,7 +735,7 @@ export function JlptSession() {
             <div className="inline-actions">
               <Button
                 variant="secondary"
-                disabled={busy || remaining === 0}
+                disabled={busy || isExpired}
                 onClick={() => setConfirm(true)}
               >
                 Kết thúc phần này
@@ -752,7 +773,7 @@ export function JlptSession() {
                   ) : question.category === 'listening' ? (
                     <div className="inline-actions spaced">
                       <Button
-                        disabled={speaking || remaining === 0}
+                        disabled={speaking || isExpired}
                         onClick={() => void audio(question.id)}
                       >
                         <Volume2 size={16} />
@@ -775,7 +796,7 @@ export function JlptSession() {
                   <QuestionInput
                     question={{ ...question, numbered: true }}
                     value={run.answers[question.id] || ''}
-                    disabled={remaining === 0}
+                    disabled={isExpired}
                     onChange={(value) => handleAnswer(question.id, value)}
                   />
                   <div className="inline-actions jlpt-navigation">

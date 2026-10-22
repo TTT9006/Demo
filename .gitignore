@@ -16,3 +16,18 @@ npm-audit.json
 
 vibe-check/
 cookies.txt
+.worktrees/
+.agents/
+
+
+
+# Audio, PDF, Output & Media Assets (Copyright Protection)
+*.mp3
+*.m4a
+*.wav
+*.aac
+*.flac
+*.pdf
+public/audio/
+data/audio/
+output/
