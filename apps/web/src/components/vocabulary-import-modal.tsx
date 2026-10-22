@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Upload, FileText, Check, AlertCircle, X, Sparkles, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Upload, FileText, Check, AlertCircle, X, Sparkles, Layers, LayoutList, Table as TableIcon } from 'lucide-react';
 import { Button, Modal } from './ui';
 import { api, post } from '../services/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -70,6 +70,13 @@ export function VocabularyImportModal({
   const [activeDeckIndex, setActiveDeckIndex] = useState(0);
   const [isCommitting, setIsCommitting] = useState(false);
   const [commitStatus, setCommitStatus] = useState('');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 640) {
+      setViewMode('cards');
+    }
+  }, []);
 
   const client = useQueryClient();
   const notify = useUI((s) => s.notify);
@@ -465,107 +472,216 @@ export function VocabularyImportModal({
 
             {currentDeck && (
               <div className="preview-deck-container">
-                <div className="deck-title-edit">
-                  <label>
-                    Tên bộ thẻ:
-                    <input
-                      type="text"
-                      value={currentDeck.deckName}
-                      onChange={(e) => {
-                        const newName = e.target.value;
-                        setParsedDecks((prev) => {
-                          const clone = [...prev];
-                          clone[activeDeckIndex] = { ...clone[activeDeckIndex], deckName: newName };
-                          return clone;
-                        });
-                      }}
-                    />
-                  </label>
+                <div className="deck-controls-row">
+                  <div className="deck-title-edit">
+                    <label>
+                      <span>Tên bộ thẻ:</span>
+                      <input
+                        type="text"
+                        value={currentDeck.deckName}
+                        onChange={(e) => {
+                          const newName = e.target.value;
+                          setParsedDecks((prev) => {
+                            const clone = [...prev];
+                            clone[activeDeckIndex] = { ...clone[activeDeckIndex], deckName: newName };
+                            return clone;
+                          });
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="view-mode-toggle" role="group" aria-label="Chế độ hiển thị">
+                    <button
+                      type="button"
+                      className={`view-mode-btn ${viewMode === 'cards' ? 'active' : ''}`}
+                      onClick={() => setViewMode('cards')}
+                      title="Hiển thị dạng thẻ (Dễ xem trên điện thoại)"
+                    >
+                      <LayoutList size={15} />
+                      <span>Dạng thẻ</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`view-mode-btn ${viewMode === 'table' ? 'active' : ''}`}
+                      onClick={() => setViewMode('table')}
+                      title="Hiển thị dạng bảng (Dành cho máy tính)"
+                    >
+                      <TableIcon size={15} />
+                      <span>Dạng bảng</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="import-table-wrapper">
-                  <table className="import-preview-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '48px', minWidth: '48px' }}>STT</th>
-                        <th style={{ width: '220px', minWidth: '180px' }}>Từ vựng (Term)</th>
-                        <th style={{ width: '220px', minWidth: '180px' }}>Cách đọc (Reading)</th>
-                        <th style={{ width: '150px', minWidth: '130px' }}>Âm Hán Việt</th>
-                        <th style={{ minWidth: '220px' }}>Nghĩa tiếng Việt</th>
-                        <th style={{ width: '44px', minWidth: '44px' }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentDeck.cards.map((card, cIdx) => (
-                        <tr key={cIdx}>
-                          <td className="center-cell muted">{cIdx + 1}</td>
-                          <td>
+                {viewMode === 'cards' ? (
+                  <div className="import-cards-list">
+                    {currentDeck.cards.map((c, idx) => (
+                      <div key={idx} className="import-card-item">
+                        <div className="import-card-top-row">
+                          <div className="import-card-term-wrap">
+                            <span className="import-card-stt">#{idx + 1}</span>
                             <input
-                              className="table-input bold"
-                              value={card.term}
+                              type="text"
+                              className="table-input bold import-card-term-input"
+                              placeholder="Từ vựng (Kanji)"
+                              value={c.term}
                               onChange={(e) =>
-                                handleUpdateCard(activeDeckIndex, cIdx, 'term', e.target.value)
+                                handleUpdateCard(activeDeckIndex, idx, 'term', e.target.value)
                               }
                             />
-                          </td>
-                          <td>
+                          </div>
+
+                          <div className="import-card-sino-wrap">
                             <input
-                              className="table-input"
-                              value={card.cleanReading || card.reading}
-                              onChange={(e) =>
-                                handleUpdateCard(
-                                  activeDeckIndex,
-                                  cIdx,
-                                  'cleanReading',
-                                  e.target.value
-                                )
-                              }
-                            />
-                            {card.pitchAccent && card.pitchAccent !== card.cleanReading && (
-                              <small className="pitch-tag" title="Trọng âm gốc">
-                                {card.pitchAccent}
-                              </small>
-                            )}
-                          </td>
-                          <td>
-                            <input
-                              className="table-input sino-input"
+                              type="text"
+                              className="table-input sino-input import-card-sino-input"
                               placeholder="[HÁN VIỆT]"
-                              value={card.sinoVietnamese || ''}
+                              value={c.sinoVietnamese || ''}
                               onChange={(e) =>
                                 handleUpdateCard(
                                   activeDeckIndex,
-                                  cIdx,
+                                  idx,
                                   'sinoVietnamese',
                                   e.target.value
                                 )
                               }
                             />
-                          </td>
-                          <td>
-                            <input
-                              className="table-input"
-                              value={card.meaning}
-                              onChange={(e) =>
-                                handleUpdateCard(activeDeckIndex, cIdx, 'meaning', e.target.value)
-                              }
-                            />
-                          </td>
-                          <td className="center-cell">
                             <button
                               type="button"
                               className="action-icon-button delete"
-                              title="Xóa dòng này"
-                              onClick={() => handleRemoveCard(activeDeckIndex, cIdx)}
+                              onClick={() => handleRemoveCard(activeDeckIndex, idx)}
+                              title="Xóa từ này"
+                              aria-label={`Xóa từ ${c.term}`}
                             >
-                              <X size={15} />
+                              <X size={16} />
                             </button>
-                          </td>
+                          </div>
+                        </div>
+
+                        <div className="import-card-grid">
+                          <div className="import-card-col">
+                            <span className="import-card-label">Cách đọc:</span>
+                            <input
+                              type="text"
+                              className="table-input"
+                              placeholder="Cách đọc Hiragana"
+                              value={c.cleanReading || c.reading}
+                              onChange={(e) =>
+                                handleUpdateCard(
+                                  activeDeckIndex,
+                                  idx,
+                                  'cleanReading',
+                                  e.target.value
+                                )
+                              }
+                            />
+                            {c.pitchAccent &&
+                              c.pitchAccent !== (c.cleanReading || c.reading) && (
+                                <span className="pitch-tag">Trọng âm: {c.pitchAccent}</span>
+                              )}
+                          </div>
+
+                          <div className="import-card-col">
+                            <span className="import-card-label">Nghĩa tiếng Việt:</span>
+                            <input
+                              type="text"
+                              className="table-input"
+                              placeholder="Nghĩa tiếng Việt"
+                              value={c.meaning}
+                              onChange={(e) =>
+                                handleUpdateCard(activeDeckIndex, idx, 'meaning', e.target.value)
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="import-table-wrapper">
+                    <table className="import-preview-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '48px', minWidth: '48px' }}>STT</th>
+                          <th style={{ width: '220px', minWidth: '180px' }}>Từ vựng (Term)</th>
+                          <th style={{ width: '220px', minWidth: '180px' }}>Cách đọc (Reading)</th>
+                          <th style={{ width: '150px', minWidth: '130px' }}>Âm Hán Việt</th>
+                          <th style={{ minWidth: '220px' }}>Nghĩa tiếng Việt</th>
+                          <th style={{ width: '44px', minWidth: '44px' }}></th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {currentDeck.cards.map((card, cIdx) => (
+                          <tr key={cIdx}>
+                            <td className="center-cell muted">{cIdx + 1}</td>
+                            <td>
+                              <input
+                                className="table-input bold"
+                                value={card.term}
+                                onChange={(e) =>
+                                  handleUpdateCard(activeDeckIndex, cIdx, 'term', e.target.value)
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                className="table-input"
+                                value={card.cleanReading || card.reading}
+                                onChange={(e) =>
+                                  handleUpdateCard(
+                                    activeDeckIndex,
+                                    cIdx,
+                                    'cleanReading',
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              {card.pitchAccent && card.pitchAccent !== card.cleanReading && (
+                                <small className="pitch-tag" title="Trọng âm gốc">
+                                  {card.pitchAccent}
+                                </small>
+                              )}
+                            </td>
+                            <td>
+                              <input
+                                className="table-input sino-input"
+                                placeholder="[HÁN VIỆT]"
+                                value={card.sinoVietnamese || ''}
+                                onChange={(e) =>
+                                  handleUpdateCard(
+                                    activeDeckIndex,
+                                    cIdx,
+                                    'sinoVietnamese',
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                className="table-input"
+                                value={card.meaning}
+                                onChange={(e) =>
+                                  handleUpdateCard(activeDeckIndex, cIdx, 'meaning', e.target.value)
+                                }
+                              />
+                            </td>
+                            <td className="center-cell">
+                              <button
+                                type="button"
+                                className="action-icon-button delete"
+                                title="Xóa dòng này"
+                                onClick={() => handleRemoveCard(activeDeckIndex, cIdx)}
+                              >
+                                <X size={15} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>

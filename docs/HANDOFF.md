@@ -9,6 +9,41 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 **Quy định kiểm thử thực tế qua Chrome DevTools Protocol (CDP) — Cập nhật 21/10/2026:**
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
 
+## Tối ưu hóa toàn diện giao diện Mobile (Điện thoại) cho tính năng Import Flashcard — ngày 22/10
+
+- **Hiện tượng & Báo cáo lỗi từ người dùng:**
+  - Người dùng hỏi: "có đồng bộ cho cả giao điện thoại luôn chưa, nếu chưa thì thực hiện".
+  - Kiểm tra thực tế trên màn hình di động (Viewport: 390x844 px):
+    - Modal trước đây bị cố định độ rộng desktop khiến bảng dữ liệu 5 cột (`STT`, `Từ vựng`, `Cách đọc`, `Âm Hán Việt`, `Nghĩa tiếng Việt`) bị tràn viền sang phải, chữ `STT` bị bẻ dòng thành `ST \n T`, các cột `Âm Hán Việt` và `Nghĩa tiếng Việt` bị thụt khuất khỏi màn hình điện thoại, thao tác vuốt cuộn ngang bất tiện trên màn hình cảm ứng nhỏ.
+    - Ô nhập "Tên bộ thẻ:" bị co ép do nhãn và ô input xếp ngang hàng.
+- **Thực hiện kỹ thuật & Tối ưu hóa:**
+  - **1. Thiết kế Chế độ Dạng Thẻ riêng cho Mobile (Mobile Card View):**
+    - Tự động nhận diện thiết bị di động (`window.innerWidth <= 640px`) để kích hoạt chế độ **"Dạng thẻ"** (`viewMode: 'cards'`).
+    - Mỗi từ vựng được hiển thị dưới dạng một thẻ card dọc trực quan:
+      - Hàng đầu: Số thứ tự `#{STT}`, Ô nhập Từ vựng (Kanji font lớn in đậm), Ô Âm Hán Việt `[HÁN VIỆT]` và Nút xóa `X` tiện lợi.
+      - Phần thân thẻ: Khung hiển thị `CÁCH ĐỌC` (Hiragana chuẩn + badge Trọng âm `いきま＼す`) và `NGHĨA TIẾNG VIỆT`.
+      - Người dùng có thể chỉnh sửa trực tiếp từng trường ngay trên điện thoại và cuộn dọc tự nhiên bằng một ngón tay mà không cần vuốt ngang qua lại.
+  - **2. Bổ sung Bộ chuyển đổi Chế độ linh hoạt (Segmented View Mode Toggle):**
+    - Cung cấp 2 nút chuyển đổi trực quan: `[ 📑 Dạng thẻ ]` và `[ 🗂️ Dạng bảng ]`.
+    - Người dùng điện thoại có thể tự do chuyển sang dạng bảng bất cứ lúc nào nếu muốn xem tổng thể, và người dùng máy tính vẫn mặc định sử dụng dạng bảng tiêu chuẩn.
+  - **3. Tối ưu CSS Responsive Bottom Sheet & Touch Targets (`apps/web/src/styles.css`):**
+    - Trên màn hình nhỏ (`max-width: 640px`), modal trở thành **Bottom Sheet** tự nhiên (`height: 94dvh`, bo góc trên `20px 20px 0 0`, an toàn với `env(safe-area-inset-bottom)`).
+    - Cột `STT` và các tiêu đề trong bảng được đặt `white-space: nowrap !important` để chống vỡ dòng.
+    - Nhãn và ô nhập "Tên bộ thẻ" xếp dọc chiếm 100% chiều rộng.
+    - Các nút hành động `[ Chọn file khác ]` và `[ Lưu thẻ / Tạo bộ Flashcard ]` được bố trí dạng lưới 2 cột chiếm trọn chiều ngang với chiều cao tối thiểu 44px chuẩn công thái học cho ngón tay.
+- **Kiểm chứng hệ thống:**
+  - `npm.cmd run typecheck`: 0 lỗi TypeScript.
+  - `npm.cmd test`: 13 test suites (132 tests) pass 100%.
+  - `npm.cmd run build`: Bản build sản xuất Vite + esbuild thành công.
+  - **Kiểm thử trực quan qua Chrome DevTools Protocol (CDP) (`scripts/test-mobile-cdp.mjs`):**
+    - Khởi chạy trình duyệt thật giả lập điện thoại di động (iPhone / Pixel, Viewport: 390x844, Touch enabled).
+    - Quét file PowerPoint `語彙5A.pptx` (31 từ).
+    - Chụp ảnh màn hình thực tế:
+      - `test-results/mobile-cards-view.png`: Dạng thẻ hiển thị phẳng đẹp, sắc nét, đầy đủ Kanji, Hán Việt, Cách đọc, Trọng âm và Nghĩa.
+      - `test-results/mobile-cards-scrolled.png`: Cuộn mượt mà các từ tiếp theo.
+      - `test-results/mobile-table-view.png` & `test-results/mobile-table-scrolled.png`: Chuyển đổi sang dạng bảng mượt mà, cuộn ngang phẳng đẹp không chồng chữ.
+- **Tập tin liên quan:** `apps/web/src/components/vocabulary-import-modal.tsx`, `apps/web/src/styles.css`, `scripts/test-mobile-cdp.mjs`, `docs/HANDOFF.md`.
+
 ## Khắc phục lỗi "Quét xong không lưu được" (Lỗi 404 Không tìm thấy chức năng này khi Commit Flashcard) — ngày 22/10
 
 - **Hiện tượng & Báo cáo lỗi từ người dùng:**
