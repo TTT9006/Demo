@@ -1,3 +1,10 @@
+## Sửa quét PDF bảng từ vựng — 23/10/2026
+
+- Bài 7A nhận đủ 32 từ thay vì 17: đọc bảng theo cột và số thứ tự, giữ đúng Kanji/cách đọc/Hán Việt/nghĩa; ghép mảnh chữ và dòng xuống hàng.
+- Bản tích hợp main 05b0cc3 đã qua TypeScript, Vite build, 6/6 kiểm thử client PDF + JLPT với DB riêng và Edge CDP desktop/mobile. Luồng quét/xem trước/chuyển dạng/chọn lại file đã kiểm; không kiểm lưu database. Kiểm thử dictionary cần dữ liệu từ điển riêng.
+- Người dùng yêu cầu chỉ push code: commit triển khai chỉ gồm parser, regression test và handoff, không chứa ảnh hoặc lịch sử commit ảnh. Ảnh giữ tại worktree kiểm thử cục bộ.
+- Chỉ hỗ trợ bảng có tiêu đề phù hợp; không phải OCR cho PDF ảnh. Không thay đổi checkout Antigravity.
+
 # Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 23/10/2026)
 
 ## Quy ước làm việc của người dùng

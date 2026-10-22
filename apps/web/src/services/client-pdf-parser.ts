@@ -27,7 +27,7 @@ export interface ExtractedClientPdfResult {
 const JAPANESE_CHAR_REGEX = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
 const KANJI_REGEX = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
 const SINO_VIETNAMESE_REGEX = /\[([A-ZÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ\s※\-\/]+)\]/g;
-const KANA_ACCENT_REGEX = /^[\u3040-\u30ff\uFF3C\uFFE3\s\[\]［］（）()～〜ー\-–—―]+$/;
+const KANA_ACCENT_REGEX = /^[\u3040-\u30ff\uFF3C\uFFE3\s\[\]［］（）()～〜ー。、！？\-–—―]+$/;
 
 function cleanPitchAccent(reading: string): string {
   return reading.replace(/[\uFF3C\uFFE3\\~]/g, '').trim();
@@ -49,6 +49,46 @@ export async function extractTextLinesFromPdf(data: ArrayBuffer | Uint8Array): P
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
     
+    // Tables have independent baselines inside each cell (e.g. a Han-Viet
+    // label above the kanji). Assign cells to numbered rows before flattening.
+    const positioned = textContent.items.filter((item): item is import('pdfjs-dist/types/src/display/api').TextItem => 'str' in item && !!item.str.trim());
+    const readingHeader = positioned.find(item => /Hiragana.*Katakana/i.test(item.str));
+    const indexHeader = positioned.find(item => item.str.trim() === 'STT');
+    const meaningHeader = positioned.find(item => /^Ngh/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
+    const typeHeader = positioned.find(item => /^Lo/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
+    if (readingHeader && indexHeader && meaningHeader && typeHeader) {
+      const headerY = indexHeader.transform[5];
+      const anchors = positioned.filter(item => /^\d+$/.test(item.str.trim()) && Math.abs(item.transform[4] - indexHeader.transform[4]) < 12 && item.transform[5] < headerY)
+        .sort((a, b) => b.transform[5] - a.transform[5]);
+      const cells = anchors.map(() => [[], [], []] as typeof positioned[]);
+      for (const item of positioned) {
+        const x = item.transform[4], y = item.transform[5];
+        if (y >= headerY - 5 || x < indexHeader.transform[4] + 20 || !anchors.length) continue;
+        let row = 0;
+        for (let i = 1; i < anchors.length; i++) {
+          if (Math.abs(y - anchors[i].transform[5]) < Math.abs(y - anchors[row].transform[5])) row = i;
+        }
+        if (Math.abs(y - anchors[row].transform[5]) > 24) continue;
+        const column = x < readingHeader.transform[4] - 3 ? 0 : x < typeHeader.transform[4] - 3 ? 1 : x >= meaningHeader.transform[4] - 3 ? 2 : -1;
+        if (column >= 0) cells[row][column].push(item);
+      }
+      const joinCell = (items: typeof positioned) => {
+        items.sort((a, b) => Math.abs(a.transform[5] - b.transform[5]) > 3 ? b.transform[5] - a.transform[5] : a.transform[4] - b.transform[4]);
+        return items.map((item, i) => {
+          const prev = items[i - 1];
+          const space = prev && (Math.abs(prev.transform[5] - item.transform[5]) > 3 || item.transform[4] - prev.transform[4] - prev.width > 1.2);
+          return (space ? ' ' : '') + item.str;
+        }).join('').trim();
+      };
+      if (anchors.length) {
+        for (const row of cells) {
+          const [term, reading, meaning] = row.map((items, column) => { const text = joinCell(items); return column < 2 ? text.replace(/(?<=[\u3040-\u30ff\u3400-\u9fff])\s+(?=[\u3040-\u30ff\u3400-\u9fff])/g, '') : text; });
+          lines.push(`${term === '-' ? reading : term}\t${reading}\t${meaning}`);
+        }
+        continue;
+      }
+    }
+
     // Group text items by roughly their Y coordinate to reconstruct lines
     const lineMap = new Map<number, { x: number; text: string }[]>();
 
@@ -163,7 +203,7 @@ export function parsePdfTextLines(rawLines: string[], filename = 'Tai-lieu.pdf')
 
     // Sino-Vietnamese tag e.g. [HÀNH], [TIÊN CHU]
     const sinoMatch = line.match(SINO_VIETNAMESE_REGEX);
-    if (sinoMatch) {
+    if (sinoMatch && !line.includes('\t') && !JAPANESE_CHAR_REGEX.test(line)) {
       currentSino = sinoMatch.map((s) => s.replace(/[※]/g, '').trim()).join(' ');
       continue;
     }
