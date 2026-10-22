@@ -1,4 +1,4 @@
-# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 21/10/2026)
+# Bàn giao ngắn — Komorebi / Wakaba (Cập nhật 22/10/2026)
 
 ## Quy ước làm việc của người dùng
 
@@ -8,6 +8,57 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 
 **Quy định kiểm thử thực tế qua Chrome DevTools Protocol (CDP) — Cập nhật 21/10/2026:**
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
+
+## Tính năng Import & Quét file PowerPoint (.pptx) & PDF tạo Flashcard tự động tuyệt đối — ngày 22/10
+
+- **Yêu cầu & Mục tiêu:**
+  - Cho phép người dùng tải lên một hoặc nhiều file PowerPoint bài giảng từ vựng (`.pptx`, Minna no Nihongo, v.v.) và tự động bóc tách thành các bộ Flashcard chuẩn mực mà không quét nhầm slide rác, không lẫn ký hiệu phát âm vào từ vựng, không bỏ sót từ nào.
+  - Tối ưu hóa tính năng đọc tệp PDF: Không cần chọn nhập từng dòng thủ công như trước, tự động nhận diện từ vựng có cấu trúc hoặc tra cứu từ điển cục bộ để trích xuất cách đọc, âm Hán Việt và nghĩa tiếng Việt một cách hoàn toàn tự động.
+- **Thực hiện kỹ thuật:**
+  - **1. Bộ bóc tách PowerPoint (.pptx) chuẩn xác tuyệt đối (`apps/api/src/pptx-parser.ts`):**
+    - Sử dụng `jszip` thuần JavaScript để giải nén buffer từ file upload trên RAM, không dùng C++ addon hay phụ thuộc hệ điều hành.
+    - Sắp xếp slide theo thứ tự số tự nhiên (**Natural Sort**) `slide1.xml`, `slide2.xml`, ..., `slide10.xml` để bảo toàn trật tự bài học.
+    - **Bộ lọc loại trừ slide rác (Slide-level Filter):**
+      - Tự động nhận diện slide tiêu đề bài học (`/^第\s*\d+\s*[A-Za-z]?\s*課/i`, `ことば`), trích xuất làm tên bộ thẻ mặc định (VD: `Từ vựng - 第1A課`).
+      - Loại bỏ 100% slide giải thích ký hiệu phát âm (`解説`, `GIẢI THÍCH VỀ KÝ HIỆU PHÁT ÂM`, `アクセント核`, `平板型`, `無声化する`).
+      - Bỏ qua các slide có ít hơn 2 dòng văn bản có nghĩa.
+    - **Làm sạch & Phân loại trường (Field Classification):**
+      - Xóa sạch ký hiệu ngôi sao `★`, `☆`, khoảng trắng thừa.
+      - Tách dòng ghi chú bắt đầu bằng `※` vào trường `note`.
+      - Trích xuất âm Hán Việt dạng `[THỰC]`, `[TẢ CHÂN] [TOÁT]` bằng regex Unicode Tiếng Việt chuẩn.
+      - Nhận diện cách đọc Kana và ký hiệu trọng âm (`＼`, `￣`), bóc tách `pitchAccent` riêng và tạo `cleanReading` đã xóa sạch trọng âm để đảm bảo tìm kiếm và phát âm TTS không bị lỗi.
+      - Nhận diện `term` (Kanji/từ vựng gốc) và `meaning` (nghĩa tiếng Việt), loại bỏ nhiễu từ ảnh minh họa như `22 さい`, `?`.
+  - **2. Tối ưu hóa tự động đọc tệp PDF (`apps/api/src/pdf-parser.ts`):**
+    - Nhận diện các dòng từ vựng có cấu trúc phân tách bởi dấu hai chấm, gạch ngang, tab hoặc ngoặc đơn (VD: `食べる (たべる) [THỰC]: Ăn`).
+    - Tự động bóc tách âm Hán Việt trong ngoặc vuông và nghĩa tiếng Việt.
+    - Tích hợp cơ chế tự động tra cứu từ điển cục bộ Mức A (`searchDictionary`) cho các dòng chỉ có từ vựng tiếng Nhật, tự động điền cách đọc và bản dịch tiếng Việt mà không bắt người học phải gõ tay hay chọn từng dòng thủ công.
+  - **3. Backend API (`apps/api/src/app.ts`):**
+    - Cấu hình middleware `pptxUpload` cho phép tải lên tới 20 file `.pptx` cùng lúc (tối đa 30MB).
+    - `POST /api/flashcards/pptx/preview`: Nhận mảng file PPTX, trả về danh sách bộ thẻ và các thẻ đã bóc tách.
+    - `POST /api/flashcards/pdf`: Nâng cấp trả về `cards` đã bóc tách tự động cùng thông điệp thành công.
+    - `POST /api/flashcards/import/commit`: Cho phép lưu hàng loạt bộ thẻ mới hoặc nhập thẻ vào một bộ thẻ đã chọn sẵn.
+  - **4. Giao diện người dùng (`apps/web/src/components/vocabulary-import-modal.tsx` & `flashcards.tsx`):**
+    - Bổ sung nút **"Import PowerPoint / PDF"** tại trang danh sách bộ thẻ (`/flashcards`) và bên trong chi tiết từng bộ thẻ (`/flashcards/:id`).
+    - Modal nhập thông minh với 2 tab chuyển đổi: PowerPoint (`.pptx`) và PDF (`.pdf`), hỗ trợ chọn nhiều file cùng lúc.
+    - Bảng xem trước trực quan (Preview Table) gồm các cột: `STT | Từ vựng (Term) | Cách đọc (Reading + Trọng âm) | Âm Hán Việt | Nghĩa tiếng Việt | Xóa`.
+    - Cho phép sửa trực tiếp từng ô và xóa các dòng không mong muốn trước khi bấm **"Tạo bộ Flashcard"**.
+  - **5. Styling & Giao diện Responsive (`apps/web/src/styles.css`):**
+    - Thiết kế đầy đủ kiểu dáng cho Dropzone, Deck Tabs, Preview Table, Table Inputs, và Theme Sáng / Tối.
+- **Kiểm chứng hệ thống:**
+  - `tests/pptx-parser.test.ts`: 8/8 tests pass (100%).
+  - `tests/pptx-integration.test.ts`: 1/1 test pass (kiểm tra toàn diện giải nén zip, bóc tách slide, natural sort và metadata).
+  - `tests/pdf-parser.test.ts`: 2/2 tests pass (kiểm tra bóc tách cấu trúc và tra cứu từ điển tự động).
+  - `tests/api.test.ts`: 31/31 tests pass (100% tương thích ngược toàn bộ API hệ thống).
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm run build`: Vite build frontend và esbuild backend thành công mỹ mãn.
+  - **Kiểm thử thực tế qua Chrome DevTools Protocol (CDP) (`scripts/test-import-cdp.mjs`):**
+    - Khởi chạy Google Chrome thực tế trên Windows qua CDP.
+    - Đăng nhập tài khoản mẫu, điều hướng vào trang Flashcards.
+    - Bấm nút mở Modal "Import PowerPoint / PDF".
+    - Tải file PPTX gồm slide tiêu đề, slide giải thích phát âm và 2 slide từ vựng.
+    - Quét và hiển thị đúng 2 từ vựng vào bảng Preview: `食べます / たべます / [THỰC] / Ăn` và `［写真を］撮ります / ［しゃしんを］とります / [TẢ CHÂN] [TOÁT] / Chụp (ảnh)`.
+    - Bấm "Tạo bộ Flashcard" và lưu thành công vào cơ sở dữ liệu.
+- **Tập tin liên quan:** `apps/api/src/app.ts`, `apps/api/src/pptx-parser.ts`, `apps/api/src/pdf-parser.ts`, `apps/web/src/components/vocabulary-import-modal.tsx`, `apps/web/src/pages/flashcards.tsx`, `apps/web/src/styles.css`, `tests/pptx-parser.test.ts`, `tests/pptx-integration.test.ts`, `tests/pdf-parser.test.ts`, `scripts/test-import-cdp.mjs`, `docs/HANDOFF.md`.
 
 ## Khắc phục lỗi "Thông tin chưa hợp lệ" khi nộp bài thi JLPT sớm & Cơ chế Fallback đa tầng — ngày 21/10
 

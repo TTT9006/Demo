@@ -21,6 +21,7 @@ import { useUI } from '../stores/ui';
 import type { Card, Deck } from '../types';
 import { ReviewCardInteractive } from '../components/review-card-interactive';
 import { DeckCoverArt } from '../components/deck-cover-art';
+import { VocabularyImportModal } from '../components/vocabulary-import-modal';
 import {
   AudioButton,
   Button,
@@ -88,6 +89,7 @@ export function Flashcards() {
     queryFn: () => api<Deck[]>('/flashcards/decks'),
   });
   const [create, setCreate] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const matching = (data || []).filter((deck) =>
@@ -106,10 +108,16 @@ export function Flashcards() {
         title="Gặp lại để nhớ lâu hơn."
         description="Học ngay với Hiragana, Katakana và Kanji theo chủ đề, hoặc tạo bộ thẻ của riêng bạn."
         action={
-          <Button onClick={() => setCreate(true)}>
-            <Plus size={17} />
-            Tạo bộ thẻ
-          </Button>
+          <div className="inline-actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
+            <Button variant="secondary" onClick={() => setImportOpen(true)}>
+              <Upload size={16} />
+              Import PowerPoint / PDF
+            </Button>
+            <Button onClick={() => setCreate(true)}>
+              <Plus size={17} />
+              Tạo bộ thẻ
+            </Button>
+          </div>
         }
       />
       <section className="review-banner">
@@ -225,6 +233,7 @@ export function Flashcards() {
       <Modal open={create} onOpenChange={setCreate} title="Một bộ thẻ mới">
         <DeckForm close={() => setCreate(false)} />
       </Modal>
+      <VocabularyImportModal open={importOpen} onOpenChange={setImportOpen} />
     </>
   );
 }
@@ -322,8 +331,7 @@ export function DeckDetail() {
   const [deleting, setDeleting] = useState<Card | 'deck' | null>(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const [pdf, setPdf] = useState<{ lines: string[]; message: string } | null>(null);
-  const [importing, setImporting] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [initial, setInitial] = useState('');
   const deletion = useMutation({
     mutationFn: () =>
@@ -391,30 +399,10 @@ export function DeckDetail() {
           <option value="all">Tất cả thẻ</option>
           <option value="due">Đến hạn ôn</option>
         </select>
-        <label className="button secondary upload-label">
+        <Button variant="secondary" onClick={() => setImportModalOpen(true)}>
           <Upload size={16} />
-          {importing ? 'Đang đọc…' : 'Nhập PDF'}
-          <input
-            type="file"
-            accept="application/pdf"
-            disabled={importing}
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              setImporting(true);
-              const form = new FormData();
-              form.append('file', file);
-              try {
-                setPdf(await api('/flashcards/pdf', { method: 'POST', body: form }));
-              } catch (error) {
-                notify((error as Error).message);
-              } finally {
-                setImporting(false);
-                e.target.value = '';
-              }
-            }}
-          />
-        </label>
+          Import PPTX / PDF
+        </Button>
         <div className="inline-actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
           <Link className="button primary" to={'/flashcards/review?deck=' + deckId}>
             Ôn bộ này
@@ -525,32 +513,12 @@ export function DeckDetail() {
           </Button>
         </div>
       </Modal>
-      <Modal
-        open={pdf !== null}
-        onOpenChange={(o) => !o && setPdf(null)}
-        title="Kiểm tra nội dung PDF"
-      >
-        <p>{pdf?.message}</p>
-        <div className="pdf-lines">
-          {pdf?.lines.map((line, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setInitial(line);
-                setPdf(null);
-                setEditor('new');
-              }}
-            >
-              {line}
-              <Plus size={14} />
-            </button>
-          ))}
-        </div>
-        <small className="muted">
-          Chỉ hỗ trợ PDF có lớp văn bản, tối đa 5 MB. Chọn một dòng để sửa và thêm nghĩa; không tự
-          động tạo thẻ.
-        </small>
-      </Modal>
+      <VocabularyImportModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        targetDeckId={deckId}
+        targetDeckName={deck.name}
+      />
     </>
   );
 }

@@ -17,6 +17,8 @@ import { db } from './db';
 import { annotate } from './annotation';
 import { kanjiData, kanjiStrokes } from './kanji';
 import { ensureDefaultDecks } from './default-decks';
+import { parsePptxBuffer, type ExtractedDeckResult } from './pptx-parser';
+import { parsePdfVocabulary } from './pdf-parser';
 import { synthesizeSpeech } from './tts';
 import { dictionaryStatus, entryInclude, searchDictionary, ensureDictionaryContent } from './dictionary';
 import { schedule } from '../../../packages/shared/srs';
@@ -654,12 +656,25 @@ app.post('/api/flashcards/review', async (req, res) => {
 });
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype === 'application/pdf') cb(null, true);
     else cb(Object.assign(Error('Chỉ chấp nhận tệp PDF.'), { status: 400 }));
   },
 });
+
+const pptxUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 30 * 1024 * 1024, files: 20 },
+  fileFilter: (_req, file, cb) => {
+    const isPptx =
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      /\.pptx$/i.test(file.originalname);
+    if (isPptx) cb(null, true);
+    else cb(Object.assign(Error('Chỉ chấp nhận tệp PowerPoint (.pptx).'), { status: 400 }));
+  },
+});
+
 app.post('/api/flashcards/pdf', upload.single('file'), async (req, res) => {
   if (!req.file || req.file.buffer.subarray(0, 5).toString() !== '%PDF-') {
     res.status(400).json({ error: 'Tệp PDF không hợp lệ.' });
@@ -669,20 +684,135 @@ app.post('/api/flashcards/pdf', upload.single('file'), async (req, res) => {
   const parser = new PDFParse({ data: req.file.buffer });
   try {
     const result = await parser.getText();
+    const parsed = await parsePdfVocabulary(result.text, req.file.originalname);
     const lines = result.text
       .split('\n')
       .map((s) => s.trim())
       .filter((s) => /[\u3040-\u30ff\u4e00-\u9fff]/.test(s))
       .slice(0, 100);
+
     res.json({
       lines,
-      message: lines.length
-        ? 'Hãy kiểm tra từng dòng và bổ sung nghĩa trước khi lưu.'
-        : 'Không tìm thấy văn bản tiếng Nhật. PDF ảnh quét cần OCR; ứng dụng chưa hỗ trợ OCR.',
+      deckName: parsed.deckName,
+      cards: parsed.cards,
+      message: parsed.cards.length
+        ? `Đã quét và bóc tách thành công ${parsed.cards.length} từ vựng từ tệp PDF.`
+        : lines.length
+          ? 'Không bóc tách được từ vựng cấu trúc tự động. Hãy chọn từng dòng để thêm.'
+          : 'Không tìm thấy văn bản tiếng Nhật. PDF ảnh quét cần OCR; ứng dụng chưa hỗ trợ OCR.',
     });
   } finally {
     await parser.destroy();
   }
+});
+
+// PPTX Vocabulary Import: Preview endpoint (accepts 1 or multiple .pptx files)
+app.post('/api/flashcards/pptx/preview', pptxUpload.array('files', 20), async (req, res) => {
+  const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
+  if (!files || files.length === 0) {
+    res.status(400).json({ error: 'Vui lòng chọn ít nhất một tệp PowerPoint (.pptx).' });
+    return;
+  }
+
+  const results: ExtractedDeckResult[] = [];
+  for (const file of files) {
+    try {
+      const extracted = await parsePptxBuffer(file.buffer, file.originalname);
+      results.push(extracted);
+    } catch (err) {
+      console.error(`Lỗi đọc file pptx ${file.originalname}:`, err);
+      res.status(400).json({ error: `Không thể đọc tệp ${file.originalname}: ${(err as Error).message}` });
+      return;
+    }
+  }
+
+  const totalCards = results.reduce((acc, r) => acc + r.cards.length, 0);
+  res.json({
+    results,
+    totalDecks: results.length,
+    totalCards,
+    message: `Đã bóc tách thành công ${totalCards} từ vựng từ ${results.length} tệp bài giảng.`,
+  });
+});
+
+// Commit imported decks and cards (batch create)
+const importCommitSchema = z.object({
+  targetDeckId: z.string().optional(), // If provided, add all cards into this existing deck
+  decks: z.array(
+    z.object({
+      deckName: z.string().min(1).max(80),
+      description: z.string().max(300).default(''),
+      cards: z.array(
+        z.object({
+          term: z.string().min(1).max(120),
+          reading: z.string().max(200),
+          cleanReading: z.string().max(200).optional(),
+          sinoVietnamese: z.string().optional(),
+          meaning: z.string().min(1).max(1000),
+          note: z.string().max(2000).optional(),
+          example: z.string().max(1000).optional(),
+        })
+      ),
+    })
+  ),
+});
+
+app.post('/api/flashcards/import/commit', async (req, res) => {
+  const { targetDeckId, decks } = importCommitSchema.parse(req.body);
+  const userId = res.locals.user.id;
+
+  const createdDeckIds: string[] = [];
+  let totalCardsCreated = 0;
+
+  if (targetDeckId) {
+    await ownedDeck(targetDeckId, userId);
+    const allCards = decks.flatMap((d) => d.cards);
+    if (allCards.length > 0) {
+      await db.card.createMany({
+        data: allCards.map((c) => ({
+          deckId: targetDeckId,
+          japanese: c.term,
+          reading: c.cleanReading || c.reading,
+          meaning: c.meaning,
+          note: c.note || '',
+          example: c.example || '',
+        })),
+      });
+      totalCardsCreated += allCards.length;
+    }
+    createdDeckIds.push(targetDeckId);
+  } else {
+    for (const d of decks) {
+      if (!d.cards.length) continue;
+      const newDeck = await db.deck.create({
+        data: {
+          name: d.deckName,
+          description: d.description || 'Bộ từ vựng nhập tự động từ bài giảng.',
+          userId,
+        },
+      });
+      createdDeckIds.push(newDeck.id);
+
+      await db.card.createMany({
+        data: d.cards.map((c) => ({
+          deckId: newDeck.id,
+          japanese: c.term,
+          reading: c.cleanReading || c.reading,
+          meaning: c.meaning,
+          note: c.note || '',
+          example: c.example || '',
+        })),
+      });
+      totalCardsCreated += d.cards.length;
+    }
+  }
+
+  res.status(201).json({
+    ok: true,
+    deckIds: createdDeckIds,
+    totalCardsCreated,
+    message: `Đã lưu thành công ${totalCardsCreated} thẻ vào ${createdDeckIds.length} bộ thẻ.`,
+  });
 });
 app.use('/api/grammar', grammarRouter);
 const normalizeAnswer = normalizeGrammarAnswer;
