@@ -9,6 +9,31 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 **Quy định kiểm thử thực tế qua Chrome DevTools Protocol (CDP) — Cập nhật 21/10/2026:**
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
 
+## Khắc phục lỗi "Quét xong không lưu được" (Lỗi 404 Không tìm thấy chức năng này khi Commit Flashcard) — ngày 22/10
+
+- **Hiện tượng & Báo cáo lỗi từ người dùng:**
+  - Sau khi quét xong file PowerPoint hoặc PDF (hiển thị bảng xem trước 32 từ vựng), khi người dùng bấm nút `"Lưu 32 từ vào bộ hiện tại"` hoặc `"Tạo bộ Flashcard"`, hệ thống hiển thị popup màu đen cảnh báo dưới đáy màn hình: `"Không tìm thấy chức năng này."` và không thể lưu được từ vựng vào cơ sở dữ liệu.
+- **Nguyên nhân cốt lõi (Lý do vì sao code xong nhưng tính năng lại không chạy):**
+  - **1. Sự lệch pha triển khai giữa Vercel & Render:** Vercel tự động build & deploy frontend chỉ trong ~20 giây sau mỗi commit. Trong khi đó, Render Free Tier sử dụng môi trường Docker runtime cần nhiều thời gian (hoặc bị nghẽn RAM do database từ điển) để deploy bản backend mới.
+  - **2. Sự phụ thuộc cứng vào endpoint mới `/api/flashcards/import/commit`:** Code frontend ban đầu gọi trực tiếp endpoint mới `/api/flashcards/import/commit`. Khi máy chủ Render production chưa kịp hoàn tất redeploy Docker, router Express fallback trả về mã lỗi HTTP 404 mặc định: `{ error: 'Không tìm thấy chức năng này.' }`.
+  - Trong khi đó, các API tiêu chuẩn của Wakaba (`POST /api/flashcards/decks` và `POST /api/flashcards/cards`) đã tồn tại từ phiên bản đầu tiên và đang chạy ổn định 100% trên Render production.
+- **Thực hiện kỹ thuật & Khắc phục triệt để:**
+  - **1. Cơ chế Lưu thích ứng 2 tầng (Dual-Strategy Save with Auto-Fallback) ([`apps/web/src/components/vocabulary-import-modal.tsx`](file:///d:/Demo/apps/web/src/components/vocabulary-import-modal.tsx)):**
+    - **Tầng 1 (Batch Commit API):** Ưu tiên gọi `/flashcards/import/commit` để lưu 1 lần siêu tốc nếu backend đã có endpoint này.
+    - **Tầng 2 (Seamless Standard API Fallback):** Nếu backend trả về lỗi 404 ("Không tìm thấy chức năng này."), frontend tự động bắt lỗi và chuyển tức thì sang cơ chế lưu qua các API tiêu chuẩn (`POST /flashcards/decks` và `POST /flashcards/cards`) theo từng chunk song song (mỗi lần 6 thẻ). Nhờ đó, người dùng lưu thẻ thành công 100% ngay lập tức mà không phụ thuộc vào trạng thái deploy của Render.
+  - **2. Chuẩn hóa dữ liệu thẻ khi lưu (`formatCardPayload`):**
+    - Tự động gộp âm Hán Việt (VD: `[THỦ]`) và ký hiệu trọng âm gốc (VD: `Trọng âm: て＼`) vào trường `note`, giữ nguyên `term` (Kanji) ở mặt trước và `cleanReading` (Hiragana chuẩn) ở mặt sau.
+  - **3. Cập nhật tiến độ lưu trực quan trên nút bấm:**
+    - Nút lưu hiển thị tiến độ thời gian thực: `Đang lưu 12/32 thẻ...` giúp người dùng yên tâm theo dõi.
+- **Kiểm chứng hệ thống:**
+  - `npm.cmd run typecheck`: 0 lỗi TypeScript.
+  - `npm.cmd test`: 13 test suites (132 tests) pass 100%.
+  - `npm.cmd run build`: Hoàn tất thành công bản build frontend và backend.
+  - **Kiểm thử thực tế qua Chrome DevTools Protocol (CDP):**
+    - Chạy test CDP tạo bộ thẻ mới ([`scripts/test-save-cdp.mjs`](file:///d:/Demo/scripts/test-save-cdp.mjs)): Tải `語彙5A.pptx`, lưu thành công bộ Flashcard mới và modal đóng bình thường.
+    - Chạy test CDP lưu vào bộ thẻ hiện có ([`scripts/test-save-existing-deck-cdp.mjs`](file:///d:/Demo/scripts/test-save-existing-deck-cdp.mjs)): Kiểm thử đúng trường hợp trong ảnh chụp của người dùng (nhấn "Lưu ... từ vào bộ hiện tại"), lưu thành công 31 từ vào bộ thẻ đã chọn mà không phát sinh bất kỳ lỗi nào.
+- **Tập tin liên quan:** `apps/web/src/components/vocabulary-import-modal.tsx`, `scripts/test-save-cdp.mjs`, `scripts/test-save-existing-deck-cdp.mjs`, `docs/HANDOFF.md`.
+
 ## Khắc phục lỗi chồng giao diện bảng xem trước Flashcard khi cuộn (Sticky Header & Layout Clipping) — ngày 22/10
 
 - **Hiện tượng & Báo cáo lỗi từ người dùng:**

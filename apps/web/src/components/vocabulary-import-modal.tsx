@@ -20,9 +20,35 @@ export interface ParsedCardItem {
 
 export interface ParsedDeckGroup {
   deckName: string;
+  description?: string;
   cards: ParsedCardItem[];
   skippedSlidesCount?: number;
   totalSlidesCount?: number;
+}
+
+function formatCardPayload(c: ParsedCardItem, deckId: string) {
+  const notesArr: string[] = [];
+  if (c.sinoVietnamese) {
+    notesArr.push(`Hán Việt: ${c.sinoVietnamese}`);
+  }
+  const cleanRead = (c.cleanReading || c.reading || '').trim();
+  const pitch = c.pitchAccent || c.reading;
+  if (pitch && pitch !== cleanRead) {
+    notesArr.push(`Trọng âm: ${pitch}`);
+  }
+  if (c.note && !notesArr.some((n) => c.note?.includes(n))) {
+    notesArr.push(c.note);
+  }
+
+  return {
+    deckId,
+    japanese: (c.term || '').trim().slice(0, 120) || 'Từ vựng',
+    reading: cleanRead.slice(0, 200),
+    meaning: (c.meaning || '').trim().slice(0, 1000) || 'Chưa có nghĩa',
+    english: '',
+    note: notesArr.join(' · ').slice(0, 1999),
+    example: (c.example || '').slice(0, 999),
+  };
 }
 
 interface VocabularyImportModalProps {
@@ -43,6 +69,7 @@ export function VocabularyImportModal({
   const [parsedDecks, setParsedDecks] = useState<ParsedDeckGroup[]>([]);
   const [activeDeckIndex, setActiveDeckIndex] = useState(0);
   const [isCommitting, setIsCommitting] = useState(false);
+  const [commitStatus, setCommitStatus] = useState('');
 
   const client = useQueryClient();
   const notify = useUI((s) => s.notify);
@@ -52,6 +79,7 @@ export function VocabularyImportModal({
     setActiveDeckIndex(0);
     setIsProcessing(false);
     setIsCommitting(false);
+    setCommitStatus('');
   };
 
   const handleClose = (nextOpen: boolean) => {
@@ -211,25 +239,90 @@ export function VocabularyImportModal({
     }
 
     setIsCommitting(true);
+    setCommitStatus('Đang chuẩn bị lưu...');
+
     try {
-      const res = await post<{ ok: boolean; totalCardsCreated: number; message: string }>(
-        '/flashcards/import/commit',
-        {
-          targetDeckId,
-          decks: parsedDecks,
+      let savedCount = 0;
+      let createdDecksCount = 0;
+      let batchSuccess = false;
+
+      // 1. Thử gọi API batch commit mới nhất nếu backend đã triển khai
+      try {
+        const res = await post<{ ok: boolean; totalCardsCreated: number; message: string }>(
+          '/flashcards/import/commit',
+          {
+            targetDeckId,
+            decks: parsedDecks,
+          }
+        );
+        if (res && res.ok) {
+          batchSuccess = true;
+          savedCount = res.totalCardsCreated;
+          createdDecksCount = targetDeckId ? 1 : parsedDecks.length;
         }
-      );
+      } catch (commitErr) {
+        const msg = (commitErr as Error).message || '';
+        // Bắt lỗi 404 "Không tìm thấy chức năng này" khi backend chưa hoàn tất redeploy Docker
+        if (msg.includes('Không tìm thấy chức năng này') || msg.includes('404')) {
+          console.warn('Backend chưa cập nhật /flashcards/import/commit, kích hoạt fallback sang standard API.');
+        } else {
+          throw commitErr;
+        }
+      }
+
+      // 2. Tự động fallback sang Standard API nếu batch commit chưa có trên backend
+      if (!batchSuccess) {
+        if (targetDeckId) {
+          const allCards = parsedDecks.flatMap((d) => d.cards);
+          const chunkSize = 6;
+          for (let i = 0; i < allCards.length; i += chunkSize) {
+            const chunk = allCards.slice(i, i + chunkSize);
+            setCommitStatus(
+              `Đang lưu ${Math.min(i + chunk.length, allCards.length)}/${allCards.length} thẻ...`
+            );
+            await Promise.all(
+              chunk.map((c) => post('/flashcards/cards', formatCardPayload(c, targetDeckId)))
+            );
+          }
+          savedCount = allCards.length;
+          createdDecksCount = 1;
+        } else {
+          for (let dIdx = 0; dIdx < parsedDecks.length; dIdx++) {
+            const d = parsedDecks[dIdx];
+            if (!d.cards.length) continue;
+            setCommitStatus(`Đang tạo bộ thẻ: ${d.deckName}...`);
+            const newDeck = await post<{ id: string }>('/flashcards/decks', {
+              name: d.deckName.trim().slice(0, 80) || 'Bộ từ vựng mới',
+              description: d.description || 'Bộ từ vựng nhập tự động từ bài giảng.',
+            });
+            createdDecksCount++;
+
+            const chunkSize = 6;
+            for (let i = 0; i < d.cards.length; i += chunkSize) {
+              const chunk = d.cards.slice(i, i + chunkSize);
+              setCommitStatus(
+                `Đang lưu thẻ bộ ${dIdx + 1}/${parsedDecks.length} (${Math.min(i + chunk.length, d.cards.length)}/${d.cards.length})...`
+              );
+              await Promise.all(
+                chunk.map((c) => post('/flashcards/cards', formatCardPayload(c, newDeck.id)))
+              );
+            }
+            savedCount += d.cards.length;
+          }
+        }
+      }
 
       void client.invalidateQueries({ queryKey: ['decks'] });
       void client.invalidateQueries({ queryKey: ['deck'] });
       void client.invalidateQueries({ queryKey: ['dashboard'] });
 
-      notify(res.message);
+      notify(`Đã lưu thành công ${savedCount} thẻ vào ${createdDecksCount} bộ thẻ.`);
       handleClose(false);
     } catch (err) {
       notify((err as Error).message);
     } finally {
       setIsCommitting(false);
+      setCommitStatus('');
     }
   };
 
@@ -346,7 +439,7 @@ export function VocabularyImportModal({
                 >
                   <Sparkles size={16} />
                   {isCommitting
-                    ? 'Đang lưu...'
+                    ? commitStatus || 'Đang lưu...'
                     : targetDeckId
                       ? `Lưu ${totalExtractedCards} từ vào bộ hiện tại`
                       : `Tạo ${parsedDecks.length} bộ Flashcard`}
