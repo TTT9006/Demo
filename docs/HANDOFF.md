@@ -1,3 +1,8 @@
+## Bỏ khung quy chuẩn JLPT — 23/10/2026
+
+- Theo ảnh người dùng: xóa toàn bộ khung “Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)” khỏi trang Tests và import Info không còn dùng. Không đổi bộ lọc hoặc dữ liệu đề.
+- TypeScript qua; kiểm thử trang Tests thực trên Edge CDP desktop/mobile với query cache rỗng: khung vắng mặt, bộ lọc hiện, chuyển hai tab hoạt động, không pageerror. Ảnh lưu cục bộ, không push. Không kiểm lại API hoặc dữ liệu đề trong lần sửa giao diện này.
+
 ## Sửa quét PDF bảng từ vựng — 23/10/2026
 
 - Bài 7A nhận đủ 32 từ thay vì 17: đọc bảng theo cột và số thứ tự, giữ đúng Kanji/cách đọc/Hán Việt/nghĩa; ghép mảnh chữ và dòng xuống hàng.

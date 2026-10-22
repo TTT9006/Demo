@@ -22,7 +22,6 @@ import {
   BookOpen,
   Sparkles,
   FileText,
-  Info,
   Layers,
   GraduationCap,
 } from 'lucide-react';
@@ -253,28 +252,6 @@ export function Tests() {
       {mainTab === 'exams' ? (
         /* ==================== 1. LUYỆN THI JLPT (ĐỀ CHUẨN) ==================== */
         <div>
-          {/* Policy / Qualification notice */}
-          <div className="jlpt-policy-box">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <Info size={17} style={{ color: 'var(--jade)' }} />
-              <strong>Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)</strong>
-            </div>
-            <p style={{ margin: 0 }}>
-              Mục này chỉ hiển thị các đề hội tụ đủ 3 phần chuẩn JLPT: <strong>Kiến thức ngôn ngữ (Từ vựng–Chữ Hán)</strong>, <strong>Ngữ pháp–Đọc hiểu</strong>, và <strong>Nghe hiểu</strong> (file audio cắt chuẩn từng câu) kèm đáp án gốc đã đối chiếu.
-            </p>
-            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '13px', color: 'var(--muted)' }}>
-              <li>
-                <strong>Đề ứng viên đạt chuẩn:</strong> N5 2010–2011, 12/2012, 7/2013, 2018, 12/2021.
-              </li>
-              <li>
-                <strong>Lưu ý đề N5 07/2017:</strong> Toàn bộ phần nghe trùng 97.35% với đề 2010–2011 nên không tính là đề nghe độc lập.
-              </li>
-              <li>
-                <strong>Tuyển tập N2 (40 đề) và N3 (26 đề):</strong> Do chưa có file audio đối ứng cho phần nghe hiểu nên toàn bộ câu hỏi được phân bổ vào mục <strong>Luyện kỹ năng</strong> (Đọc hiểu, Ngữ pháp, Từ vựng) để đảm bảo bài thi luôn trọn vẹn.
-              </li>
-            </ul>
-          </div>
-
           {/* Level Filter Bar */}
           <div className="tabs inline-actions spaced" role="tablist" aria-label="Lọc cấp độ đề thi" style={{ marginBlock: '16px', flexWrap: 'wrap' }}>
             <button
