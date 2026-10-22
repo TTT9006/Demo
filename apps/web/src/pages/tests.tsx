@@ -1,8 +1,6 @@
 import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';
 import { JlptSession } from './jlpt';
-import type { JlptSummary, JlptLevel, SkillType } from '../../../../packages/shared/jlpt-types';
-import type { SkillExerciseSet } from '../../../../packages/shared/jlpt-skills';
-import { SkillPracticeModal } from '../components/skill-practice-modal';
+import type { JlptSummary } from '../../../../packages/shared/jlpt-types';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -19,10 +17,6 @@ import {
   CheckCircle,
   Trophy,
   Target,
-  BookOpen,
-  Sparkles,
-  FileText,
-  Layers,
   GraduationCap,
 } from 'lucide-react';
 import { api, post } from '../services/api';
@@ -143,15 +137,8 @@ export function QuestionInput({
   );
 }
 export function Tests() {
-  const [mainTab, setMainTab] = useState<'exams' | 'skills'>('exams');
   const [review, setReview] = useState<Attempt | null>(null);
   const [selectedExamLevel, setSelectedExamLevel] = useState<string>('all');
-
-  // Skills practice state
-  const [activeSkill, setActiveSkill] = useState<SkillType>('listening');
-  const [activeSkillLevel, setActiveSkillLevel] = useState<JlptLevel>('N5');
-  const [activeSet, setActiveSet] = useState<SkillExerciseSet | null>(null);
-  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['tests'],
@@ -162,338 +149,190 @@ export function Tests() {
     queryFn: () => api<Attempt[]>('/tests/history'),
   });
 
-  const {
-    data: skillSets,
-    isLoading: isLoadingSkills,
-    error: skillsError,
-  } = useQuery({
-    queryKey: ['skill-sets', activeSkill, activeSkillLevel],
-    queryFn: () => api<SkillExerciseSet[]>(`/jlpt/skills/${activeSkill}/${activeSkillLevel}`),
-    enabled: mainTab === 'skills',
-  });
-
   const examLevels = ['N5', 'N4', 'N3', 'N2'] as const;
-  const practiceExams = (data || []).filter((t) => t.isPracticeExam);
+  const allExams = data || [];
   const examCounts = {
-    all: practiceExams.length,
-    N5: practiceExams.filter((t) => t.level === 'N5').length,
-    N4: practiceExams.filter((t) => t.level === 'N4').length,
-    N3: practiceExams.filter((t) => t.level === 'N3').length,
-    N2: practiceExams.filter((t) => t.level === 'N2').length,
+    all: allExams.length,
+    N5: allExams.filter((t) => t.level === 'N5').length,
+    N4: allExams.filter((t) => t.level === 'N4').length,
+    N3: allExams.filter((t) => t.level === 'N3').length,
+    N2: allExams.filter((t) => t.level === 'N2').length,
   };
 
   const filteredExams =
     selectedExamLevel === 'all'
-      ? practiceExams
-      : practiceExams.filter((t) => t.level === selectedExamLevel);
-
-  const skillOptions: Array<{ id: SkillType; label: string; icon: any; desc: string }> = [
-    {
-      id: 'listening',
-      label: 'Nghe hiểu (聴解)',
-      icon: Headphones,
-      desc: 'Kho bài nghe chuẩn hóa theo giáo trình Goukaku Dekiru (N4–N5), Speed Master (N3), Shin Kanzen (N2) chia theo dạng bài/CD/track. Hỗ trợ tua lại, chọn tốc độ (0.8x, 1.0x, 1.2x) và hiển thị bản chép lời (transcript) sau khi nộp bài.',
-    },
-    {
-      id: 'reading',
-      label: 'Đọc hiểu (読解)',
-      icon: BookOpen,
-      desc: 'Trích xuất bài đọc hiểu thực tế từ các kỳ thi JLPT kèm câu hỏi, từ vựng và đáp án giải thích chi tiết.',
-    },
-    {
-      id: 'vocabulary',
-      label: 'Từ vựng (文字・語彙)',
-      icon: Sparkles,
-      desc: 'Luyện tập đa dạng: cách đọc Kanji, ngữ cảnh câu, từ đồng nghĩa và cách dùng từ trong câu. Tích hợp nút 1-chạm đưa toàn bộ từ làm sai vào Flashcard (SM-2) để ghi nhớ ngắt quãng!',
-    },
-    {
-      id: 'grammar',
-      label: 'Ngữ pháp (文法)',
-      icon: FileText,
-      desc: 'Ngữ pháp N5–N2 tự biên soạn nguyên bản (không sao chép nguyên văn), đầy đủ dạng bài lựa chọn mẫu câu, sắp xếp sao (*) và đọc hiểu ngữ pháp đoạn văn.',
-    },
-  ];
-
-  const currentSkillInfo = skillOptions.find((s) => s.id === activeSkill) || skillOptions[0];
+      ? allExams
+      : allExams.filter((t) => t.level === selectedExamLevel);
 
   return (
     <>
       <PageHeader
         eyebrow="BIẾT MÌNH ĐÃ ĐI ĐƯỢC BAO XA"
-        title="Luyện thi JLPT & Kỹ năng chuyên sâu"
-        description="Đề thi đầy đủ thời gian theo cấu trúc chuẩn JLPT và hệ thống luyện 4 kỹ năng Nghe, Đọc, Từ vựng, Ngữ pháp từ N5 đến N2."
+        title="Luyện đề thi JLPT Chuẩn (N5–N2)"
+        description="Đề thi đầy đủ thời gian theo cấu trúc chuẩn JLPT. Chấm điểm ở server, lưu bài đang làm và xem lại kết quả từng nhóm."
       />
 
-      {/* Segmented Mode Switcher */}
-      <div className="test-mode-switcher" role="tablist" aria-label="Chế độ luyện tập">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mainTab === 'exams'}
-          className={`test-mode-btn ${mainTab === 'exams' ? 'active' : ''}`}
-          onClick={() => setMainTab('exams')}
+      {/* Banner linking to Luyện kỹ năng */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '14px 18px',
+          backgroundColor: 'var(--surface)',
+          borderRadius: '10px',
+          border: '1px solid var(--line)',
+          marginBlock: '16px 20px',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Target size={20} style={{ color: 'var(--jade)', flexShrink: 0 }} />
+          <span style={{ fontSize: '14px', color: 'var(--ink)' }}>
+            Bạn muốn rèn luyện từng kỹ năng riêng biệt (Nghe, Đọc, Từ vựng, Ngữ pháp)?
+          </span>
+        </div>
+        <Link
+          to="/skills"
+          className="pill-btn active"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            background: 'var(--jade)',
+            color: '#fff',
+            textDecoration: 'none',
+            fontSize: '13px',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+          }}
         >
-          <Trophy size={18} style={{ color: mainTab === 'exams' ? 'var(--jade)' : 'inherit' }} />
-          <span>Luyện thi JLPT (Đề chuẩn)</span>
-          <span className="tab-badge">{practiceExams.length}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mainTab === 'skills'}
-          className={`test-mode-btn ${mainTab === 'skills' ? 'active' : ''}`}
-          onClick={() => setMainTab('skills')}
-        >
-          <Target size={18} style={{ color: mainTab === 'skills' ? 'var(--jade)' : 'inherit' }} />
-          <span>Luyện kỹ năng (Nghe · Đọc · Từ vựng · Ngữ pháp)</span>
-        </button>
+          Sang mục Luyện kỹ năng <ArrowRight size={14} />
+        </Link>
       </div>
 
-      {mainTab === 'exams' ? (
-        /* ==================== 1. LUYỆN THI JLPT (ĐỀ CHUẨN) ==================== */
-        <div>
-          {/* Level Filter Bar */}
-          <div className="tabs inline-actions spaced" role="tablist" aria-label="Lọc cấp độ đề thi" style={{ marginBlock: '16px', flexWrap: 'wrap' }}>
-            <button
-              role="tab"
-              aria-selected={selectedExamLevel === 'all'}
-              className={selectedExamLevel === 'all' ? 'active' : ''}
-              onClick={() => setSelectedExamLevel('all')}
-            >
-              <span>Tất cả</span>
-              <span className="tab-badge">{examCounts.all}</span>
-            </button>
-            {examLevels.map((lvl) => (
-              <button
-                key={lvl}
-                role="tab"
-                aria-selected={selectedExamLevel === lvl}
-                className={selectedExamLevel === lvl ? 'active' : ''}
-                onClick={() => setSelectedExamLevel(lvl)}
-              >
-                <span>JLPT {lvl}</span>
-                <span className="tab-badge">{examCounts[lvl]}</span>
-              </button>
-            ))}
-          </div>
+      {/* Level Filter Bar */}
+      <div className="tabs inline-actions spaced" role="tablist" aria-label="Lọc cấp độ đề thi" style={{ marginBlock: '16px', flexWrap: 'wrap' }}>
+        <button
+          role="tab"
+          aria-selected={selectedExamLevel === 'all'}
+          className={selectedExamLevel === 'all' ? 'active' : ''}
+          onClick={() => setSelectedExamLevel('all')}
+        >
+          <span>Tất cả</span>
+          <span className="tab-badge">{examCounts.all}</span>
+        </button>
+        {examLevels.map((lvl) => (
+          <button
+            key={lvl}
+            role="tab"
+            aria-selected={selectedExamLevel === lvl}
+            className={selectedExamLevel === lvl ? 'active' : ''}
+            onClick={() => setSelectedExamLevel(lvl)}
+          >
+            <span>JLPT {lvl}</span>
+            <span className="tab-badge">{examCounts[lvl]}</span>
+          </button>
+        ))}
+      </div>
 
-          {isLoading ? (
-            <Loading />
-          ) : error ? (
-            <ErrorState error={error} />
-          ) : filteredExams.length === 0 ? (
-            <div className="panel" style={{ textAlign: 'center', padding: '36px 20px', marginBlock: '20px' }}>
-              <GraduationCap size={36} style={{ color: 'var(--muted)', margin: '0 auto 12px auto' }} />
-              <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>Chưa có đề thi trọn gói 3 phần cho JLPT {selectedExamLevel}</h3>
-              <p style={{ color: 'var(--muted)', maxWidth: '540px', margin: '0 auto 18px auto', fontSize: '14px' }}>
-                Tuyển tập đề thi JLPT {selectedExamLevel} hiện đã được đưa vào phần <strong>Luyện kỹ năng</strong> (Đọc hiểu, Ngữ pháp, Từ vựng) để bạn luyện tập từng cấu trúc chuyên sâu.
-              </p>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setMainTab('skills');
-                  setActiveSkillLevel(selectedExamLevel as JlptLevel);
-                }}
-              >
-                <Target size={16} /> Chuyển sang Luyện kỹ năng JLPT {selectedExamLevel}
-              </Button>
-            </div>
-          ) : (
-            <div className="test-grid">
-              {filteredExams.map((t, i) => (
-                <Link
-                  className="test-card test-card-official"
-                  to={'/tests/' + t.id}
-                  key={t.id}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '8px',
-                      gap: '8px',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <span className="eyebrow" style={{ margin: 0, color: 'var(--jade)', fontWeight: 700 }}>
-                      {t.level} · ĐỀ THI CHUẨN
-                    </span>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <span
-                        className="tag"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color: t.keySource === 'Đáp án tham khảo' ? 'var(--peach)' : 'var(--jade)',
-                          borderColor: t.keySource === 'Đáp án tham khảo' ? 'var(--peach)' : 'var(--jade)',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {t.keySource || 'Đáp án gốc'}
-                      </span>
-                      <span
-                        className="tag"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color: 'var(--ocean)',
-                          borderColor: 'var(--ocean)',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        <Headphones size={12} />
-                        Audio gốc · khớp tự động
-                      </span>
-                    </div>
-                  </div>
-                  <span className="test-number">{String(i + 1).padStart(2, '0')}</span>
-                  <h2>{t.title}</h2>
-                  <p>
-                    {t.total} câu · {t.minutes} phút · {t.sections.length} phần
-                  </p>
-                  <ul className="jlpt-card-sections">
-                    {t.sections.map((s) => (
-                      <li key={s.id}>
-                        {s.title}: {s.minutes} phút ({s.count} câu)
-                      </li>
-                    ))}
-                  </ul>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                    <span>Vào phòng thi & bấm giờ</span>
-                    <ArrowRight size={19} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+      {isLoading ? (
+        <Loading />
+      ) : error ? (
+        <ErrorState error={error} />
+      ) : filteredExams.length === 0 ? (
+        <div className="panel" style={{ textAlign: 'center', padding: '36px 20px', marginBlock: '20px' }}>
+          <GraduationCap size={36} style={{ color: 'var(--muted)', margin: '0 auto 12px auto' }} />
+          <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>Chưa có đề thi trọn gói 3 phần cho JLPT {selectedExamLevel}</h3>
+          <p style={{ color: 'var(--muted)', maxWidth: '540px', margin: '0 auto 18px auto', fontSize: '14px' }}>
+            Tuyển tập đề thi JLPT {selectedExamLevel} hiện đã được đưa vào phần <strong>Luyện kỹ năng</strong> (Đọc hiểu, Ngữ pháp, Từ vựng) để bạn luyện tập từng cấu trúc chuyên sâu.
+          </p>
+          <Link
+            to="/skills"
+            className="button"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+          >
+            <Target size={16} /> Chuyển sang Luyện kỹ năng JLPT {selectedExamLevel}
+          </Link>
         </div>
       ) : (
-        /* ==================== 2. LUYỆN KỸ NĂNG THEO CẤP ĐỘ ==================== */
-        <div>
-          {/* Skill Selector Tabs */}
-          <div className="skill-tabs-bar" role="tablist" aria-label="Chọn kỹ năng luyện tập">
-            {skillOptions.map((opt) => {
-              const Icon = opt.icon;
-              const isActive = activeSkill === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`skill-tab-pill ${isActive ? 'active' : ''}`}
-                  onClick={() => setActiveSkill(opt.id)}
-                >
-                  <Icon size={16} />
-                  <span>{opt.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Level Filter Bar for Skills */}
-          <div className="tabs inline-actions spaced" role="tablist" aria-label="Chọn cấp độ kỹ năng" style={{ marginBlock: '12px 18px' }}>
-            {(['N5', 'N4', 'N3', 'N2'] as const).map((lvl) => (
-              <button
-                key={lvl}
-                type="button"
-                role="tab"
-                aria-selected={activeSkillLevel === lvl}
-                className={activeSkillLevel === lvl ? 'active' : ''}
-                onClick={() => setActiveSkillLevel(lvl)}
+        <div className="test-grid">
+          {filteredExams.map((t, i) => (
+            <Link
+              className="test-card test-card-official"
+              to={'/tests/' + t.id}
+              key={t.id}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px',
+                  gap: '8px',
+                  flexWrap: 'wrap',
+                }}
               >
-                <span>JLPT {lvl}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Guide Banner for active skill */}
-          <div
-            style={{
-              padding: '14px 18px',
-              backgroundColor: 'var(--surface)',
-              borderRadius: '8px',
-              border: '1px solid var(--line)',
-              marginBottom: '20px',
-              fontSize: '13.5px',
-              lineHeight: '1.6',
-              color: 'var(--ink)',
-            }}
-          >
-            <strong>💡 Định hướng luyện {currentSkillInfo.label} — Cấp độ {activeSkillLevel}:</strong> {currentSkillInfo.desc}
-          </div>
-
-          {/* Exercises Grid */}
-          {isLoadingSkills ? (
-            <Loading />
-          ) : skillsError ? (
-            <ErrorState error={skillsError} />
-          ) : !skillSets?.length ? (
-            <Empty title="Chưa có bài tập cho kỹ năng này" />
-          ) : (
-            <div className="skill-card-grid">
-              {skillSets.map((set) => (
-                <div key={set.id} className="skill-card">
-                  <div className="skill-card-header">
-                    <span className="level-pill" style={{ padding: '2px 8px', fontSize: '11px' }}>
-                      JLPT {set.level}
-                    </span>
-                    {set.book && (
-                      <span className="tag" style={{ fontSize: '11px', color: 'var(--ocean)' }}>
-                        <BookOpen size={12} /> {set.book}
-                      </span>
-                    )}
-                    <span
-                      className="tag"
-                      style={{
-                        fontSize: '11px',
-                        color: set.syncStatus === 'khớp tự động' ? 'var(--jade)' : 'var(--muted)',
-                        borderColor: set.syncStatus === 'khớp tự động' ? 'var(--jade)' : 'var(--line)',
-                      }}
-                    >
-                      Trạng thái: {set.syncStatus}
-                    </span>
-                  </div>
-                  <h3 className="skill-card-title">{set.title}</h3>
-                  <p className="skill-card-desc">{set.description}</p>
-                  <div className="skill-card-footer">
-                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                      {set.questions.length} câu hỏi · {set.subCategory || 'Bài luyện'}
-                    </span>
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        setActiveSet(set);
-                        setIsSkillModalOpen(true);
-                      }}
-                    >
-                      Luyện tập ngay
-                      <ArrowRight size={14} />
-                    </Button>
-                  </div>
+                <span className="eyebrow" style={{ margin: 0, color: 'var(--jade)', fontWeight: 700 }}>
+                  {t.level} · {t.isOfficial ? 'ĐỀ THI CHÍNH THỨC' : 'ĐỀ LUYỆN TẬP'}
+                </span>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <span
+                    className="tag"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: t.keySource === 'Đáp án tham khảo' ? 'var(--peach)' : 'var(--jade)',
+                      borderColor: t.keySource === 'Đáp án tham khảo' ? 'var(--peach)' : 'var(--jade)',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t.keySource || (t.isOfficial ? 'Đáp án gốc' : 'Đáp án chuẩn')}
+                  </span>
+                  <span
+                    className="tag"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: t.isDuplicateAudio ? 'var(--peach)' : 'var(--ocean)',
+                      borderColor: t.isDuplicateAudio ? 'var(--peach)' : 'var(--ocean)',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Headphones size={12} />
+                    {t.isDuplicateAudio ? (t.duplicateNote || 'Audio trùng 2010–2011') : 'Audio gốc · khớp tự động'}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Interactive Skill Practice Modal */}
-          <SkillPracticeModal
-            open={isSkillModalOpen}
-            onOpenChange={setIsSkillModalOpen}
-            set={activeSet}
-            onComplete={() => {
-              void history.refetch();
-            }}
-          />
+              </div>
+              <span className="test-number">{String(i + 1).padStart(2, '0')}</span>
+              <h2>{t.title}</h2>
+              <p>
+                {t.total} câu · {t.minutes} phút · {t.sections.length} phần
+              </p>
+              <ul className="jlpt-card-sections">
+                {t.sections.map((s) => (
+                  <li key={s.id}>
+                    {s.title}: {s.minutes} phút ({s.count} câu)
+                  </li>
+                ))}
+              </ul>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                <span>Vào phòng thi & bấm giờ</span>
+                <ArrowRight size={19} />
+              </div>
+            </Link>
+          ))}
         </div>
       )}
 
@@ -699,7 +538,7 @@ function LegacyTestSession() {
       {!isExamActive && (
         <Link className="back-link" to="/tests">
           <ArrowLeft size={16} />
-          Các bài kiểm tra
+          Danh sách đề thi
         </Link>
       )}
       {isExamActive && (
@@ -708,7 +547,7 @@ function LegacyTestSession() {
             <span className="exam-mode-badge">
               <ShieldAlert size={14} /> Chế độ làm bài
             </span>
-            <strong>Bài kiểm tra</strong>
+            <strong>Bài luyện đề</strong>
             <span className="muted">· {Object.keys(answers).filter((k) => answers[k]).length}/{run?.questions.length || 0} câu đã trả lời</span>
           </div>
           <div className="exam-sticky-actions">
@@ -730,7 +569,7 @@ function LegacyTestSession() {
               size="small"
               disabled={busy}
               onClick={() => setConfirmSubmit(true)}
-              title="Dừng bài kiểm tra và nộp bài ngay"
+              title="Dừng bài luyện đề và nộp bài ngay"
             >
               <CheckCircle size={15} />
               <span>Nộp bài ngay</span>
@@ -741,7 +580,7 @@ function LegacyTestSession() {
       {isExamActive && !isFullscreen && (
         <aside className="exam-fullscreen-prompt" role="alert">
           <span>
-            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài kiểm tra.
+            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài làm.
           </span>
           <Button size="small" variant="secondary" onClick={() => void enterFullscreen()}>
             <Maximize size={14} /> Ẩn thanh tab Google
@@ -771,7 +610,7 @@ function LegacyTestSession() {
         </p>
       )}
       {!run ? (
-        <Empty title="Một khoảng nhỏ để kiểm tra kiến thức">
+        <Empty title="Sẵn sàng luyện đề">
           <p>Đọc kỹ từng câu và chọn đáp án bạn tin là đúng.</p>
           <Button disabled={busy} onClick={() => void start()}>
             {busy ? 'Đang chuẩn bị…' : 'Bắt đầu bài kiểm tra'}
@@ -853,9 +692,9 @@ function LegacyTestSession() {
           </div>
         </>
       )}
-      <Modal open={confirmSubmit} onOpenChange={setConfirmSubmit} title="Dừng bài kiểm tra & nộp ngay?">
+      <Modal open={confirmSubmit} onOpenChange={setConfirmSubmit} title="Dừng bài luyện đề & nộp ngay?">
         <p>
-          Bạn có chắc chắn muốn dừng bài kiểm tra và nộp bài ngay bây giờ không? Còn {run ? run.questions.length - Object.keys(answers).filter((k) => answers[k]).length : 0} câu chưa trả lời. Các câu bỏ trống sẽ được tính là chưa đúng.
+          Bạn có chắc chắn muốn dừng bài luyện đề và nộp bài ngay bây giờ không? Còn {run ? run.questions.length - Object.keys(answers).filter((k) => answers[k]).length : 0} câu chưa trả lời. Các câu bỏ trống sẽ được tính là chưa đúng.
         </p>
         <div className="inline-actions">
           <Button variant="secondary" disabled={busy} onClick={() => setConfirmSubmit(false)}>

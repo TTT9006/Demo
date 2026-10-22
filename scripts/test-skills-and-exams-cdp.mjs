@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 import fs from 'node:fs';
 
 async function run() {
-  console.log('--- Bắt đầu kiểm tra CDP cho Luyện thi JLPT & Luyện kỹ năng ---');
+  console.log('--- Bắt đầu kiểm tra CDP cho Luyện đề & Luyện kỹ năng trên thanh tính năng ---');
 
   const chromePath = 'C:\\Users\\Hoang Vuong\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe';
   const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
@@ -32,7 +32,7 @@ async function run() {
     await page.waitForTimeout(1500);
   }
 
-  console.log('2. Điều hướng tới trang /tests...');
+  console.log('2. Điều hướng tới trang Luyện đề (/tests)...');
   await page.goto('http://127.0.0.1:5173/tests', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
 
@@ -44,16 +44,17 @@ async function run() {
     await page.waitForTimeout(1500);
   }
 
-  // 1. Chụp màn hình Luyện thi JLPT (Đề chuẩn)
-  console.log('3. Kiểm tra màn hình Luyện thi JLPT...');
+  // 1. Chụp màn hình Luyện đề thi JLPT
+  console.log('3. Kiểm tra màn hình Luyện đề (/tests)...');
   await page.waitForSelector('.test-card-official', { timeout: 10000 });
   await page.screenshot({ path: 'test-results/desktop-exams.png', fullPage: false });
   console.log('✓ Đã lưu test-results/desktop-exams.png');
 
-  // 2. Chuyển sang Luyện kỹ năng
-  console.log('4. Bấm chuyển sang tab Luyện kỹ năng...');
-  const skillsTabBtn = page.locator('.test-mode-btn:has-text("Luyện kỹ năng")');
-  await skillsTabBtn.click();
+  // 2. Chuyển sang thẻ Luyện kỹ năng trên thanh tính năng (/skills)
+  console.log('4. Bấm vào mục Luyện kỹ năng trên thanh tính năng...');
+  const skillsNavLink = page.locator('nav a:has-text("Luyện kỹ năng")').first();
+  await skillsNavLink.click();
+  await page.waitForURL('**/skills', { timeout: 10000 });
   await page.waitForSelector('.skill-card', { timeout: 10000 });
   await page.waitForTimeout(1000);
 
@@ -80,7 +81,7 @@ async function run() {
   await page.waitForSelector('.skill-results-view', { timeout: 10000 });
   await page.waitForTimeout(1500);
 
-  // Chụp ảnh màn hình kết quả bài luyện (bao gồm transcript và flashcard button nếu có)
+  // Chụp ảnh màn hình kết quả bài luyện
   await page.screenshot({ path: 'test-results/skill-results.png', fullPage: false });
   console.log('✓ Đã lưu test-results/skill-results.png');
 
@@ -96,7 +97,7 @@ async function run() {
   await desktopContext.close();
 
   // Mobile Context
-  console.log('7. Kiểm tra giao diện Mobile (390x844)...');
+  console.log('7. Kiểm tra giao diện Mobile (/skills trên 390x844)...');
   const mobileContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     userAgent:
@@ -111,24 +112,36 @@ async function run() {
   });
 
   const mobilePage = await mobileContext.newPage();
-  await mobilePage.goto('http://127.0.0.1:5173/tests', { waitUntil: 'networkidle' });
+  await mobilePage.goto('http://127.0.0.1:5173/skills', { waitUntil: 'networkidle' });
   await mobilePage.waitForTimeout(1500);
 
   const mobileDeferBtn = mobilePage.getByRole('button', { name: /Ôn tập vào lần sau/i });
   if (await mobileDeferBtn.isVisible()) {
     await mobileDeferBtn.click();
     await mobilePage.waitForTimeout(1500);
-    await mobilePage.goto('http://127.0.0.1:5173/tests', { waitUntil: 'networkidle' });
+    await mobilePage.goto('http://127.0.0.1:5173/skills', { waitUntil: 'networkidle' });
     await mobilePage.waitForTimeout(1500);
   }
 
-  const mobileSkillsTabBtn = mobilePage.locator('.test-mode-btn:has-text("Luyện kỹ năng")');
-  await mobileSkillsTabBtn.click();
   await mobilePage.waitForSelector('.skill-card', { timeout: 10000 });
   await mobilePage.waitForTimeout(1000);
 
   await mobilePage.screenshot({ path: 'test-results/mobile-skills.png', fullPage: false });
   console.log('✓ Đã lưu test-results/mobile-skills.png');
+
+  console.log('8. Kiểm tra giao diện Mobile Luyện đề (/tests trên 390x844)...');
+  await mobilePage.goto('http://127.0.0.1:5173/tests', { waitUntil: 'networkidle' });
+  await mobilePage.waitForSelector('.test-card-official', { timeout: 10000 });
+  await mobilePage.screenshot({ path: 'test-results/mobile-exams.png', fullPage: false });
+  console.log('✓ Đã lưu test-results/mobile-exams.png');
+
+  console.log('9. Mở Drawer menu trên mobile để kiểm tra Luyện kỹ năng & Luyện đề...');
+  const menuBtn = mobilePage.locator('button.mobile-menu');
+  await menuBtn.click();
+  await mobilePage.waitForSelector('.mobile-drawer', { timeout: 5000 });
+  await mobilePage.waitForTimeout(600);
+  await mobilePage.screenshot({ path: 'test-results/mobile-drawer.png', fullPage: false });
+  console.log('✓ Đã lưu test-results/mobile-drawer.png');
 
   await mobileContext.close();
   await browser.close();

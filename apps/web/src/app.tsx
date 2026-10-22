@@ -29,6 +29,7 @@ import {
   ChevronDown,
   Leaf,
   X,
+  Target,
 } from 'lucide-react';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -43,6 +44,7 @@ import { Flashcards, DeckDetail, Review } from './pages/flashcards';
 import { ConsolidatedReview } from './pages/consolidated-review';
 import { Grammar, GrammarLesson, GrammarReview } from './pages/grammar';
 import { Tests, TestSession } from './pages/tests';
+import { SkillsPage } from './pages/skills';
 import { Writing } from './pages/writing';
 import { SettingsPage, Profile } from './pages/settings';
 import { TermsPage, PrivacyPage, CookiePolicyPage } from './pages/legal';
@@ -53,7 +55,8 @@ const navigation = [
   { to: '/grammar', label: 'Ngữ pháp', icon: BookOpen },
   { to: '/dictionary', label: 'Từ điển', icon: Search },
   { to: '/writing', label: 'Luyện viết', icon: PenLine },
-  { to: '/tests', label: 'Kiểm tra', icon: ClipboardCheck },
+  { to: '/skills', label: 'Luyện kỹ năng', icon: Target },
+  { to: '/tests', label: 'Luyện đề', icon: ClipboardCheck },
   { to: '/progress', label: 'Tiến độ học tập', icon: ChartNoAxesCombined },
 ];
 export function useUser() {
@@ -265,6 +268,7 @@ export function App() {
           <Route path="grammar/:id" element={<GrammarLesson />} />
           <Route path="kanji/:character" element={<KanjiDetail/>}/>
           <Route path="writing" element={<Writing />} />
+          <Route path="skills" element={<SkillsPage />} />
           <Route path="tests" element={<Tests />} />
           <Route path="tests/:id" element={<TestSession />} />
           <Route path="progress" element={<Progress />} />

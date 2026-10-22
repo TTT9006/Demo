@@ -532,7 +532,7 @@ export function JlptSession() {
               size="small"
               disabled={busy}
               onClick={() => setEarlySubmitConfirm(true)}
-              title="Dừng bài kiểm tra và nộp bài ngay"
+              title="Dừng bài luyện đề và nộp bài ngay"
             >
               <CheckCircle size={15} />
               <span>Nộp bài ngay</span>
@@ -543,7 +543,7 @@ export function JlptSession() {
       {isExamActive && !isFullscreen && (
         <aside className="exam-fullscreen-prompt" role="alert">
           <span>
-            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài kiểm tra.
+            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài làm.
           </span>
           <Button size="small" variant="secondary" onClick={() => void enterFullscreen()}>
             <Maximize size={14} /> Ẩn thanh tab Google

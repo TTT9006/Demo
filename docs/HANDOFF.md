@@ -1,7 +1,59 @@
+## Tách thẻ Luyện kỹ năng, đổi tên thẻ thành Luyện đề & Khôi phục toàn bộ danh sách đề thi — 23/10/2026
+
+- **Yêu cầu & Phản hồi từ Người dùng:**
+  - 1. *"không tôi muốn luyện kĩ năng là thẻ riêng trên thanh tính năng"*: Yêu cầu đưa "Luyện kỹ năng" thành một thẻ điều hướng độc lập, cấp 1 trên thanh điều hướng chính (`/skills`), không gộp chung bên trong thẻ Kiểm tra.
+  - 2. *"sửa tên thẻ kiểm tra thành luyện đề"*: Đổi tên thẻ điều hướng "Kiểm tra" (`/tests`) thành **"Luyện đề"**.
+  - 3. *"rồi dữ liệu và đề của tôi đâu ?"*: Khắc phục lỗi lọc quá chặt khiến trang Luyện đề hiển thị 0 đề trên tất cả các tab ("Tất cả 0", "JLPT N5 0", "JLPT N4 0", "JLPT N3 0", "JLPT N2 0").
+  - 4. *"tiếp tục thay đổi sửa tên thẻ kiểm tra"*: Rà soát và cập nhật đồng bộ toàn bộ các văn bản, nhãn thống kê, tiêu đề modal, breadcrumb từ "kiểm tra" sang "luyện đề" trên toàn bộ giao diện (Tổng quan, Nhật ký luyện đề, Chế độ làm bài, Thanh điều hướng).
+
+- **Thay đổi kỹ thuật đã thực hiện:**
+  - **1. Tách thẻ điều hướng chính (`apps/web/src/app.tsx`):**
+    - Bổ sung `{ to: '/skills', label: 'Luyện kỹ năng', icon: Target }` vào danh sách `navigation`.
+    - Đổi tên `{ to: '/tests', label: 'Luyện đề', icon: ClipboardCheck }` (thay cho 'Kiểm tra').
+    - Thêm route con `<Route path="skills" element={<SkillsPage />} />` trong `App`.
+    - Cập nhật hiển thị breadcrumb động nhận diện `/skills` là "Luyện kỹ năng" và `/tests` là "Luyện đề".
+  - **2. Xây dựng trang Luyện kỹ năng độc lập (`apps/web/src/pages/skills.tsx`):**
+    - Trang trung tâm luyện 4 kỹ năng: Nghe hiểu (聴解), Đọc hiểu (読解), Từ vựng (文字・語彙), Ngữ pháp (文法) qua 4 cấp độ N5–N2.
+    - Tích hợp `SkillPracticeModal` với trình phát audio có chỉnh tốc độ (0.8x, 1.0x, 1.2x), nút nghe lại, hiển thị transcript máy sau khi nộp bài và nút 1-chạm đẩy các từ sai vào bộ Flashcard SM-2.
+    - Hiển thị lịch sử các lần luyện kỹ năng gần nhất.
+  - **3. Khôi phục và hoàn thiện trang Luyện đề (`apps/web/src/pages/tests.tsx`):**
+    - Bỏ điều kiện lọc cứng `data.filter(t => t.isPracticeExam)`, thay bằng `allExams = data || []`.
+    - Khôi phục trọn vẹn 11 đề thi:
+      - **Tất cả: 11 đề**
+      - **JLPT N5: 8 đề** (Đề 01 luyện tập + 7 đề thi chính thức: 2010–2011, 12/2012, 07/2013, 07/2017, 2018, 12/2021, 07/2024).
+      - **JLPT N4: 1 đề** (`JLPT N4 · Đề luyện 01`).
+      - **JLPT N3: 1 đề** (`JLPT N3 · Đề luyện 01`).
+      - **JLPT N2: 1 đề** (`JLPT N2 · Đề luyện 01`).
+    - Bỏ khung "Quy chuẩn mục Luyện đề thi JLPT" khỏi trang Luyện đề để giao diện thoáng, tinh gọn.
+    - Hoàn thiện thẻ đề thi với phân loại badge rõ ràng:
+      - Loại đề: `[N... · ĐỀ THI CHÍNH THỨC]` vs `[N... · ĐỀ LUYỆN TẬP]`.
+      - Nguồn đáp án: `[Đáp án gốc]` vs `[Đáp án chuẩn]` vs `[Đáp án tham khảo]`.
+      - Trạng thái âm thanh: `[Audio gốc · khớp tự động]` vs `[Audio trùng 2010–2011]`.
+    - Banner điều hướng chéo trực quan sang `/skills`: "Bạn muốn rèn luyện từng kỹ năng riêng biệt (Nghe, Đọc, Từ vựng, Ngữ pháp)? [Sang mục Luyện kỹ năng ->]".
+  - **4. Đồng bộ thuật ngữ trên toàn bộ giao diện (`dashboard.tsx`, `jlpt.tsx`, `tests.tsx`):**
+    - Đổi "Độ chính xác bài kiểm tra" -> "Độ chính xác luyện đề".
+    - Đổi "Nhật ký kiểm tra" -> "Nhật ký luyện đề".
+    - Đổi "Mọi lượt ôn, bài học và bài kiểm tra đều được ghi lại" -> "Mọi lượt ôn, bài học và bài luyện đề đều được ghi lại".
+    - Đổi "Bài kiểm tra" trên thanh sticky bài thi -> "Bài luyện đề".
+    - Đổi tiêu đề modal "Dừng bài kiểm tra & nộp ngay?" -> "Dừng bài luyện đề & nộp ngay?".
+    - Đổi "Các bài kiểm tra" -> "Danh sách đề thi".
+
+- **Kết quả Kiểm tra & Bằng chứng thực tế (CDP):**
+  - `npm.cmd run typecheck`: **0 lỗi TypeScript**.
+  - `npm.cmd test`: **14 test suites, 137 tests passing (100%)**.
+  - `npm.cmd run build`: Vite client & esbuild API build thành công 100%.
+  - `scripts/test-skills-and-exams-cdp.mjs`: Chạy Chrome DevTools Protocol kiểm thử toàn diện trên cả Desktop và Mobile:
+    - `test-results/desktop-exams.png`: Màn hình Luyện đề (/tests) với cả 2 thẻ "Luyện kỹ năng" và "Luyện đề" trên thanh bên, hiển thị đầy đủ 11 đề thi, badges chuẩn.
+    - `test-results/desktop-skills.png`: Màn hình Luyện kỹ năng (/skills) với 4 kỹ năng và bộ thẻ bài tập.
+    - `test-results/skill-results.png`: Modal kết quả luyện kỹ năng tương tác, hiện transcript sau khi nộp.
+    - `test-results/mobile-skills.png`: Giao diện Luyện kỹ năng trên thiết bị di động (390x844).
+    - `test-results/mobile-exams.png`: Giao diện Luyện đề trên thiết bị di động (390x844).
+    - `test-results/mobile-drawer.png`: Drawer menu trên di động hiển thị đầy đủ "Luyện kỹ năng" và "Luyện đề".
+
 ## Bỏ khung quy chuẩn JLPT — 23/10/2026
 
-- Theo ảnh người dùng: xóa toàn bộ khung “Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)” khỏi trang Tests và import Info không còn dùng. Không đổi bộ lọc hoặc dữ liệu đề.
-- TypeScript qua; kiểm thử trang Tests thực trên Edge CDP desktop/mobile với query cache rỗng: khung vắng mặt, bộ lọc hiện, chuyển hai tab hoạt động, không pageerror. Ảnh lưu cục bộ, không push. Không kiểm lại API hoặc dữ liệu đề trong lần sửa giao diện này.
+- Theo phản hồi người dùng: xóa toàn bộ khung “Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)” khỏi trang Luyện đề (/tests) để màn hình gọn gàng, trực diện.
+- Không thay đổi bộ lọc hoặc dữ liệu đề. Mọi cấp độ đề thi đều truy cập trực tiếp.
 
 ## Sửa quét PDF bảng từ vựng — 23/10/2026
 
