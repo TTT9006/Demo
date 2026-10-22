@@ -9,6 +9,30 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 **Quy định kiểm thử thực tế qua Chrome DevTools Protocol (CDP) — Cập nhật 21/10/2026:**
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
 
+## Tối ưu hóa siêu tốc bóc tách PDF phía Client (pdfjs-dist) & Khắc phục lỗi "Không tìm thấy từ vựng nào có cấu trúc hợp lệ" — ngày 22/10
+
+- **Hiện tượng & Báo cáo lỗi từ người dùng:**
+  - Khi người dùng tải file PDF lên giao diện web xuất hiện thông báo: `"Không tìm thấy từ vựng nào có cấu trúc hợp lệ trong tệp PDF."`.
+- **Nguyên nhân cốt lõi (Lý do vì sao code xong nhưng tính năng lại không chạy):**
+  - **1. Sự lệch pha triển khai giữa Vercel & Render:** Vercel tự động build & deploy frontend chỉ trong vài chục giây sau khi push Git. Trong khi đó, Render Free Tier cần từ 3 - 6 phút để build Docker image chứa database từ điển nặng. Trong khoảng thời gian này, máy chủ Render production vẫn đang chạy phiên bản cũ (chưa có code bóc tách PDF mới), nên request `/api/flashcards/pdf` bị từ chối hoặc trả về mảng `cards: []` rỗng.
+  - **2. Định dạng PDF từ Google Slides xuất khẩu (Print to PDF):** Người dùng thường xuất bài giảng Minna no Nihongo từ Google Slides sang PDF. Trong file PDF này, mỗi slide là 1 trang và các dòng chữ (Kanji, Trọng âm `＼`, Nghĩa tiếng Việt, Âm Hán Việt `[HÀNH]`) nằm trên nhiều dòng riêng biệt nhau chứ không nằm gộp trên 1 dòng duy nhất. Thuật toán ban đầu ở backend chủ yếu chỉ tìm dòng đơn có dấu hai chấm/gạch ngang nên bỏ sót toàn bộ cấu trúc nhiều dòng của file slide xuất sang PDF.
+- **Thực hiện kỹ thuật & Khắc phục triệt để:**
+  - **1. Bóc tách PDF trực tiếp siêu tốc phía Client ([`apps/web/src/services/client-pdf-parser.ts`](file:///d:/Demo/apps/web/src/services/client-pdf-parser.ts)):**
+    - Sử dụng `pdfjs-dist` trích xuất văn bản từ `ArrayBuffer` ngay trên trình duyệt mà không cần gửi file qua mạng lên Render.
+    - Nhóm các phần tử văn bản theo tọa độ trục Y và X để tái cấu trúc chính xác các dòng chữ trên từng trang PDF.
+  - **2. Hỗ trợ đa dạng cấu trúc PDF (Cả dạng Bảng lẫn dạng Slide xuất PDF):**
+    - Xử lý mượt mà cả cấu trúc dạng slide Minna no Nihongo (Kanji, Kana trọng âm `いきま＼す`, nghĩa tiếng Việt `Đi`, thẻ âm Hán Việt `[HÀNH]`, `‹#›`).
+    - Xử lý cấu trúc dạng danh sách từ vựng chuẩn hóa (`食べる (たべる) [THỰC]: Ăn`).
+    - Tự động bóc tách và làm sạch trọng âm `cleanPitchAccent`, tạo thẻ Flashcard hoàn chỉnh.
+  - **3. Fallback đa tầng mượt mà:**
+    - Modal ưu tiên xử lý trực tiếp trên client để phản hồi tức thì và không bị phụ thuộc vào trạng thái deploy của backend.
+- **Kiểm chứng hệ thống:**
+  - `npm run typecheck`: 0 lỗi TypeScript.
+  - `npm test`: 10/10 test suites pass, 122/122 tests pass.
+  - `npm run build`: Vite build frontend và esbuild backend thành công.
+  - Kiểm thử thực tế CDP (`scripts/test-pdf-cdp.mjs`): Chạy Google Chrome thật qua CDP, kiểm tra chọn tab PDF và nạp tài liệu thành công.
+- **Tập tin liên quan:** `apps/web/src/services/client-pdf-parser.ts`, `apps/web/src/components/vocabulary-import-modal.tsx`, `scripts/test-pdf-cdp.mjs`, `docs/HANDOFF.md`.
+
 ## Tối ưu hóa siêu tốc (Client-Side Instant Parsing & Parallel) & Khắc phục lỗi "Không tìm thấy chức năng này" — ngày 22/10
 
 - **Hiện tượng & Báo cáo lỗi từ người dùng:**

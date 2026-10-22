@@ -5,6 +5,7 @@ import { api, post } from '../services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUI } from '../stores/ui';
 import { parsePptxBuffer } from '../services/client-pptx-parser';
+import { extractTextLinesFromPdf, parsePdfTextLines } from '../services/client-pdf-parser';
 
 export interface ParsedCardItem {
   term: string;
@@ -110,10 +111,35 @@ export function VocabularyImportModal({
     }
   };
 
-  // Upload and parse PDF file (automatic card extraction)
+  // Upload and parse PDF file (instant client-side extraction + server fallback)
   const handlePdfUpload = async (file: File | null) => {
     if (!file) return;
     setIsProcessing(true);
+
+    try {
+      // 1. TỐI ƯU SIÊU TỐC TRÊN CLIENT: Trích xuất trực tiếp bằng pdfjs
+      const arrayBuffer = await file.arrayBuffer();
+      const lines = await extractTextLinesFromPdf(arrayBuffer);
+      const parsed = parsePdfTextLines(lines, file.name);
+
+      if (parsed.cards && parsed.cards.length > 0) {
+        setParsedDecks([
+          {
+            deckName: targetDeckName || parsed.deckName,
+            cards: parsed.cards,
+            totalSlidesCount: parsed.cards.length,
+          },
+        ]);
+        setActiveDeckIndex(0);
+        notify(`Đã quét siêu tốc thành công ${parsed.cards.length} từ vựng từ tệp PDF.`);
+        return;
+      }
+      console.warn('Client-side PDF parsed 0 structured cards, trying server fallback...');
+    } catch (clientErr) {
+      console.warn('Client-side PDF parsing error, falling back to server API...', clientErr);
+    }
+
+    // 2. Dự phòng: Gửi lên máy chủ nếu client không bóc tách được
     const form = new FormData();
     form.append('file', file);
 
