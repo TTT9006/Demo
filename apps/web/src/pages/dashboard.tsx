@@ -130,11 +130,11 @@ export function Dashboard() {
             icon: '文',
           },
           {
-            label: 'Độ chính xác bài kiểm tra',
+            label: 'Độ chính xác luyện đề',
             value: data.accuracy === null ? '—' : `${data.accuracy}%`,
             meta: data.attempts.length
-              ? `${data.attempts.length} bài kiểm tra gần nhất`
-              : 'Làm bài kiểm tra đầu tiên',
+              ? `${data.attempts.length} bài luyện đề gần nhất`
+              : 'Làm bài luyện đề đầu tiên',
             icon: '正',
           },
         ].map((s) => (
@@ -389,14 +389,14 @@ export function Progress() {
       <PageHeader
         eyebrow="NHÌN LẠI ĐỂ ĐI XA HƠN"
         title="Từng ngày, bạn đang tiến bộ."
-        description="Mọi lượt ôn, bài học và bài kiểm tra đều được ghi lại."
+        description="Mọi lượt ôn, bài học và bài luyện đề đều được ghi lại."
       />
       <div className="metrics-grid">
         {[
           ['Từ đã học', data.learned],
           ['Ngày liên tiếp', data.streak],
           ['Bài ngữ pháp', data.grammarCompleted],
-          ['Bài kiểm tra', data.attempts.length],
+          ['Luyện đề', data.attempts.length],
         ].map(([label, value]) => (
           <div className="panel metric" key={label}>
             <span>{label}</span>
@@ -420,7 +420,7 @@ export function Progress() {
         </section>
       </div>
       <section className="panel spaced">
-        <h2>Nhật ký kiểm tra</h2>
+        <h2>Nhật ký luyện đề</h2>
         {data.attempts.length ? (
           data.attempts.map((a) => (
             <div className="simple-row" key={a.id}>
@@ -434,7 +434,7 @@ export function Progress() {
           ))
         ) : (
           <p className="muted">
-            Chưa có bài kiểm tra. <Link to="/tests">Bắt đầu bài đầu tiên →</Link>
+            Chưa có bài luyện đề. <Link to="/tests">Bắt đầu bài đầu tiên →</Link>
           </p>
         )}
       </section>

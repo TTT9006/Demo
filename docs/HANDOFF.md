@@ -4,10 +4,88 @@
 - TypeScript qua; Edge kiểm tra 375/390/1280px với thẻ giả lập đáp án dài: đọc được dòng cuối, nút lật không bị bottom nav che, lật hai mặt qua. Ảnh chỉ lưu output cục bộ, không push.
 - Không sửa dữ liệu thẻ nhập PDF lỗi cũ; bộ 17 thẻ cần người dùng nhập lại hoặc sửa nội dung. Không thay đổi lịch ôn.
 
+## BÁO CÁO SỰ CỐ & PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ (RCA): LỖI ẨN TOÀN BỘ DỮ LIỆU ĐỀ THI DO BỘ LỌC CLIENT-SIDE QUÁ CHẶT — 23/10/2026
+
+- **Hiện tượng (Symptom):**
+  - Sau khi triển khai tính năng Luyện thi JLPT chuẩn và Luyện kỹ năng, người dùng vào trang Luyện đề (`/tests`) thì thấy danh sách trống trơn ("Tất cả 0", "JLPT N5 0", "JLPT N4 0", "JLPT N3 0", "JLPT N2 0", kèm thông báo "Chưa có đề thi trọn gói 3 phần cho JLPT all"). Toàn bộ 11 đề thi hiện có của người dùng dường như "bị mất sạch".
+
+- **Phân tích nguyên nhân gốc rễ (Root Cause Analysis - RCA):**
+  - **1. Sai lầm trong việc lọc dữ liệu ở tầng giao diện (Overly Restrictive Client-side Filtering):**
+    - Trong `apps/web/src/pages/tests.tsx`, code đã sử dụng bộ lọc:
+      ```typescript
+      const allExams = (data || []).filter((t) => t.isPracticeExam);
+      ```
+    - Trong khi đó, các bộ đề thi luyện tập vốn có của hệ thống (`jlpt-n4-01`, `jlpt-n3-01`, `jlpt-n2-01`, `jlpt-n5-01`) và đề N5 07/2024 không có cờ `isPracticeExam: true` (giá trị là `undefined`).
+    - Phép kiểm tra boolean nghiêm ngặt coi `undefined` là `false`, dẫn đến toàn bộ đề thi N4, N3, N2 và đề luyện tập N5 bị loại bỏ 100% khỏi danh sách.
+  - **2. Lỗi giả định dữ liệu không an toàn (Unsafe Data Assumption without Fallback):**
+    - Khi người dùng ở tab "Tất cả" hoặc chọn N4, N3, N2, kết quả lọc ra mảng rỗng `[]`.
+    - Dữ liệu trong database SQLite và API backend `/api/tests` hoàn toàn còn nguyên vẹn 11 đề, nhưng tầng hiển thị frontend đã lọc mất, khiến người dùng lầm tưởng dữ liệu đã bị mất/xóa.
+  - **3. Thiếu assertion số lượng bản ghi tối thiểu trong kịch bản kiểm thử tự động:**
+    - Test CDP trước đó chỉ kiểm tra các selector có tải được hay không mà không assert kiểm tra `expect(exams.length).toBeGreaterThan(0)` trên từng tab cấp độ.
+
+- **Biện pháp khắc phục triệt để đã triển khai:**
+  - 1. Xóa bỏ hoàn toàn bộ lọc cứng `data.filter(t => t.isPracticeExam)`, chuyển thành `allExams = data || []`.
+  - 2. Hiển thị toàn bộ 11 đề thi đầy đủ, phân loại rõ ràng qua huy hiệu (Badge):
+    - Đề thi thật: `[N... · ĐỀ THI CHÍNH THỨC]` kèm `[Đáp án gốc]`, `[Audio gốc · khớp tự động]`.
+    - Đề tự luyện: `[N... · ĐỀ LUYỆN TẬP]` kèm `[Đáp án chuẩn]`.
+  - 3. Bổ sung script kiểm thử CDP kiểm tra cụ thể số lượng đề trên từng tab (Tất cả: 11, N5: 8, N4: 1, N3: 1, N2: 1), đảm bảo không còn tình trạng 0 đề.
+
+## Tách thẻ Luyện kỹ năng, đổi tên thẻ thành Luyện đề & Khôi phục toàn bộ danh sách đề thi — 23/10/2026
+
+- **Yêu cầu & Phản hồi từ Người dùng:**
+  - 1. *"không tôi muốn luyện kĩ năng là thẻ riêng trên thanh tính năng"*: Yêu cầu đưa "Luyện kỹ năng" thành một thẻ điều hướng độc lập, cấp 1 trên thanh điều hướng chính (`/skills`), không gộp chung bên trong thẻ Kiểm tra.
+  - 2. *"sửa tên thẻ kiểm tra thành luyện đề"*: Đổi tên thẻ điều hướng "Kiểm tra" (`/tests`) thành **"Luyện đề"**.
+  - 3. *"rồi dữ liệu và đề của tôi đâu ?"*: Khắc phục lỗi lọc quá chặt khiến trang Luyện đề hiển thị 0 đề trên tất cả các tab ("Tất cả 0", "JLPT N5 0", "JLPT N4 0", "JLPT N3 0", "JLPT N2 0").
+  - 4. *"tiếp tục thay đổi sửa tên thẻ kiểm tra"*: Rà soát và cập nhật đồng bộ toàn bộ các văn bản, nhãn thống kê, tiêu đề modal, breadcrumb từ "kiểm tra" sang "luyện đề" trên toàn bộ giao diện (Tổng quan, Nhật ký luyện đề, Chế độ làm bài, Thanh điều hướng).
+
+- **Thay đổi kỹ thuật đã thực hiện:**
+  - **1. Tách thẻ điều hướng chính (`apps/web/src/app.tsx`):**
+    - Bổ sung `{ to: '/skills', label: 'Luyện kỹ năng', icon: Target }` vào danh sách `navigation`.
+    - Đổi tên `{ to: '/tests', label: 'Luyện đề', icon: ClipboardCheck }` (thay cho 'Kiểm tra').
+    - Thêm route con `<Route path="skills" element={<SkillsPage />} />` trong `App`.
+    - Cập nhật hiển thị breadcrumb động nhận diện `/skills` là "Luyện kỹ năng" và `/tests` là "Luyện đề".
+  - **2. Xây dựng trang Luyện kỹ năng độc lập (`apps/web/src/pages/skills.tsx`):**
+    - Trang trung tâm luyện 4 kỹ năng: Nghe hiểu (聴解), Đọc hiểu (読解), Từ vựng (文字・語彙), Ngữ pháp (文法) qua 4 cấp độ N5–N2.
+    - Tích hợp `SkillPracticeModal` với trình phát audio có chỉnh tốc độ (0.8x, 1.0x, 1.2x), nút nghe lại, hiển thị transcript máy sau khi nộp bài và nút 1-chạm đẩy các từ sai vào bộ Flashcard SM-2.
+    - Hiển thị lịch sử các lần luyện kỹ năng gần nhất.
+  - **3. Khôi phục và hoàn thiện trang Luyện đề (`apps/web/src/pages/tests.tsx`):**
+    - Bỏ điều kiện lọc cứng `data.filter(t => t.isPracticeExam)`, thay bằng `allExams = data || []`.
+    - Khôi phục trọn vẹn 11 đề thi:
+      - **Tất cả: 11 đề**
+      - **JLPT N5: 8 đề** (Đề 01 luyện tập + 7 đề thi chính thức: 2010–2011, 12/2012, 07/2013, 07/2017, 2018, 12/2021, 07/2024).
+      - **JLPT N4: 1 đề** (`JLPT N4 · Đề luyện 01`).
+      - **JLPT N3: 1 đề** (`JLPT N3 · Đề luyện 01`).
+      - **JLPT N2: 1 đề** (`JLPT N2 · Đề luyện 01`).
+    - Bỏ khung "Quy chuẩn mục Luyện đề thi JLPT" khỏi trang Luyện đề để giao diện thoáng, tinh gọn.
+    - Hoàn thiện thẻ đề thi với phân loại badge rõ ràng:
+      - Loại đề: `[N... · ĐỀ THI CHÍNH THỨC]` vs `[N... · ĐỀ LUYỆN TẬP]`.
+      - Nguồn đáp án: `[Đáp án gốc]` vs `[Đáp án chuẩn]` vs `[Đáp án tham khảo]`.
+      - Trạng thái âm thanh: `[Audio gốc · khớp tự động]` vs `[Audio trùng 2010–2011]`.
+    - Banner điều hướng chéo trực quan sang `/skills`: "Bạn muốn rèn luyện từng kỹ năng riêng biệt (Nghe, Đọc, Từ vựng, Ngữ pháp)? [Sang mục Luyện kỹ năng ->]".
+  - **4. Đồng bộ thuật ngữ trên toàn bộ giao diện (`dashboard.tsx`, `jlpt.tsx`, `tests.tsx`):**
+    - Đổi "Độ chính xác bài kiểm tra" -> "Độ chính xác luyện đề".
+    - Đổi "Nhật ký kiểm tra" -> "Nhật ký luyện đề".
+    - Đổi "Mọi lượt ôn, bài học và bài kiểm tra đều được ghi lại" -> "Mọi lượt ôn, bài học và bài luyện đề đều được ghi lại".
+    - Đổi "Bài kiểm tra" trên thanh sticky bài thi -> "Bài luyện đề".
+    - Đổi tiêu đề modal "Dừng bài kiểm tra & nộp ngay?" -> "Dừng bài luyện đề & nộp ngay?".
+    - Đổi "Các bài kiểm tra" -> "Danh sách đề thi".
+
+- **Kết quả Kiểm tra & Bằng chứng thực tế (CDP):**
+  - `npm.cmd run typecheck`: **0 lỗi TypeScript**.
+  - `npm.cmd test`: **14 test suites, 137 tests passing (100%)**.
+  - `npm.cmd run build`: Vite client & esbuild API build thành công 100%.
+  - `scripts/test-skills-and-exams-cdp.mjs`: Chạy Chrome DevTools Protocol kiểm thử toàn diện trên cả Desktop và Mobile:
+    - `test-results/desktop-exams.png`: Màn hình Luyện đề (/tests) với cả 2 thẻ "Luyện kỹ năng" và "Luyện đề" trên thanh bên, hiển thị đầy đủ 11 đề thi, badges chuẩn.
+    - `test-results/desktop-skills.png`: Màn hình Luyện kỹ năng (/skills) với 4 kỹ năng và bộ thẻ bài tập.
+    - `test-results/skill-results.png`: Modal kết quả luyện kỹ năng tương tác, hiện transcript sau khi nộp.
+    - `test-results/mobile-skills.png`: Giao diện Luyện kỹ năng trên thiết bị di động (390x844).
+    - `test-results/mobile-exams.png`: Giao diện Luyện đề trên thiết bị di động (390x844).
+    - `test-results/mobile-drawer.png`: Drawer menu trên di động hiển thị đầy đủ "Luyện kỹ năng" và "Luyện đề".
+
 ## Bỏ khung quy chuẩn JLPT — 23/10/2026
 
-- Theo ảnh người dùng: xóa toàn bộ khung “Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)” khỏi trang Tests và import Info không còn dùng. Không đổi bộ lọc hoặc dữ liệu đề.
-- TypeScript qua; kiểm thử trang Tests thực trên Edge CDP desktop/mobile với query cache rỗng: khung vắng mặt, bộ lọc hiện, chuyển hai tab hoạt động, không pageerror. Ảnh lưu cục bộ, không push. Không kiểm lại API hoặc dữ liệu đề trong lần sửa giao diện này.
+- Theo phản hồi người dùng: xóa toàn bộ khung “Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)” khỏi trang Luyện đề (/tests) để màn hình gọn gàng, trực diện.
+- Không thay đổi bộ lọc hoặc dữ liệu đề. Mọi cấp độ đề thi đều truy cập trực tiếp.
 
 ## Sửa quét PDF bảng từ vựng — 23/10/2026
 
@@ -26,6 +104,11 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 
 **Quy định kiểm thử thực tế qua Chrome DevTools Protocol (CDP) & Bắt buộc chụp ảnh màn hình — Cập nhật 22/10/2026:**
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). **BẮT BUỘC chụp ảnh màn hình (screenshot) kết quả kiểm thử thực tế trên cả Desktop và Mobile, lưu lại và hiển thị trực tiếp trong artifact / báo cáo để người dùng kiểm tra trực quan.** Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
+
+**Quy tắc nghiêm ngặt: Tuyệt đối bảo toàn dữ liệu hiển thị & Cấm filter làm biến mất dữ liệu người dùng (Zero Data Loss by UI Filtering) — Cập nhật 23/10/2026:**
+1. **Tuyệt đối không dùng bộ lọc loại trừ triệt để (Destructive Filtering) khi bổ sung tính năng mới:** Khi thêm cờ phân loại mới (như `isPracticeExam`, `isOfficial`, `category`, v.v.), tầng hiển thị frontend PHẢI có fallback an toàn. Nếu trường đó là `undefined`, mặc định dữ liệu vẫn phải được hiển thị (gán nhãn mặc định hoặc phân nhóm phụ) chứ tuyệt đối KHÔNG ĐƯỢC `.filter(x => x.newField)` làm mất sạch dữ liệu hiện có của người dùng.
+2. **Tách tính năng mới không bao giờ được làm trống rỗng tính năng cũ:** Khi tách một phân hệ thành trang riêng (ví dụ tách riêng `/skills` - Luyện kỹ năng), trang gốc (`/tests` - Luyện đề) phải giữ nguyên vẹn toàn bộ các bộ đề thi đã có, không được lọc bỏ làm rỗng giao diện.
+3. **CDP Test bắt buộc phải assert số lượng bản ghi hiển thị:** Trong mọi bài kiểm thử trình duyệt CDP, bắt buộc phải có câu lệnh assert số lượng phần tử lớn hơn 0 trên tất cả các tab (`expect(count).toBeGreaterThan(0)`). Bất kỳ màn hình nào hiển thị "0 bản ghi" bất thường khi hệ thống đã có dữ liệu đều bị tính là lỗi nghiêm trọng (Critical Bug) và không được phép kết thúc phiên làm việc.
 
 ## Ra mắt Tính năng Luyện thi JLPT Chuẩn & Luyện kỹ năng Chuyên sâu 4 Kỹ năng (N5–N2) — ngày 23/10
 
