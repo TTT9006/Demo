@@ -2,7 +2,12 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../apps/api/src/app';
 import { jlptPapers } from '../packages/shared/jlpt-papers';
-import { getSkillExercises, skillCategories } from '../packages/shared/jlpt-skills';
+import {
+  getSkillExercises,
+  skillCategories,
+  shuffleQuestionOptions,
+  shuffleArray,
+} from '../packages/shared/jlpt-skills';
 
 describe('JLPT Exam Qualification & Skills Practice', () => {
   let cookie = '';
@@ -125,5 +130,52 @@ describe('JLPT Exam Qualification & Skills Practice', () => {
       expect(starQ).toBeDefined();
       expect(starQ?.explanation).toContain('Thứ tự hoàn chỉnh');
     }
+  });
+
+  it('shuffles question options dynamically when entering practice sets while preserving valid answer grading', () => {
+    const sets = getSkillExercises('vocabulary', 'N5');
+    const questions = sets[0].questions;
+
+    // Run multiple shuffling passes
+    const pass1 = shuffleQuestionOptions(questions);
+    const pass2 = shuffleQuestionOptions(questions);
+
+    // Verify all original options are preserved in every question
+    for (let i = 0; i < questions.length; i++) {
+      const orig = questions[i];
+      const p1 = pass1[i];
+      const p2 = pass2[i];
+
+      expect(p1.options.slice().sort()).toEqual(orig.options.slice().sort());
+      expect(p2.options.slice().sort()).toEqual(orig.options.slice().sort());
+      expect(p1.options.includes(orig.answer)).toBe(true);
+      expect(p2.options.includes(orig.answer)).toBe(true);
+    }
+
+    // Verify sequential audio numbered options are protected from shuffling
+    const audioNumberedQuestions = [
+      {
+        id: 'listen-num-test',
+        type: 'choice' as const,
+        category: 'listening' as const,
+        group: 'Phản xạ nhanh',
+        prompt: '1番〜4番から選んでください',
+        options: ['1', '2', '3', '4'],
+        answer: '2',
+        explanation: 'Đáp án là 2',
+        annotationDisabled: true as const,
+      },
+    ];
+    const shuffledAudio = shuffleQuestionOptions(audioNumberedQuestions);
+    expect(shuffledAudio[0].options).toEqual(['1', '2', '3', '4']);
+
+    // Across 20 shuffle runs on a 4-choice question, ensure variation occurs
+    const sampleQ = questions.find((q) => q.options.length === 4)!;
+    const signatures = new Set<string>();
+    for (let r = 0; r < 20; r++) {
+      const [shuffled] = shuffleQuestionOptions([sampleQ]);
+      signatures.add(shuffled.options.join('|'));
+    }
+    expect(signatures.size).toBeGreaterThan(1);
   });
 });

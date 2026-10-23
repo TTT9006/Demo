@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Volume2,
   VolumeX,
@@ -20,7 +20,11 @@ import { Button, Modal } from './ui';
 import { JapaneseAnnotatedText } from './japanese-annotated-text';
 import { api, post } from '../services/api';
 import { useUI } from '../stores/ui';
-import type { SkillExerciseSet } from '../../../../packages/shared/jlpt-skills';
+import {
+  type SkillExerciseSet,
+  type SkillQuestion,
+  shuffleQuestionOptions,
+} from '../../../../packages/shared/jlpt-skills';
 import type { JlptLevel, SkillType } from '../../../../packages/shared/jlpt-types';
 
 interface SkillPracticeModalProps {
@@ -58,18 +62,23 @@ export function SkillPracticeModal({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Reset state when opening a new set
-  useEffect(() => {
-    if (open) {
-      setIndex(0);
-      setAnswers({});
-      setResults(null);
-      setFlashcardsAdded(false);
-      setIsPlaying(false);
-      setCurrentTime(0);
-      setDuration(0);
-    }
-  }, [open, set?.id]);
+  // Practice session key: changes each time user opens the modal or chooses a set, triggering fresh option shuffling
+  const [sessionKey, setSessionKey] = useState(0);
+  const [lastOpen, setLastOpen] = useState(false);
+  const [lastSetId, setLastSetId] = useState<string | null>(null);
+
+  // Synchronously reset state & trigger fresh shuffle when modal opens or set changes
+  if (open && (!lastOpen || lastSetId !== (set?.id ?? null))) {
+    setLastOpen(true);
+    setLastSetId(set?.id ?? null);
+    setSessionKey((k) => k + 1);
+    setIndex(0);
+    setAnswers({});
+    setResults(null);
+    setFlashcardsAdded(false);
+  } else if (!open && lastOpen) {
+    setLastOpen(false);
+  }
 
   // Audio time update
   useEffect(() => {
@@ -83,9 +92,16 @@ export function SkillPracticeModal({
     }
   }, [index, set?.id]);
 
-  if (!set) return null;
+  // Questions with freshly shuffled options per practice session
+  const questions = useMemo(() => {
+    if (!set) return [];
+    return shuffleQuestionOptions(set.questions);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [set?.id, sessionKey]);
 
-  const currentQ = set.questions[index];
+  if (!set || questions.length === 0) return null;
+
+  const currentQ = questions[index] || questions[0];
   const currentAudioUrl =
     currentQ.audioUrl ||
     (currentQ.transcript ? `/api/tts?text=${encodeURIComponent(currentQ.transcript)}` : undefined);
@@ -160,7 +176,7 @@ export function SkillPracticeModal({
           'Backend /jlpt/skills/submit chưa sẵn sàng, tính điểm trực tiếp client-side:',
           submitErr,
         );
-        const resultsList = set.questions.map((q) => {
+        const resultsList = questions.map((q) => {
           const given = answers[q.id] || '';
           const correct = given === q.answer;
           return {
@@ -271,7 +287,7 @@ export function SkillPracticeModal({
           <div className="skill-session-progress">
             {!isFinished ? (
               <span>
-                Câu {index + 1} / {set.questions.length} (Đã làm {answeredCount})
+                Câu {index + 1} / {questions.length} (Đã làm {answeredCount})
               </span>
             ) : (
               <span className="positive font-bold">
@@ -361,6 +377,7 @@ export function SkillPracticeModal({
                 <Button
                   variant="secondary"
                   onClick={() => {
+                    setSessionKey((k) => k + 1);
                     setResults(null);
                     setAnswers({});
                     setIndex(0);
@@ -567,7 +584,7 @@ export function SkillPracticeModal({
             {/* Question Prompt */}
             <div className="skill-question-prompt" style={{ marginBottom: '16px' }}>
               <span className="eyebrow" style={{ marginBottom: '4px', display: 'block' }}>
-                {currentQ.group} · CÂU {index + 1}/{set.questions.length}
+                {currentQ.group} · CÂU {index + 1}/{questions.length}
               </span>
               <h2 lang="ja" style={{ fontSize: '18px', margin: 0 }}>
                 {currentQ.prompt}
@@ -632,7 +649,7 @@ export function SkillPracticeModal({
                 <Button
                   variant="secondary"
                   size="small"
-                  disabled={index === set.questions.length - 1}
+                  disabled={index === questions.length - 1}
                   onClick={() => setIndex((i) => i + 1)}
                 >
                   Câu tiếp <ArrowRight size={15} />
@@ -644,7 +661,7 @@ export function SkillPracticeModal({
                   <Check size={16} />
                   {isSubmitting
                     ? 'Đang chấm điểm...'
-                    : `Nộp bài (${answeredCount}/${set.questions.length})`}
+                    : `Nộp bài (${answeredCount}/${questions.length})`}
                 </Button>
               </div>
             </div>

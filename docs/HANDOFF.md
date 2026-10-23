@@ -1,3 +1,41 @@
+## TRỘN NGẪU NHIÊN THỨ TỰ CÁC ĐÁP ÁN MỖI KHI NGƯỜI DÙNG VÀO ĐỀ LUYỆN KỸ NĂNG (/SKILLS) — 23/10/2026
+
+- **Yêu cầu & Mục tiêu:**
+  - Trong phân hệ **Luyện 4 kỹ năng** (Nghe hiểu, Đọc hiểu, Từ vựng, Ngữ pháp tại `/skills`), mỗi khi người dùng chọn vào một bộ đề bài tập bất kỳ, thứ tự các đáp án lựa chọn (A, B, C, D) phải được trộn ngẫu nhiên (shuffle).
+  - Khi người dùng thoát ra và vào lại đề đó, hoặc bấm nút "Luyện tập lại" sau khi nộp bài, các đáp án phải được xáo trộn ngẫu nhiên thành một thứ tự mới, tránh việc người học ghi nhớ vị trí nút bấm thay vì nắm vững kiến thức.
+  - Tuyệt đối bảo đảm tính chính xác 100% của hệ thống chấm điểm (`answers[q.id] === q.answer`), giải thích đáp án, bản chép lời (transcript) và tính năng tự động thêm từ làm sai vào Flashcard SM-2.
+
+- **Hiện trạng trước khi xử lý:**
+  - Trong `packages/shared/jlpt-skills.ts`, hàm `shuffleOptions(arr)` trước đây sử dụng thuật toán giả ngẫu nhiên cố định: `(i * 7 + 3) % (i + 1)`. Với mỗi câu hỏi, các đáp án luôn xuất hiện theo đúng 1 thứ tự cố định duy nhất qua mọi lần học.
+  - Phía giao diện React (`apps/web/src/pages/skills.tsx` và `apps/web/src/components/skill-practice-modal.tsx`), `useQuery` lưu cache bộ câu hỏi trong bộ nhớ. Khi người dùng mở modal `SkillPracticeModal`, làm xong, đóng lại rồi mở lại thì danh sách `set.questions` vẫn giữ nguyên thứ tự cũ.
+
+- **Giải pháp kỹ thuật & Kiến trúc thực hiện:**
+  1. **Thuật toán trộn ngẫu nhiên chuẩn Fisher-Yates (`packages/shared/jlpt-skills.ts`):**
+     - Xây dựng hàm `shuffleArray<T>(arr)` áp dụng thuật toán Fisher-Yates đồng đều với `Math.floor(Math.random() * (i + 1))`, bảo đảm mọi hoán vị $n!$ đều có xác suất xuất hiện công bằng ($1/24$ cho câu 4 đáp án).
+     - Xây dựng hàm `shuffleQuestionOptions(questions: SkillQuestion[])`:
+       - Tự động xáo trộn các lựa chọn cho từng câu hỏi.
+       - Tích hợp cơ chế bảo vệ thông minh: nếu câu hỏi nghe có các đáp án dạng số thứ tự chuẩn nối tiếp `["1", "2", "3", "4"]` (hoặc `q.audioOptions === true`) khớp với nội dung băng đọc "1番, 2番…", hệ thống tự động giữ nguyên thứ tự số thứ tự để không làm sai lệch băng nghe.
+       - Xuất khẩu kiểu dữ liệu `SkillQuestion`.
+  2. **Quản lý phiên làm bài & Xáo trộn tức thời khi mở đề (`apps/web/src/components/skill-practice-modal.tsx`):**
+     - Bổ sung `sessionKey` cùng cơ chế phát hiện chuyển trạng thái modal đồng bộ trong pha render (`if (open && (!lastOpen || lastSetId !== set?.id))`).
+     - Mỗi khi người dùng bấm "Luyện tập ngay" vào một đề:
+       - `sessionKey` tăng lên, `useMemo` kích hoạt `shuffleQuestionOptions(set.questions)` để sinh thứ tự đáp án mới hoàn toàn trên frame hiển thị đầu tiên (không bị giật/nháy hình).
+       - Thứ tự đáp án của từng câu hỏi được duy trì ổn định xuyên suốt phiên làm bài đó (khi người dùng chuyển tiếp giữa Câu 1 -> Câu 2 -> Câu trước).
+     - Khi người dùng hoàn thành và bấm **"Luyện tập lại"** (`RotateCcw`), hệ thống tăng `sessionKey`, đặt lại toàn bộ trạng thái và xáo trộn lại một tổ hợp đáp án mới cho lần thử tiếp theo.
+     - Đồng bộ hóa tất cả các tham chiếu số lượng câu hỏi, thanh tiến độ (`Câu x / y`), tiêu đề câu hỏi, trạng thái nút "Câu tiếp" và bộ chấm điểm client-side dự phòng theo mảng câu hỏi `questions` đã trộn.
+     - Do việc đối chiếu chấm điểm so sánh chuỗi đáp án gốc (`q.answer`), việc hoán đổi vị trí hiển thị hoàn toàn không ảnh hưởng đến độ chuẩn xác của kết quả, bảng thống kê và tính năng lưu từ sai vào Flashcards SM-2.
+
+- **Kết quả Kiểm thử & Đo kiểm thực tế:**
+  - **TypeScript Typecheck (`npm run typecheck`):** Đạt 100% 0 lỗi.
+  - **Unit Tests (`npm test`):** Đạt 16/16 test files, 141/141 unit tests pass.
+  - Bổ sung unit test `shuffles question options dynamically when entering practice sets while preserving valid answer grading` trong `tests/skills-and-jlpt-exam.test.ts`.
+  - **Kiểm thử tự động trên Chrome thật (CDP - Playwright `scripts/test-skills-shuffle-cdp.mjs`):**
+    - Vào đề lần 1: `[ 'がっこう', 'でんしゃ', 'まいにち', 'せんせい' ]`
+    - Thoát ra vào lại đề lần 2: `[ 'でんしゃ', 'せんせい', 'まいにち', 'がっこう' ]`
+    - Thoát ra vào lại đề lần 3: `[ 'せんせい', 'でんしゃ', 'がっこう', 'まいにち' ]`
+    - Nộp bài và bấm "Luyện tập lại": đáp án tiếp tục được trộn ngẫu nhiên.
+    - Chụp ảnh bằng chứng tại `skills-shuffle-run1.png`, `skills-shuffle-run2.png`, `skills-result-screen.png`.
+
 ## ĐỒNG BỘ CÁCH PHÁT CÂU NGHE CHUẨN THI THẬT & NGHIÊM CẤM TẠM DỪNG AUDIO TRÊN MỌI ĐỀ THI (KỂ CẢ ĐỀ LUYỆN MẪU) — 23/10/2026
 
 - **Yêu cầu & Mục tiêu:**

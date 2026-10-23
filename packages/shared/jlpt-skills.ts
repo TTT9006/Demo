@@ -11,6 +11,8 @@ import { grammarChoices, sentenceParts, textGrammar } from './jlpt-grammar';
 import { reading } from './jlpt-reading';
 import { listeningItems } from './jlpt-listening';
 
+export type SkillQuestion = JlptQuestion & { term?: string; reading?: string; meaning?: string };
+
 export interface SkillExerciseSet {
   id: string;
   title: string;
@@ -22,7 +24,7 @@ export interface SkillExerciseSet {
   track?: number;
   description: string;
   syncStatus: SyncStatus;
-  questions: (JlptQuestion & { term?: string; reading?: string; meaning?: string })[];
+  questions: SkillQuestion[];
 }
 
 export const skillCategories: SkillCategoryView[] = [
@@ -429,12 +431,32 @@ function buildListeningSkillSets(level: JlptLevel): SkillExerciseSet[] {
   return sets;
 }
 
-// Utility: Deterministic shuffle for options so correct answer isn't always first
-function shuffleOptions(arr: string[]): string[] {
+// Utility: Pure Fisher-Yates array shuffle
+export function shuffleArray<T>(arr: readonly T[]): T[] {
   const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {
-    const j = (i * 7 + 3) % (i + 1);
+    const j = Math.floor(Math.random() * (i + 1));
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
+}
+
+// Utility: Shuffle options so correct answer isn't always first
+export function shuffleOptions(arr: string[]): string[] {
+  return shuffleArray(arr);
+}
+
+// Utility: Shuffle options across an array of skill questions while preserving sequential audio options (1, 2, 3, 4)
+export function shuffleQuestionOptions(questions: SkillQuestion[]): SkillQuestion[] {
+  return questions.map((q) => {
+    const isSequentialNumbers =
+      q.options.length > 1 && q.options.every((opt, i) => opt.trim() === String(i + 1));
+    if (q.audioOptions || isSequentialNumbers) {
+      return q;
+    }
+    return {
+      ...q,
+      options: shuffleArray(q.options),
+    };
+  });
 }
