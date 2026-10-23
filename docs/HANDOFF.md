@@ -1,3 +1,9 @@
+## Sửa màn hình ôn thẻ điện thoại — 23/10/2026
+
+- Mặt thẻ mobile dùng chiều cao theo nội dung, giảm cỡ chữ nghĩa, nút lật sticky nằm trên thanh điều hướng và safe area. Pointer cancel chỉ hủy kéo, không lật/chấm thẻ.
+- TypeScript qua; Edge kiểm tra 375/390/1280px với thẻ giả lập đáp án dài: đọc được dòng cuối, nút lật không bị bottom nav che, lật hai mặt qua. Ảnh chỉ lưu output cục bộ, không push.
+- Không sửa dữ liệu thẻ nhập PDF lỗi cũ; bộ 17 thẻ cần người dùng nhập lại hoặc sửa nội dung. Không thay đổi lịch ôn.
+
 ## Bỏ khung quy chuẩn JLPT — 23/10/2026
 
 - Theo ảnh người dùng: xóa toàn bộ khung “Quy chuẩn mục Luyện thi JLPT (Đề chuẩn)” khỏi trang Tests và import Info không còn dùng. Không đổi bộ lọc hoặc dữ liệu đề.

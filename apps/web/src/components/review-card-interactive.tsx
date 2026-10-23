@@ -140,7 +140,10 @@ export function ReviewCardInteractive({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onPointerCancel={() => {
+          setIsDragging(false);
+          setDragX(0);
+        }}
       >
         <div
           className={`review-card ${flipped ? 'flipped' : ''}`}

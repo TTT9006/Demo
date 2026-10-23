@@ -6186,3 +6186,47 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
 
 
 
+
+/* Let long mobile answers grow with the page, rather than clipping a 3D face. */
+@media (max-width: 760px) {
+  .review-session .review-card,
+  .review-session .review-card.flipped {
+    min-height: 0;
+    transform: none;
+  }
+  .review-session .review-card-face {
+    position: relative;
+    inset: auto;
+    height: auto;
+    min-height: 260px;
+    padding: 24px 18px;
+    transform: none;
+    overflow: visible;
+    gap: 8px;
+  }
+  .review-session .review-card-back,
+  .review-session .review-card.flipped .review-card-front { display: none; }
+  .review-session .review-card.flipped .review-card-back { display: flex; }
+  .review-session .review-card h2,
+  .review-session .review-card.flipped h2 {
+    font-size: clamp(32px, 10vw, 48px);
+    line-height: 1.4;
+    margin: 8px 0;
+  }
+  .review-session .review-card h3 {
+    font-size: 17px;
+    line-height: 1.65;
+    letter-spacing: normal;
+    overflow-wrap: anywhere;
+  }
+  .review-session .review-card-controls {
+    position: sticky;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 23;
+    padding: 8px 0;
+    background: var(--bg);
+  }
+  .review-session .flip-button { margin-top: 0; min-height: 48px; width: 100%; }
+  .review-session .review-swipe-guide { gap: 8px; flex-wrap: wrap; }
+  .review-session .review-footnote { font-size: 12px; }
+}
