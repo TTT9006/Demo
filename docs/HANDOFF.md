@@ -1,3 +1,37 @@
+## ĐỒNG BỘ CÁCH PHÁT CÂU NGHE CHUẨN THI THẬT & NGHIÊM CẤM TẠM DỪNG AUDIO TRÊN MỌI ĐỀ THI (KỂ CẢ ĐỀ LUYỆN MẪU) — 23/10/2026
+
+- **Yêu cầu & Mục tiêu:**
+  - Đồng bộ cách phát câu hỏi nghe hiểu trên toàn bộ các bài thi JLPT (cả đề thi thật chính thức và đề luyện mẫu) theo đúng quy chế phòng thi thực tế:
+    - Băng nghe phát liên tục một lần duy nhất theo nhịp độ phòng thi.
+    - Nghiêm cấm mọi hành vi tạm dừng (pause), dừng lại (stop) hoặc tua lại (rewind) audio trong lúc đang nghe câu hỏi thi (kể cả trên các đề luyện mẫu tự biên soạn).
+
+- **Hiện trạng trước khi sửa:**
+  - Trong `apps/web/src/pages/jlpt.tsx`, component `ExamAudioPlayer` hỗ trợ `togglePlay`: khi đang phát, người dùng bấm vào nút thì audio bị `pause()` (hiển thị nút "Tạm dừng").
+  - Trên các "đề luyện mẫu" (`jlptPracticePapers` như `jlpt-n5-01`, `jlpt-n4-01`, `jlpt-n3-01`, `jlpt-n2-01`), câu hỏi nghe chưa được gán trường `audioUrl`, dẫn đến giao diện rơi vào nhánh fallback hiển thị nút "Nghe câu này" và nút "Dừng" (`Square`), cho phép thí sinh tự do dừng audio để ghi chú hoặc suy nghĩ đáp án, làm sai lệch tính kỷ luật và áp lực thời gian của phòng thi chuẩn JLPT.
+
+- **Biện pháp khắc phục triệt để:**
+  1. **Đồng bộ giao diện Trình phát thi thật (`ExamAudioPlayer`) cho 100% câu hỏi nghe:**
+     - Tại `packages/shared/jlpt-papers.ts`, bổ sung `audioUrl: /api/tts?text=${encodeURIComponent(item.script)}` cho hàm `makePaper(level)`.
+     - Tại `apps/web/src/pages/jlpt.tsx`:
+       - Thay thế hoàn toàn nhánh nút bấm đơn sơ `Nghe câu này / Dừng` bằng `ExamAudioPlayer` thống nhất (`question.category === 'listening'`).
+       - Trong `ExamAudioPlayer`, hỗ trợ tự động truy xuất transcript qua API `/api/jlpt/runs/:id/audio/:questionId` và chuyển hướng sang `/api/tts` khi gặp các phiên làm bài cũ chưa có sẵn `src`.
+  2. **Vô hiệu hóa hoàn toàn chức năng tạm dừng (Strict Exam Mode Playback):**
+     - Nút phát chuyển từ cơ chế `togglePlay` (bật/tắt) sang `handlePlay` (chỉ phát một chiều).
+     - Khi bài nghe bắt đầu phát:
+       - Nút bấm hiển thị trạng thái `Đang phát bài nghe…` kèm biểu tượng sóng âm `Volume2` hiệu ứng xung nhịp (`animate-pulse`).
+       - Nút bị vô hiệu hóa (`disabled={isPlaying || hasEnded}`) với tiêu đề cảnh báo: _"Đang phát bài nghe (không thể tạm dừng)"_.
+       - CSS `.exam-audio-btn.playing:disabled` duy trì màu xanh ngọc tươi sáng đặc trưng (`var(--jade)`), không bị mờ nhạt.
+       - Sự kiện `onPause` của thẻ `<audio>` tự động phát tiếp nếu phát hiện audio bị dừng đột ngột ngoài ý muốn (do phím media/keyboard shortcut) trước khi kết thúc bài.
+     - Cập nhật banner quy chế: `"🎧 Mô phỏng phòng thi thật" | "Phát 1 lần · Không thể dừng hoặc tua lại"`.
+     - Sau khi kết thúc bài phát: nút chuyển thành `✓ Đã nghe xong` và khóa vĩnh viễn (thí sinh không thể nghe lại lần 2).
+
+- **Xác minh kiểm thử & Bằng chứng thực nghiệm:**
+  - Chạy `npm run typecheck` (tsc --noEmit): Pass 100% 0 lỗi.
+  - Chạy `npm test`: 15/15 test suite pass, 140/140 tests pass.
+  - Chạy kịch bản tự động hóa CDP trên Chrome thật (`scripts/test-exam-audio-cdp.mjs`):
+    - Đề thi thật (`jlpt-n5-2010-2011`): Giao diện chuẩn phòng thi, nút chuyển sang `Disabled = true` với text "Đang phát bài nghe…", không thể tạm dừng. Ảnh lưu tại `exam-audio-official-playing.png`.
+    - Đề luyện mẫu (`jlpt-n5-01`): Hiển thị đồng bộ `ExamAudioPlayer`, loại bỏ 100% nút "Dừng", nút chuyển sang `Disabled = true` khi phát. Ảnh lưu tại `exam-audio-practice-playing.png`.
+
 ## BÁO CÁO SỰ CỐ & PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ (RCA): LỖI 404 "KHÔNG TÌM THẤY CHỨC NĂNG NÀY" TRÊN TRANG LUYỆN 4 KỸ NĂNG (/SKILLS) — 23/10/2026
 
 - **Hiện tượng (Symptom):**
@@ -53,12 +87,22 @@
   - **1. Nhận diện tiêu đề bảng quá mong manh trước hiện tượng phân rã glyph (Glyph Splitting) trên mobile:**
     - Trong `apps/web/src/services/client-pdf-parser.ts`, bộ bóc tách bảng cũ tìm kiếm các chuỗi tiêu đề trực tiếp trên từng phần tử văn bản đơn lẻ (`item.str`):
       ```typescript
-      const readingHeader = positioned.find(item => /Hiragana.*Katakana/i.test(item.str));
-      const indexHeader = positioned.find(item => item.str.trim() === 'STT');
-      const meaningHeader = positioned.find(item => /^Ngh/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
-      const typeHeader = positioned.find(item => /^Lo/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
+      const readingHeader = positioned.find((item) => /Hiragana.*Katakana/i.test(item.str));
+      const indexHeader = positioned.find((item) => item.str.trim() === 'STT');
+      const meaningHeader = positioned.find(
+        (item) =>
+          /^Ngh/.test(item.str) &&
+          readingHeader &&
+          Math.abs(item.transform[5] - readingHeader.transform[5]) < 3,
+      );
+      const typeHeader = positioned.find(
+        (item) =>
+          /^Lo/.test(item.str) &&
+          readingHeader &&
+          Math.abs(item.transform[5] - readingHeader.transform[5]) < 3,
+      );
       ```
-    - Trên trình duyệt di động (Safari iOS / Chrome Mobile với subpixel rendering và font metrics khác biệt), các từ tiếng Việt có dấu thường bị tách thành các glyph rời rạc (ví dụ: `Lo` + `ạ` + `i`, `Ngh` + `ĩ` + `a` hoặc `Hiragana` + ` / ` + `Katakana`), hoặc độ lệch tọa độ Y vượt ngưỡng 3px.
+    - Trên trình duyệt di động (Safari iOS / Chrome Mobile với subpixel rendering và font metrics khác biệt), các từ tiếng Việt có dấu thường bị tách thành các glyph rời rạc (ví dụ: `Lo` + `ạ` + `i`, `Ngh` + `ĩ` + `a` hoặc `Hiragana` + `/` + `Katakana`), hoặc độ lệch tọa độ Y vượt ngưỡng 3px.
     - Chỉ cần 1 trong 4 tiêu đề không khớp, toàn bộ logic bóc tách bảng bị hủy bỏ ngay lập tức và rơi xuống tầng fallback gom dòng Y thô (`lineMap`).
   - **2. Tầng dự phòng (Fallback Line Parser) nuốt chửng toàn bộ các hàng thuần Kana:**
     - Khi các hàng bảng bị làm phẳng theo trục Y, dòng hàng thuần Kana (ví dụ: `3 - スプーン Danh từ Muỗng, thìa` hoặc `4 - ナイフ Danh từ Dao`) không chứa chữ Hán Kanji.
@@ -118,10 +162,10 @@
 ## Tách thẻ Luyện kỹ năng, đổi tên thẻ thành Luyện đề & Khôi phục toàn bộ danh sách đề thi — 23/10/2026
 
 - **Yêu cầu & Phản hồi từ Người dùng:**
-  - 1. *"không tôi muốn luyện kĩ năng là thẻ riêng trên thanh tính năng"*: Yêu cầu đưa "Luyện kỹ năng" thành một thẻ điều hướng độc lập, cấp 1 trên thanh điều hướng chính (`/skills`), không gộp chung bên trong thẻ Kiểm tra.
-  - 2. *"sửa tên thẻ kiểm tra thành luyện đề"*: Đổi tên thẻ điều hướng "Kiểm tra" (`/tests`) thành **"Luyện đề"**.
-  - 3. *"rồi dữ liệu và đề của tôi đâu ?"*: Khắc phục lỗi lọc quá chặt khiến trang Luyện đề hiển thị 0 đề trên tất cả các tab ("Tất cả 0", "JLPT N5 0", "JLPT N4 0", "JLPT N3 0", "JLPT N2 0").
-  - 4. *"tiếp tục thay đổi sửa tên thẻ kiểm tra"*: Rà soát và cập nhật đồng bộ toàn bộ các văn bản, nhãn thống kê, tiêu đề modal, breadcrumb từ "kiểm tra" sang "luyện đề" trên toàn bộ giao diện (Tổng quan, Nhật ký luyện đề, Chế độ làm bài, Thanh điều hướng).
+  - 1. _"không tôi muốn luyện kĩ năng là thẻ riêng trên thanh tính năng"_: Yêu cầu đưa "Luyện kỹ năng" thành một thẻ điều hướng độc lập, cấp 1 trên thanh điều hướng chính (`/skills`), không gộp chung bên trong thẻ Kiểm tra.
+  - 2. _"sửa tên thẻ kiểm tra thành luyện đề"_: Đổi tên thẻ điều hướng "Kiểm tra" (`/tests`) thành **"Luyện đề"**.
+  - 3. _"rồi dữ liệu và đề của tôi đâu ?"_: Khắc phục lỗi lọc quá chặt khiến trang Luyện đề hiển thị 0 đề trên tất cả các tab ("Tất cả 0", "JLPT N5 0", "JLPT N4 0", "JLPT N3 0", "JLPT N2 0").
+  - 4. _"tiếp tục thay đổi sửa tên thẻ kiểm tra"_: Rà soát và cập nhật đồng bộ toàn bộ các văn bản, nhãn thống kê, tiêu đề modal, breadcrumb từ "kiểm tra" sang "luyện đề" trên toàn bộ giao diện (Tổng quan, Nhật ký luyện đề, Chế độ làm bài, Thanh điều hướng).
 
 - **Thay đổi kỹ thuật đã thực hiện:**
   - **1. Tách thẻ điều hướng chính (`apps/web/src/app.tsx`):**
@@ -191,6 +235,7 @@ Từ ngày 15/10/2026, tự động tạo commit sau khi hoàn thành một thay
 Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, bắt buộc phải khởi chạy trình duyệt thật qua **Chrome DevTools Protocol (CDP)** để trực tiếp thử nghiệm và tương tác toàn diện tính năng đó (thao tác click, nhập liệu, gửi yêu cầu, chuyển trạng thái). **BẮT BUỘC chụp ảnh màn hình (screenshot) kết quả kiểm thử thực tế trên cả Desktop và Mobile, lưu lại và hiển thị trực tiếp trong artifact / báo cáo để người dùng kiểm tra trực quan.** Nếu xuất hiện bất kỳ lỗi nào (lỗi giao diện, lỗi logic, lỗi API, lỗi console hoặc tràn màn hình) thì phải khắc phục và sửa ngay lập tức, sau đó tiếp tục thử nghiệm lại qua CDP. Lặp lại chu trình kiểm thử - sửa lỗi này cho tới khi tính năng hoạt động hoàn thiện, mượt mà và không còn lỗi nào thì mới được kết thúc công việc.
 
 **Quy tắc nghiêm ngặt: Tuyệt đối bảo toàn dữ liệu hiển thị & Cấm filter làm biến mất dữ liệu người dùng (Zero Data Loss by UI Filtering) — Cập nhật 23/10/2026:**
+
 1. **Tuyệt đối không dùng bộ lọc loại trừ triệt để (Destructive Filtering) khi bổ sung tính năng mới:** Khi thêm cờ phân loại mới (như `isPracticeExam`, `isOfficial`, `category`, v.v.), tầng hiển thị frontend PHẢI có fallback an toàn. Nếu trường đó là `undefined`, mặc định dữ liệu vẫn phải được hiển thị (gán nhãn mặc định hoặc phân nhóm phụ) chứ tuyệt đối KHÔNG ĐƯỢC `.filter(x => x.newField)` làm mất sạch dữ liệu hiện có của người dùng.
 2. **Tách tính năng mới không bao giờ được làm trống rỗng tính năng cũ:** Khi tách một phân hệ thành trang riêng (ví dụ tách riêng `/skills` - Luyện kỹ năng), trang gốc (`/tests` - Luyện đề) phải giữ nguyên vẹn toàn bộ các bộ đề thi đã có, không được lọc bỏ làm rỗng giao diện.
 3. **CDP Test bắt buộc phải assert số lượng bản ghi hiển thị:** Trong mọi bài kiểm thử trình duyệt CDP, bắt buộc phải có câu lệnh assert số lượng phần tử lớn hơn 0 trên tất cả các tab (`expect(count).toBeGreaterThan(0)`). Bất kỳ màn hình nào hiển thị "0 bản ghi" bất thường khi hệ thống đã có dữ liệu đều bị tính là lỗi nghiêm trọng (Critical Bug) và không được phép kết thúc phiên làm việc.
@@ -270,7 +315,6 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
   - `apps/web/src/components/skill-practice-modal.tsx`, `apps/web/src/styles.css`
   - `scripts/verify-audio-slices.ts`, `scripts/test-skills-and-exams-cdp.mjs`, `tests/skills-and-jlpt-exam.test.ts`
   - `docs/flagged-audio-review.md`, `docs/flagged-audio-review.json`, `docs/HANDOFF.md`
-
 
 ## Tối ưu hóa toàn diện giao diện Mobile (Điện thoại) cho tính năng Import Flashcard — ngày 22/10
 
@@ -534,7 +578,7 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
   - **3. Ẩn thanh tab Google Chrome qua HTML5 Fullscreen API (`apps/web/src/pages/jlpt.tsx` & `apps/web/src/pages/tests.tsx`):**
     - Tự động gọi `requestFullscreen()` ngay khi người dùng nhấn nút "Bắt đầu làm bài" hoặc "Làm phần tiếp theo" (tuân thủ browser security gesture).
     - Lắng nghe sự kiện `fullscreenchange` để cập nhật trạng thái hiển thị.
-    - Bổ sung nút bấm trực quan *"Toàn màn hình / Ẩn tab Google"* trên thanh công cụ ghim trên cùng (`.exam-sticky-bar`) cho phép bật lại bất kỳ lúc nào nếu người dùng vô tình bấm `Esc`.
+    - Bổ sung nút bấm trực quan _"Toàn màn hình / Ẩn tab Google"_ trên thanh công cụ ghim trên cùng (`.exam-sticky-bar`) cho phép bật lại bất kỳ lúc nào nếu người dùng vô tình bấm `Esc`.
     - Lắng nghe sự kiện `beforeunload` để cảnh báo ngăn người dùng vô tình đóng tab hoặc reload trang khi đang trong bài thi.
   - **4. Nút "Nộp bài ngay" & Modal xác nhận (`apps/web/src/pages/jlpt.tsx` & `apps/web/src/pages/tests.tsx`):**
     - Thêm thanh Sticky Bar đầu trang (`.exam-sticky-bar`) ghim cố định với:
@@ -562,23 +606,23 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
 ## Cập nhật toàn diện Thành ngữ & Tục ngữ sang tiếng Việt thuần khiết + Mobile Audit & Performance Profiling qua Chrome DevTools Protocol (CDP) — ngày 21/10
 
 - **Yêu cầu người dùng:**
-  1. Cập nhật thêm cho từ điển tất cả các câu thành ngữ / tục ngữ tiếng Nhật và dịch sang tiếng Việt, rà soát đối chiếu nhiều nguồn để sửa bản dịch sao cho thuần Việt, tự nhiên nhất (VD người dùng nêu đích danh: `一石二鳥` -> *"một mũi tên trúng hai con nhạn"* chứ không phải *"một hòn đá trúng hai con chim"*).
+  1. Cập nhật thêm cho từ điển tất cả các câu thành ngữ / tục ngữ tiếng Nhật và dịch sang tiếng Việt, rà soát đối chiếu nhiều nguồn để sửa bản dịch sao cho thuần Việt, tự nhiên nhất (VD người dùng nêu đích danh: `一石二鳥` -> _"một mũi tên trúng hai con nhạn"_ chứ không phải _"một hòn đá trúng hai con chim"_).
   2. Sau khi xong, tự vào web trên trình duyệt qua Chrome DevTools Protocol và bộ mô phỏng cho mobile (viewport 390x844), tự thử từng nút, tự đo hiệu năng, kiểm tra toàn diện chất lượng web và để lại đánh giá về trải nghiệm của chính mình.
 - **Thực hiện kỹ thuật & Dữ liệu:**
   - **1. Biên soạn & Cập nhật Dữ liệu Thành ngữ & Tục ngữ (Proverbs & Idioms):**
     - **Tục ngữ (Proverbs):** Rà soát toàn bộ **941 câu tục ngữ** (1.771 glosses) trong kho từ điển tiếng Nhật, biên dịch và chuẩn hóa sang bản dịch ca dao, tục ngữ tiếng Việt tương đương mang đậm phong vị văn hóa Việt Nam (lưu tại `scripts/data/proverbs_all_vi.json`). Ví dụ:
-      - `隣の芝生は青い` -> *Đứng núi này trông núi nọ (cỏ nhà bên bao giờ cũng xanh hơn)*
-      - `井の中の蛙、大海を知らず` -> *Ếch ngồi đáy giếng coi trời bằng vung (ếch nơi đáy giếng chẳng biết biển lớn bao la)*
-      - `先ず隗より始めよ` -> *Vạn dặm khởi đầu từ một bước chân (muốn làm việc lớn hãy bắt đầu từ việc nhỏ trước mắt)*
-      - `失敗は成功のもと` -> *Thất bại là mẹ thành công*
-      - `猿も木から落ちる` -> *Nhân vô thập toàn (người giỏi đến đâu cũng có lúc lỡ tay; khỉ còn ngã cây)*
-      - `塵も積もれば山となる` -> *Tích tiểu thành đại, góp gió thành bão*
+      - `隣の芝生は青い` -> _Đứng núi này trông núi nọ (cỏ nhà bên bao giờ cũng xanh hơn)_
+      - `井の中の蛙、大海を知らず` -> _Ếch ngồi đáy giếng coi trời bằng vung (ếch nơi đáy giếng chẳng biết biển lớn bao la)_
+      - `先ず隗より始めよ` -> _Vạn dặm khởi đầu từ một bước chân (muốn làm việc lớn hãy bắt đầu từ việc nhỏ trước mắt)_
+      - `失敗は成功のもと` -> _Thất bại là mẹ thành công_
+      - `猿も木から落ちる` -> _Nhân vô thập toàn (người giỏi đến đâu cũng có lúc lỡ tay; khỉ còn ngã cây)_
+      - `塵も積もれば山となる` -> _Tích tiểu thành đại, góp gió thành bão_
     - **Tứ tự thành ngữ (Yojijukugo):** Rà soát toàn diện và chỉnh sửa các bản dịch máy ngô nghê thành các thành ngữ Hán-Việt và thuần Việt chuẩn mực (lưu tại `scripts/data/yojis_all_vi.json`). Đích thân sửa:
-      - `一石二鳥` -> *một mũi tên trúng hai con nhạn (một công đôi việc)*
-      - `黄金時代` -> *thời kỳ hoàng kim, thời đại hoàng kim*
-      - `起死回生` -> *cải tử hoàn sinh, chuyển bại thành thắng, xoay chuyển tình thế lúc ngàn cân treo sợi tóc*
-      - `興味津々` -> *hứng thú dạt dào, vô cùng thích thú, tràn đầy tò mò*
-      - `試行錯誤` -> *thử và sai, vừa làm vừa rút kinh nghiệm*
+      - `一石二鳥` -> _một mũi tên trúng hai con nhạn (một công đôi việc)_
+      - `黄金時代` -> _thời kỳ hoàng kim, thời đại hoàng kim_
+      - `起死回生` -> _cải tử hoàn sinh, chuyển bại thành thắng, xoay chuyển tình thế lúc ngàn cân treo sợi tóc_
+      - `興味津々` -> _hứng thú dạt dào, vô cùng thích thú, tràn đầy tò mò_
+      - `試行錯誤` -> _thử và sai, vừa làm vừa rút kinh nghiệm_
     - **Cơ sở dữ liệu SQLite (`prisma/learning.db`):** Nạp thành công **1.995 bản dịch** vào bảng `DictionaryTranslation` (`provider: 'curated-proverb'`).
     - **Chỉ mục tìm kiếm FTS5 & SearchTerm:** Tái chỉ mục (`indexEntry`) cho toàn bộ **1.012 mục từ**, cập nhật đầy đủ các bảng `DictionaryFts`, `DictionaryTrigram`, `DictionarySearchTerm` (cả có dấu lẫn không dấu).
     - **Kho hạt giống Seed Archive:** Đã đồng bộ và nén lại thành công vào `data/seed/translations-vi-common.json.gz` (tổng cộng **89.469 bản dịch**, gồm 111 sửa đổi và 1.884 bổ sung mới).
@@ -611,17 +655,17 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
 - **Thực hiện kỹ thuật:**
   - **Component nghệ thuật mới (`apps/web/src/components/deck-cover-art.tsx`):**
     - Thiết kế hệ thống bìa thích ứng thông minh `DeckCoverArt` dựa theo tên bộ thẻ và chỉ số:
-      - *Hiragana:* Sóng truyền thống Seigaiha, chữ thư pháp `あ` (`ひらがな`), lá trúc xanh Wakaba (`#4e7e59`).
-      - *Katakana:* Họa tiết hình học Asanoha (lá gai), chữ thư pháp dứt khoát `ア` (`カタカナ`), origami hiện đại cam san hô (`#b86642`).
-      - *Kanji · Thiên nhiên:* Núi Phú Sĩ đội nón tuyết trắng, mặt trời đỏ mọc, mây trôi uốn lượn, sông nước cùng chữ `山` (`やま · NÚI`, tone xanh `#3e6f96`).
-      - *Kanji · Số đếm:* Khung bàn tính Soroban, các hạt tính cổ điển, chữ `百` (`ひゃく · TRĂM`, tone nâu ấm `#8c6f4b`).
-      - *Kanji · Động vật và cây cối:* Hoa anh đào Sakura 5 cánh, chim hạc Tsuru gấp giấy, cành lá rừng xanh cùng chữ `花` (`はな · HOA`, tone lục `#5a8549`).
-      - *Kanji · Con người và cơ thể:* Vòng tròn thiền định Enso, nhịp đập trái tim cùng chữ `心` (`こころ · TÂM`, tone hồng đất `#a85365`).
-      - *Kanji · Trường học:* Trang sách mở, bút lông và mầm lá tri thức cùng chữ `学` (`まなぶ · HỌC`, tone xanh mòng két `#477085`).
-      - *Kanji · Thời gian & phương hướng:* Vòng tròn kim thời gian, trăng khuyết và la bàn 4 hướng cùng chữ `時` (`とき · THỜI GIAN`, tone tím thạch anh `#6c568f`).
-      - *Một ngày ở Nhật / Đời sống:* Cổng trời Torii Nhật Bản, vầng thái dương đỏ cùng chữ `旅` (`たび · HÀNH TRÌNH`, tone gạch nung `#b85835`).
-      - *Bộ thủ Kanji:* Nét bút lông đại tự cùng chữ `部` (`ぶしゅ · 214 BỘ`).
-      - *Bộ thẻ tự tạo / Mặc định khác:* Vòng tuần hoàn màu ngọc bích, cam đất, rêu trầm phối hợp mầm lá non Wakaba và chữ `語` / `葉` / `日`.
+      - _Hiragana:_ Sóng truyền thống Seigaiha, chữ thư pháp `あ` (`ひらがな`), lá trúc xanh Wakaba (`#4e7e59`).
+      - _Katakana:_ Họa tiết hình học Asanoha (lá gai), chữ thư pháp dứt khoát `ア` (`カタカナ`), origami hiện đại cam san hô (`#b86642`).
+      - _Kanji · Thiên nhiên:_ Núi Phú Sĩ đội nón tuyết trắng, mặt trời đỏ mọc, mây trôi uốn lượn, sông nước cùng chữ `山` (`やま · NÚI`, tone xanh `#3e6f96`).
+      - _Kanji · Số đếm:_ Khung bàn tính Soroban, các hạt tính cổ điển, chữ `百` (`ひゃく · TRĂM`, tone nâu ấm `#8c6f4b`).
+      - _Kanji · Động vật và cây cối:_ Hoa anh đào Sakura 5 cánh, chim hạc Tsuru gấp giấy, cành lá rừng xanh cùng chữ `花` (`はな · HOA`, tone lục `#5a8549`).
+      - _Kanji · Con người và cơ thể:_ Vòng tròn thiền định Enso, nhịp đập trái tim cùng chữ `心` (`こころ · TÂM`, tone hồng đất `#a85365`).
+      - _Kanji · Trường học:_ Trang sách mở, bút lông và mầm lá tri thức cùng chữ `学` (`まなぶ · HỌC`, tone xanh mòng két `#477085`).
+      - _Kanji · Thời gian & phương hướng:_ Vòng tròn kim thời gian, trăng khuyết và la bàn 4 hướng cùng chữ `時` (`とき · THỜI GIAN`, tone tím thạch anh `#6c568f`).
+      - _Một ngày ở Nhật / Đời sống:_ Cổng trời Torii Nhật Bản, vầng thái dương đỏ cùng chữ `旅` (`たび · HÀNH TRÌNH`, tone gạch nung `#b85835`).
+      - _Bộ thủ Kanji:_ Nét bút lông đại tự cùng chữ `部` (`ぶしゅ · 214 BỘ`).
+      - _Bộ thẻ tự tạo / Mặc định khác:_ Vòng tuần hoàn màu ngọc bích, cam đất, rêu trầm phối hợp mầm lá non Wakaba và chữ `語` / `葉` / `日`.
     - **100% Vector SVG & CSS:** Không dùng ảnh bitmap nặng ngoài, 0 KB tải mạng phát sinh, hiển thị sắc nét trên mọi độ phân giải.
     - Tích hợp huy hiệu capsule chủ đề ở góc trên (`BẢNG CHỮ CÁI`, `KANJI · THIÊN NHIÊN`,...) và số thứ tự bộ thẻ.
   - **Frontend (`apps/web/src/pages/flashcards.tsx`):**
@@ -637,14 +681,13 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
   - Trình duyệt Edge thực tế: Chụp và kiểm chứng bố cục trên Desktop (1440px) và Mobile (390px) trên cả theme Sáng và Tối (`test-results/deck-covers/`).
 - **Tập tin liên quan:** `apps/web/src/components/deck-cover-art.tsx`, `apps/web/src/pages/flashcards.tsx`, `apps/web/src/styles.css`, `docs/HANDOFF.md`.
 
-
 ## Cập nhật bộ cấu trúc ngữ pháp trọng điểm thi JLPT (N5 – N2) — ngày 18/10
 
 - **Yêu cầu người dùng:** Tìm kiếm từ toàn bộ các nguồn có thể, cập nhật tiếp các cấu trúc ngữ pháp cho từng cấp độ (lần lượt từ N5 đến N2), chọn lọc các ngữ pháp thường xuất hiện nhất trong các đề thi chứng chỉ tiếng Nhật (JLPT) và cân đo đong đếm sao cho không làm tràn dữ liệu hay quá tải tài nguyên máy chủ Render (Free Tier 512MB RAM).
 - **Phân tích tối ưu dữ liệu & máy chủ:**
-  - *Tối ưu tài nguyên:* Nội dung ngữ pháp được cấu trúc hóa dưới dạng mã TypeScript biên dịch tĩnh (`packages/shared/jlpt-grammar-additions.ts`) kèm logic nạp đồng bộ database tự động. Tổng dung lượng dữ liệu thêm mới chỉ ~28KB, không sinh thêm file nhị phân lớn, hoàn toàn miễn nhiễm với nguy cơ tràn bộ nhớ RAM (512MB) hay đĩa tạm (ephemeral disk) trên Render.
-  - *Phân bổ theo cấp độ:* Bổ sung chọn lọc 20 cấu trúc trọng điểm phân bổ đều 4 cấp độ: N5 (+5 bài), N4 (+5 bài), N3 (+5 bài), N2 (+5 bài).
-  - *Tổng số bài ngữ pháp toàn hệ thống:* Tăng từ 106 bài lên **126 bài** (N5: 38 bài, N4: 30 bài, N3: 29 bài, N2: 29 bài).
+  - _Tối ưu tài nguyên:_ Nội dung ngữ pháp được cấu trúc hóa dưới dạng mã TypeScript biên dịch tĩnh (`packages/shared/jlpt-grammar-additions.ts`) kèm logic nạp đồng bộ database tự động. Tổng dung lượng dữ liệu thêm mới chỉ ~28KB, không sinh thêm file nhị phân lớn, hoàn toàn miễn nhiễm với nguy cơ tràn bộ nhớ RAM (512MB) hay đĩa tạm (ephemeral disk) trên Render.
+  - _Phân bổ theo cấp độ:_ Bổ sung chọn lọc 20 cấu trúc trọng điểm phân bổ đều 4 cấp độ: N5 (+5 bài), N4 (+5 bài), N3 (+5 bài), N2 (+5 bài).
+  - _Tổng số bài ngữ pháp toàn hệ thống:_ Tăng từ 106 bài lên **126 bài** (N5: 38 bài, N4: 30 bài, N3: 29 bài, N2: 29 bài).
 - **Nội dung cấu trúc chọn lọc:**
   - **Cấp độ N5 (+5 bài):**
     1. `〜てから` (Sau khi làm A thì làm B — thứ tự thời gian hành động)
@@ -652,24 +695,9 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
     3. `〜ながら` (Vừa làm A vừa làm B — cùng 1 chủ ngữ thực hiện 2 việc đồng thời)
     4. `〜ほうがいい` (Khuyên nên Vた / không nên Vない)
     5. `〜かもしれない` (Có lẽ, có thể là — phỏng đoán xác suất 50%)
-  - **Cấp độ N4 (+5 bài):**
-    6. `〜はずだ・はずがない` (Chắc chắn là / Làm sao có chuyện... — phán đoán logic)
-    7. `〜ようだ・ように` (Hình như, có vẻ như — cảm nhận trực giác giác quan)
-    8. `〜たばかり` (Vừa mới làm xong — cảm nhận tâm lý chủ quan)
-    9. `〜ところだ` (Giai đoạn sắp làm / đang làm / vừa mới xong tức thì)
-    10. `〜させていただけませんか` (Kính ngữ xin phép cho chính mình làm gì)
-  - **Cấp độ N3 (+5 bài):**
-    11. `〜わけではない・わけがない` (Phủ định từng phần / Tuyệt đối không đời nào)
-    12. `〜ことにしている・ことになる` (Kỷ luật cá nhân / Quy định của tập thể)
-    13. `〜ほど・〜くらい` (Đến mức độ như thế nào — ví von phóng đại)
-    14. `〜どころか` (Không những không... mà trái lại còn tệ hơn)
-    15. `〜に応じて・に応じた` (Tùy theo / Tương ứng phù hợp với đối tượng)
-  - **Cấp độ N2 (+5 bài):**
-    16. `〜ものなら` (Giá như có thể làm được — điều bất khả thi / lỡ làm thì nguy hại)
-    17. `〜かねない・かねる` (Có nguy cơ dẫn đến hậu quả xấu / Khó lòng mà làm được)
-    18. `〜ざるを得ない` (Buộc lòng phải làm dù không muốn — hoàn cảnh bắt buộc)
-    19. `〜に伴って・とともに` (Biến đổi vĩ mô kéo theo sự thay đổi tương ứng)
-    20. `〜次第だ・次第で` (Tùy thuộc vào nỗ lực / Giải thích toàn bộ nguồn cơn)
+  - **Cấp độ N4 (+5 bài):** 6. `〜はずだ・はずがない` (Chắc chắn là / Làm sao có chuyện... — phán đoán logic) 7. `〜ようだ・ように` (Hình như, có vẻ như — cảm nhận trực giác giác quan) 8. `〜たばかり` (Vừa mới làm xong — cảm nhận tâm lý chủ quan) 9. `〜ところだ` (Giai đoạn sắp làm / đang làm / vừa mới xong tức thì) 10. `〜させていただけませんか` (Kính ngữ xin phép cho chính mình làm gì)
+  - **Cấp độ N3 (+5 bài):** 11. `〜わけではない・わけがない` (Phủ định từng phần / Tuyệt đối không đời nào) 12. `〜ことにしている・ことになる` (Kỷ luật cá nhân / Quy định của tập thể) 13. `〜ほど・〜くらい` (Đến mức độ như thế nào — ví von phóng đại) 14. `〜どころか` (Không những không... mà trái lại còn tệ hơn) 15. `〜に応じて・に応じた` (Tùy theo / Tương ứng phù hợp với đối tượng)
+  - **Cấp độ N2 (+5 bài):** 16. `〜ものなら` (Giá như có thể làm được — điều bất khả thi / lỡ làm thì nguy hại) 17. `〜かねない・かねる` (Có nguy cơ dẫn đến hậu quả xấu / Khó lòng mà làm được) 18. `〜ざるを得ない` (Buộc lòng phải làm dù không muốn — hoàn cảnh bắt buộc) 19. `〜に伴って・とともに` (Biến đổi vĩ mô kéo theo sự thay đổi tương ứng) 20. `〜次第だ・次第で` (Tùy thuộc vào nỗ lực / Giải thích toàn bộ nguồn cơn)
 - **Tích hợp bài tập tương tác:**
   - Mỗi cấu trúc mới đều có trọn vẹn 3 dạng bài tập chuẩn hóa: Trắc nghiệm (`choice`), Điền khuyết (`fill`), Sắp xếp câu (`order`).
   - Đầy đủ giải thích chi tiết (`explanation`), công thức kết hợp (`formation`), ghi chú bẫy thi (`mistake`, `notes`), ví dụ thực tế kèm Furigana chuẩn hóa.
@@ -683,13 +711,14 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
 ## Cập nhật triển khai Render, Dữ liệu từ điển Mức A & Giọng đọc AI Nanami — ngày 18/10
 
 ### 1. Triển khai Web lên Render (Handoff & Vận hành Production)
+
 - **URL Production:** `https://wakaba-mk61.onrender.com`
 - **Tên dịch vụ (Service Name):** `wakaba` (cấu hình qua `render.yaml`)
 - **Môi trường chạy:** Docker Container (`node:22-slim`), kiến trúc Node.js 22 + Express 5 phục vụ API và Static Files của Frontend Vite build tại cùng một cổng HTTP `PORT=10000` (hoặc cổng Render chỉ định).
 - **Cơ chế nướng sẵn Database (Bake-in-image Database) để thích ứng Free Tier Render:**
-  - *Vấn đề đĩa tạm (Ephemeral Disk) & Giới hạn RAM:* Render Free Tier cung cấp 512MB RAM và ổ cứng dạng ephemeral (mọi dữ liệu ghi vào runtime sẽ bị reset khi container sleep hoặc redeploy). Quá trình tải hoặc giải nén từ điển nặng lúc runtime sẽ làm tràn RAM (OOM) hoặc làm API khởi động chậm vượt timeout healthcheck.
-  - *Giải pháp triệt để:* Đưa toàn bộ cơ sở dữ liệu từ điển đã chuẩn hóa vào ngay trong bước `RUN npm run build` của `Dockerfile` thông qua script `scripts/ensure-full-dictionary.ts`. Cơ sở dữ liệu SQLite `learning.db` (~83MB) chứa trọn vẹn 22.645 mục từ vựng Mức A được "nướng" trực tiếp vào Docker image tại đường dẫn `/app/prisma/learning.db`.
-  - *Ưu điểm:* Khởi động dịch vụ tức thì (< 2 giây), không tốn RAM tải mạng hay giải nén lúc chạy, 0MB băng thông phát sinh, không phụ thuộc vào dịch vụ lưu trữ ngoài.
+  - _Vấn đề đĩa tạm (Ephemeral Disk) & Giới hạn RAM:_ Render Free Tier cung cấp 512MB RAM và ổ cứng dạng ephemeral (mọi dữ liệu ghi vào runtime sẽ bị reset khi container sleep hoặc redeploy). Quá trình tải hoặc giải nén từ điển nặng lúc runtime sẽ làm tràn RAM (OOM) hoặc làm API khởi động chậm vượt timeout healthcheck.
+  - _Giải pháp triệt để:_ Đưa toàn bộ cơ sở dữ liệu từ điển đã chuẩn hóa vào ngay trong bước `RUN npm run build` của `Dockerfile` thông qua script `scripts/ensure-full-dictionary.ts`. Cơ sở dữ liệu SQLite `learning.db` (~83MB) chứa trọn vẹn 22.645 mục từ vựng Mức A được "nướng" trực tiếp vào Docker image tại đường dẫn `/app/prisma/learning.db`.
+  - _Ưu điểm:_ Khởi động dịch vụ tức thì (< 2 giây), không tốn RAM tải mạng hay giải nén lúc chạy, 0MB băng thông phát sinh, không phụ thuộc vào dịch vụ lưu trữ ngoài.
 - **Xử lý triệt để xung đột biến môi trường Turso (`TURSO_DATABASE_URL`):**
   - Trước đây, cấu hình cũ trên Render Dashboard tồn tại biến `TURSO_DATABASE_URL` trỏ về database rỗng, khiến ứng dụng ưu tiên kết nối ra ngoài và không nạp từ điển cục bộ.
   - Đã cập nhật `apps/api/src/db.ts`: Kiểm tra nếu tồn tại file SQLite nội bộ `/app/prisma/learning.db` (hoặc biến `FORCE_LOCAL_SQLITE=1`), ứng dụng sẽ cưỡng chế bỏ qua `TURSO_DATABASE_URL` và kết nối trực tiếp vào SQLite nội bộ đầy đủ.
@@ -698,6 +727,7 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
   - Endpoint `/api/dictionary/status` xác nhận trực tiếp tình trạng từ điển: `{"count":22645,"status":"ready"}`.
 
 ### 2. Dữ liệu từ điển Mức A (22.645 mục từ — Tối ưu dung lượng máy chủ)
+
 - **Yêu cầu người dùng:** Thay đổi lựa chọn từ điển từ Mức B sang **Mức A** để tiết kiệm tài nguyên máy chủ nhưng vẫn đảm bảo hoạt động trơn tru, không phải sửa nhiều lần.
 - **Quy mô dữ liệu Mức A:**
   - Bao phủ trọn vẹn **22.645 từ vựng** tiếng Nhật thông dụng và cốt lõi nhất từ N5 đến N1 (bao gồm toàn bộ từ vựng thường dùng của Minna no Nihongo, Soumatome, Mimikara Oboeru và JMdict core).
@@ -705,6 +735,7 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
   - Tối ưu dung lượng database chỉ còn ~83MB (thay vì hàng trăm MB như mức lớn), hoàn toàn nằm gọn trong giới hạn 512MB RAM của máy chủ Render.
 
 ### 3. Đồng bộ giọng đọc AI Nanami Neural trên toàn bộ trang web
+
 - **Lựa chọn giọng đọc:** Sau quá trình tạo mẫu thử nghiệm và đối chiếu 4 phương án công nghệ (Phương án 1: Microsoft Edge Neural Nanami; Phương án 2: Keita Neural; Phương án 3: Google Web Speech; Phương án 4: Voicevox/Anime), người dùng đã chính thức lựa chọn **Nanami Neural** (`ja-JP-NanamiNeural`) nhờ chất giọng truyền cảm, tự nhiên, nhịp điệu ngắt nghỉ chuẩn Tokyo và phát âm mẫu mực trong cả giao tiếp hằng ngày lẫn ngữ cảnh trang trọng.
 - **Kiến trúc Backend TTS (`apps/api/src/tts.ts` & `apps/api/src/app.ts`):**
   - Sử dụng thư viện `node-edge-tts` (được lựa chọn thay thế cho `msedge-tts` do bản phát hành npm của `msedge-tts` có nhúng script `"preinstall": "npx only-allow pnpm"` gây lỗi build trên Docker npm).
@@ -719,6 +750,7 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
   - Component `ExamAudioPlayer` trong `apps/web/src/pages/jlpt.tsx` **tuyệt đối không** bị can thiệp bởi TTS AI; bảo đảm giữ nguyên vẹn giọng đọc, nhạc hiệu và không khí phòng thi thực tế của các kỳ thi JLPT N5–N2.
 
 ### 4. Kiểm chứng hệ thống & Bằng chứng triển khai
+
 - **Local Validation:**
   - `npm run typecheck`: 0 lỗi TypeScript.
   - `npm test`: 116/116 unit & integration tests hoàn thành xuất sắc (100% pass).
@@ -814,10 +846,10 @@ Mỗi lần cập nhật xong một tính năng hoặc thay đổi giao diện, 
 ## Tích hợp 4 hiệu ứng tương tác & animation (Zen Flow + Modern Tactile) — ngày 15/10
 
 - **Yêu cầu người dùng:** Cập nhật 4 hiệu ứng tương tác đã chọn lên trang web:
-  1. *Chọn đáp án (Zen Flow):* Sóng lan tỏa nhẹ nhàng (`@keyframes zen-pulse`), viền chuyển sắc êm dịu (`#688a59`), biểu tượng tick xoay bung nhẹ (`@keyframes zen-check`).
-  2. *Lật thẻ 3D Washi (Zen Flow):* Lật 3D theo trục Y (`rotateY(180deg)`), bảo toàn phối cảnh thực (`perspective: 1200px`), bóng đổ mở rộng mềm mại như chất liệu giấy Washi.
-  3. *Vuốt thẻ (Swipe) của Modern Tactile:* Kéo thẻ bằng chuột hoặc cảm ứng di động (Pointer Events + Pointer Capture), xoay động theo góc vật lý, hiển thị huy hiệu phản hồi tức thời (`✓ NHỚ` xanh lá khi kéo sang phải, `✕ QUÊN` đỏ đất khi kéo sang trái), kích hoạt đánh giá tương ứng khi kéo vượt ngưỡng 85px kèm hiệu ứng văng thẻ (fly-out).
-  4. *Thanh tiến trình của Modern Tactile:* Thiết kế dạng viên nang (capsule pill), bo tròn 9999px, dải chuyển màu ngọc bích sang jade, hiệu ứng lò xo co giãn đàn hồi mượt mà (`cubic-bezier(0.34, 1.56, 0.64, 1)`), hiển thị tỷ lệ % trực quan.
+  1. _Chọn đáp án (Zen Flow):_ Sóng lan tỏa nhẹ nhàng (`@keyframes zen-pulse`), viền chuyển sắc êm dịu (`#688a59`), biểu tượng tick xoay bung nhẹ (`@keyframes zen-check`).
+  2. _Lật thẻ 3D Washi (Zen Flow):_ Lật 3D theo trục Y (`rotateY(180deg)`), bảo toàn phối cảnh thực (`perspective: 1200px`), bóng đổ mở rộng mềm mại như chất liệu giấy Washi.
+  3. _Vuốt thẻ (Swipe) của Modern Tactile:_ Kéo thẻ bằng chuột hoặc cảm ứng di động (Pointer Events + Pointer Capture), xoay động theo góc vật lý, hiển thị huy hiệu phản hồi tức thời (`✓ NHỚ` xanh lá khi kéo sang phải, `✕ QUÊN` đỏ đất khi kéo sang trái), kích hoạt đánh giá tương ứng khi kéo vượt ngưỡng 85px kèm hiệu ứng văng thẻ (fly-out).
+  4. _Thanh tiến trình của Modern Tactile:_ Thiết kế dạng viên nang (capsule pill), bo tròn 9999px, dải chuyển màu ngọc bích sang jade, hiệu ứng lò xo co giãn đàn hồi mượt mà (`cubic-bezier(0.34, 1.56, 0.64, 1)`), hiển thị tỷ lệ % trực quan.
 - **Thực hiện kỹ thuật:**
   - **Component tương tác đa chạm (`apps/web/src/components/review-card-interactive.tsx`):**
     - Đóng gói toàn bộ cơ chế lật 3D hai mặt (`.review-card-front`, `.review-card-back`) và cử chỉ kéo vuốt đa nền tảng (chuột/cảm ứng) không phụ thuộc thư viện nặng ngoài.
@@ -982,11 +1014,13 @@ Bổ sung theo ảnh người dùng: sửa lỗi đáp án ngữ pháp xếp d�
 4. Chỉ thay đổi tài liệu ở lần bàn giao này; không chạy lại toàn bộ kiểm thử nếu chưa sửa mã. Các kết quả nêu trên là kiểm chứng của bản tính năng đã commit.
 
 ## Dự án và quy tắc
+
 - Website tự học tiếng Nhật, giao diện Việt; repository `D:\Demo`, GitHub `TTT9006/Demo`. Người dùng muốn giao diện gọn, không gradient/thiết kế kiểu AI, tốt trên mobile, desktop và dark mode.
 - React 19/Vite 7/TypeScript; Express 5; Prisma 6.19/SQLite; React Query/Zustand; **npm + package-lock.json**, Node >=24. Không dùng `node_modules-pnpm-backup`.
 - Sửa trực tiếp kiến trúc hiện có, tái sử dụng component. Không xóa/reset database, tài khoản, tiến độ, JMdict; không bịa từ/cách đọc/dịch Việt, không tự thêm AI trả phí.
 
 ## Lịch sử và phần đã hoàn thành
+
 1. **Khôi phục dự án:** từng thiếu package.json gây ENOENT; phục hồi cấu hình/mã nguồn dựa trên lịch sử patch, imports và dependency thực tế. Build và dev hoạt động. Báo cáo nguồn phục hồi: `docs/RECOVERY.md`.
 2. **Tài khoản/dữ liệu:** tài khoản, mật khẩu băm và tiến độ lưu SQLite máy chủ; IndexedDB `komorebi-drafts` chỉ lưu bản nháp luyện viết theo người dùng, không lưu mật khẩu/token. Hiện local và chia sẻ dùng chung `prisma/learning.db`; trial cũ đã hợp nhất, xem cập nhật cuối ngày phía trên.
 3. **Chia sẻ miễn phí:** Cloudflare Quick Tunnel qua `npm run share`; máy phải bật và tiến trình phải chạy. URL thay đổi sau khởi động lại; lấy từ `.share/url.txt`. Giữ `.share/ready.json` và trial.db để giữ dữ liệu. Từng kiểm tra các đường dẫn file riêng trả HTML ứng dụng, không lộ nội dung file; đây không phải kiểm toán bảo mật toàn diện. Không triển khai hosting 24/7.
@@ -996,18 +1030,21 @@ Bổ sung theo ảnh người dùng: sửa lỗi đáp án ngữ pháp xếp d�
 7. **Mobile:** đã chỉnh responsive và kiểm tra nhiều độ rộng, sáng/tối, canvas touch; chưa kiểm chứng đầy đủ thiết bị thật/Safari/screen reader.
 
 ## Lịch sử bàn giao ngày 13/10 — đã chốt
+
 Phần thuật toán suy ra từ gốc đã viết xong; việc còn lại là khởi động bản dùng thử và xác minh công khai. Ngày 13/10 đã build lại, chạy bằng trial.db hiện có, kiểm tra đăng nhập cùng API/UI và nhãn “Dạng gốc” **4/4 pass**:
 `ikimasu→行く`, `tabemashita→食べる`, `benkyoushimashita→勉強`, `食べさせられませんでした→食べる`.
 
 Script: `tests/browser/conjugation-smoke.mjs`; bằng chứng: `test-results/handoff/conjugation-smoke.json` (10:41:46 UTC). Link lúc kiểm tra: https://sega-followed-spas-having.trycloudflare.com — luôn kiểm tra lại `.share/url.txt`, không mặc định link còn sống. Không cần viết lại engine để hoàn thành việc bàn giao này.
 
 ## Kiểm thử, migration và giới hạn từ ngày 13/10
+
 - Lượt nâng cấp ngày 13/10: 92/92 unit/integration, 6/6 E2E, 40 kiểm tra layout tính năng mới; build/typecheck pass, lint 0 lỗi/2 cảnh báo imports cũ. Lượt bàn giao ngày 13/10 chạy lại build và smoke công khai 4 truy vấn, không chạy lại toàn bộ suite. Kết quả mới nhất ngày 14/10 nằm ở đầu tài liệu.
 - Benchmark 35 query: 30 query Nhật/romaji đạt; Việt 4/5 có dữ liệu, “sách” thiếu bản dịch. Median warm 46,59→2,42ms, không phải benchmark tải đồng thời.
 - Hai migration thêm: `20261013000000_learning_upgrade`, `20261013010000_exact_search_indexes`, đã áp dụng local/trial. Backup `.recovery/upgrade-20261013/`; đối chiếu nâng cấp giữ nguyên tài khoản/tiến độ, SQLite kiểm tra toàn vẹn đạt. Rollback ưu tiên code cũ với schema bổ sung; không reset/ghi đè DB đang có dữ liệu mới.
 - Giới hạn: reading theo ngữ cảnh chưa hoàn hảo; dữ liệu Việt ít; một số bộ thủ thiếu nét/animation có fallback; không bao phủ mọi tiếng Nhật cổ/phương ngữ/dạng chia. Bundle còn lớn (~425KB gzip), Node có cảnh báo deprecated. Chi tiết nguồn/license, benchmark và file đổi trong báo cáo nâng cấp.
 
 ## Cách chạy và Git
+
 Tại `D:\Demo`: `npm run dev` (web 127.0.0.1:5173, API 3001); `npm run share` (build + server 3010 + tunnel). Kiểm tra tiến trình/cổng trước khi mở thêm. Kiểm thử: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:e2e`; E2E dùng DB thử riêng. Smoke link hiện tại: `node tests/browser/conjugation-smoke.mjs` (cần Edge và mạng). Không tải/import lại từ điển hay chạy setup/reset chỉ để khởi động.
 
 Lịch sử Git: `1325324` (`update`) và `f0d467c` (smoke từ điển/bàn giao) đã được đưa vào `main` cùng phần thẻ mặc định ngày 14/10. Trạng thái Git mới nhất xem đầu tài liệu. Không đưa `.env`, database, backup hoặc dữ liệu riêng vào commit.

@@ -1,7 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Check, Clock3, Volume2, VolumeX, Square, Play, Pause, Headphones, Maximize, Minimize, ShieldAlert, CheckCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Clock3,
+  Volume2,
+  VolumeX,
+  Square,
+  Play,
+  Pause,
+  Headphones,
+  Maximize,
+  Minimize,
+  ShieldAlert,
+  CheckCircle,
+} from 'lucide-react';
 import { api, post, patch, speak, stopSpeech } from '../services/api';
 import { useUI } from '../stores/ui';
 import { Button, ErrorState, Loading, Modal, PageHeader } from '../components/ui';
@@ -13,13 +28,23 @@ async function playJapanese(text: string) {
 }
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-function ExamAudioPlayer({ src, questionId }: { src: string; questionId: string }) {
+function ExamAudioPlayer({
+  src,
+  questionId,
+  runId,
+}: {
+  src?: string;
+  questionId: string;
+  runId?: string;
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
+  const [resolvedSrc, setResolvedSrc] = useState(src || '');
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const maxTimeRef = useRef(0);
 
   useEffect(() => {
@@ -32,24 +57,48 @@ function ExamAudioPlayer({ src, questionId }: { src: string; questionId: string 
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
+
+    if (src) {
+      setResolvedSrc(src);
+      return;
+    }
+
+    // Đề luyện mẫu: nếu chưa có src nhúng sẵn, tải transcript câu hỏi và nạp audio TTS
+    if (runId && questionId) {
+      let cancelled = false;
+      setIsLoadingAudio(true);
+      api<{ text: string }>(`/jlpt/runs/${runId}/audio/${questionId}`)
+        .then((res) => {
+          if (!cancelled && res.text) {
+            setResolvedSrc(`/api/tts?text=${encodeURIComponent(res.text)}`);
+          }
+        })
+        .catch((e) => console.warn('Không thể nạp audio cho câu hỏi nghe:', e))
+        .finally(() => {
+          if (!cancelled) setIsLoadingAudio(false);
+        });
+      return () => {
+        cancelled = true;
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+      };
+    }
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
       }
     };
-  }, [questionId, src]);
+  }, [questionId, src, runId]);
 
-  const togglePlay = () => {
-    if (!audioRef.current || hasEnded) return;
-    if (isPlaying) {
-      audioRef.current.pause();
+  const handlePlay = () => {
+    if (!audioRef.current || hasEnded || isPlaying || isLoadingAudio) return;
+    setIsPlaying(true);
+    audioRef.current.play().catch((e) => {
+      console.error('Audio play error:', e);
       setIsPlaying(false);
-    } else {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch((e) => console.error('Audio play error:', e));
-    }
+    });
   };
 
   const toggleMute = () => {
@@ -99,43 +148,75 @@ function ExamAudioPlayer({ src, questionId }: { src: string; questionId: string 
     <div className="exam-audio-card" aria-label="Trình phát âm thanh câu hỏi thi">
       <audio
         ref={audioRef}
-        src={src}
+        src={resolvedSrc}
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onSeeking={handleSeeking}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
         onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPause={() => {
+          // Tuân thủ quy chế phòng thi: không cho phép tạm dừng trước khi phát hết bài nghe
+          if (!hasEnded && audioRef.current && duration > 0 && currentTime < duration - 0.5) {
+            audioRef.current.play().catch(() => setIsPlaying(false));
+          } else {
+            setIsPlaying(false);
+          }
+        }}
       />
       <div className="exam-audio-header">
         <span className="exam-audio-badge">
           <Headphones size={13} />
           Mô phỏng phòng thi thật
         </span>
-        <span className="exam-audio-notice">
-          Không hỗ trợ tua lại
-        </span>
+        <span className="exam-audio-notice">Phát 1 lần · Không thể dừng hoặc tua lại</span>
       </div>
       <div className="exam-audio-controls">
         <button
           type="button"
           className={`exam-audio-btn ${isPlaying ? 'playing' : ''}`}
-          onClick={togglePlay}
-          disabled={hasEnded}
-          title={hasEnded ? 'Đã phát hết bài nghe' : isPlaying ? 'Tạm dừng' : 'Phát âm thanh'}
-          aria-label={hasEnded ? 'Đã phát hết bài nghe' : isPlaying ? 'Tạm dừng' : 'Phát âm thanh'}
+          onClick={handlePlay}
+          disabled={isPlaying || hasEnded || isLoadingAudio || !resolvedSrc}
+          title={
+            hasEnded
+              ? 'Đã phát hết bài nghe'
+              : isPlaying
+                ? 'Đang phát bài nghe (không thể tạm dừng)'
+                : isLoadingAudio
+                  ? 'Đang nạp âm thanh bài nghe…'
+                  : 'Phát bài nghe'
+          }
+          aria-label={
+            hasEnded
+              ? 'Đã phát hết bài nghe'
+              : isPlaying
+                ? 'Đang phát bài nghe (không thể tạm dừng)'
+                : isLoadingAudio
+                  ? 'Đang nạp âm thanh bài nghe…'
+                  : 'Phát bài nghe'
+          }
         >
-          {isPlaying ? <Pause size={18} /> : <Play size={18} style={{ marginLeft: '2px' }} />}
-          <span>{hasEnded ? 'Đã nghe xong' : isPlaying ? 'Tạm dừng' : currentTime > 0 ? 'Tiếp tục nghe' : 'Phát bài nghe'}</span>
+          {hasEnded ? (
+            <Check size={18} />
+          ) : isPlaying ? (
+            <Volume2 size={18} className="animate-pulse" />
+          ) : (
+            <Play size={18} style={{ marginLeft: '2px' }} />
+          )}
+          <span>
+            {hasEnded
+              ? 'Đã nghe xong'
+              : isPlaying
+                ? 'Đang phát bài nghe…'
+                : isLoadingAudio
+                  ? 'Đang tải âm thanh…'
+                  : 'Phát bài nghe'}
+          </span>
         </button>
 
         <div className="exam-audio-progress-container" title="Tiến trình phát (không thể tua lại)">
           <div className="exam-audio-progress-track">
-            <div
-              className="exam-audio-progress-fill"
-              style={{ width: `${progressPercent}%` }}
-            />
+            <div className="exam-audio-progress-fill" style={{ width: `${progressPercent}%` }} />
           </div>
           <div className="exam-audio-time">
             <span>{formatTime(currentTime)}</span>
@@ -190,7 +271,11 @@ export function JlptCountdown({
   if (!deadline) return null;
 
   return (
-    <span className={'timer ' + (remaining < 60 ? 'error-text' : '')} role="timer" aria-label="Thời gian còn lại">
+    <span
+      className={'timer ' + (remaining < 60 ? 'error-text' : '')}
+      role="timer"
+      aria-label="Thời gian còn lại"
+    >
       <Clock3 size={16} />
       {clock(remaining)}
     </span>
@@ -301,7 +386,9 @@ export function JlptSession() {
 
     // Optimistic UI update
     pendingAnswers.current[questionId] = value;
-    setRun((prev) => (prev ? { ...prev, answers: { ...prev.answers, [questionId]: value } } : prev));
+    setRun((prev) =>
+      prev ? { ...prev, answers: { ...prev.answers, [questionId]: value } } : prev,
+    );
 
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -507,7 +594,9 @@ export function JlptSession() {
             </span>
             <strong>{paper.title}</strong>
             {run?.startedAt && (
-              <span className="muted">· Phần {run.section + 1}/{run.sections.length} ({run.sectionTitle})</span>
+              <span className="muted">
+                · Phần {run.section + 1}/{run.sections.length} ({run.sectionTitle})
+              </span>
             )}
           </div>
           <div className="exam-sticky-actions">
@@ -543,7 +632,8 @@ export function JlptSession() {
       {isExamActive && !isFullscreen && (
         <aside className="exam-fullscreen-prompt" role="alert">
           <span>
-            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài làm.
+            💡 Hãy bật chế độ toàn màn hình để ẩn thanh tab Google Chrome, tập trung tối đa cho bài
+            làm.
           </span>
           <Button size="small" variant="secondary" onClick={() => void enterFullscreen()}>
             <Maximize size={14} /> Ẩn thanh tab Google
@@ -551,7 +641,11 @@ export function JlptSession() {
         </aside>
       )}
       <PageHeader
-        eyebrow={paper.isOfficial ? 'JLPT CHÍNH THỨC · ĐỒNG BỘ AUDIO GỐC' : 'THI THỬ · ĐỀ TỔNG HỢP BÁM SÁT JLPT'}
+        eyebrow={
+          paper.isOfficial
+            ? 'JLPT CHÍNH THỨC · ĐỒNG BỘ AUDIO GỐC'
+            : 'THI THỬ · ĐỀ TỔNG HỢP BÁM SÁT JLPT'
+        }
         title={paper.title}
         description={`${paper.total} câu · ${paper.minutes} phút làm bài · ${paper.sections.length} phần`}
         action={
@@ -607,8 +701,8 @@ export function JlptSession() {
           </p>
           {paper.isOfficial ? (
             <p>
-              Đây là đề thi JLPT N5 chính thức có âm thanh gốc đồng bộ theo từng câu hỏi.
-              Bạn có thể nghe trực tiếp trên từng câu với trình phát âm thanh tích hợp sẵn.
+              Đây là đề thi JLPT N5 chính thức có âm thanh gốc đồng bộ theo từng câu hỏi. Bạn có thể
+              nghe trực tiếp trên từng câu với trình phát âm thanh tích hợp sẵn.
             </p>
           ) : (
             <p>
@@ -682,7 +776,12 @@ export function JlptSession() {
                 )}
                 {q.audioUrl && (
                   <div className="jlpt-audio-player" style={{ marginBlock: '12px' }}>
-                    <audio controls preload="auto" src={q.audioUrl} className="jlpt-audio-element" />
+                    <audio
+                      controls
+                      preload="auto"
+                      src={q.audioUrl}
+                      className="jlpt-audio-element"
+                    />
                   </div>
                 )}
                 <p className="jlpt-passage" lang="ja">
@@ -764,35 +863,14 @@ export function JlptSession() {
                     </div>
                   )}
                   <h2 lang="ja">{question.prompt}</h2>
-                  {question.audioUrl ? (
+                  {question.category === 'listening' && (
                     <ExamAudioPlayer
                       key={question.id}
                       src={question.audioUrl}
                       questionId={question.id}
+                      runId={run.runId}
                     />
-                  ) : question.category === 'listening' ? (
-                    <div className="inline-actions spaced">
-                      <Button
-                        disabled={speaking || isExpired}
-                        onClick={() => void audio(question.id)}
-                      >
-                        <Volume2 size={16} />
-                        {speaking ? 'Đang phát…' : 'Nghe câu này'}
-                      </Button>
-                      {speaking && (
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            stopSpeech();
-                            setSpeaking(false);
-                          }}
-                        >
-                          <Square size={16} />
-                          Dừng
-                        </Button>
-                      )}
-                    </div>
-                  ) : null}
+                  )}
                   <QuestionInput
                     question={{ ...question, numbered: true }}
                     value={run.answers[question.id] || ''}
@@ -865,9 +943,14 @@ export function JlptSession() {
           </Button>
         </div>
       </Modal>
-      <Modal open={earlySubmitConfirm} onOpenChange={setEarlySubmitConfirm} title="Dừng bài thi và nộp ngay?">
+      <Modal
+        open={earlySubmitConfirm}
+        onOpenChange={setEarlySubmitConfirm}
+        title="Dừng bài thi và nộp ngay?"
+      >
         <p>
-          Bạn có chắc chắn muốn dừng bài thi ngay bây giờ không? Các câu hỏi chưa làm trong toàn bộ bài thi sẽ được tính là chưa đúng và hệ thống sẽ chấm điểm kết quả của bạn ngay lập tức.
+          Bạn có chắc chắn muốn dừng bài thi ngay bây giờ không? Các câu hỏi chưa làm trong toàn bộ
+          bài thi sẽ được tính là chưa đúng và hệ thống sẽ chấm điểm kết quả của bạn ngay lập tức.
         </p>
         <div className="inline-actions">
           <Button variant="secondary" disabled={busy} onClick={() => setEarlySubmitConfirm(false)}>

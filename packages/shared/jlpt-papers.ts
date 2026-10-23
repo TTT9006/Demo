@@ -154,7 +154,11 @@ function makePaper(level: JlptLevel): JlptPaper {
       item.prompt,
       item.choices,
       `Nội dung nghe dẫn đến lựa chọn: ${item.choices[0]}`,
-      { transcript: item.script, audioOptions: item.audioOptions },
+      {
+        transcript: item.script,
+        audioOptions: item.audioOptions,
+        audioUrl: `/api/tts?text=${encodeURIComponent(item.script)}`,
+      },
     );
   const minutes = { N5: [20, 40, 30], N4: [25, 55, 35], N3: [30, 70, 40], N2: [105, 50] }[level];
   const sections =

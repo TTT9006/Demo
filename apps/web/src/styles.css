@@ -4150,6 +4150,12 @@ mark { background: #eee1b9; color: #27271f; border-radius: 2px; }
   cursor: not-allowed;
   opacity: 0.7;
 }
+.exam-audio-btn.playing:disabled {
+  background: var(--jade);
+  color: #ffffff;
+  cursor: default;
+  opacity: 0.95;
+}
 .exam-audio-progress-container {
   display: flex;
   align-items: center;
