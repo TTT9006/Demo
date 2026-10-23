@@ -1,19 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Headphones,
-  BookOpen,
-  Sparkles,
-  FileText,
-  ArrowRight,
-  Target,
-} from 'lucide-react';
+import { Headphones, BookOpen, Sparkles, FileText, ArrowRight, Target } from 'lucide-react';
 import { api } from '../services/api';
 import { Button, Empty, ErrorState, Loading, PageHeader, Modal } from '../components/ui';
 import { JapaneseAnnotatedText } from '../components/japanese-annotated-text';
 import { SkillPracticeModal } from '../components/skill-practice-modal';
 import type { JlptLevel, SkillType } from '../../../../packages/shared/jlpt-types';
-import type { SkillExerciseSet } from '../../../../packages/shared/jlpt-skills';
+import { getSkillExercises, type SkillExerciseSet } from '../../../../packages/shared/jlpt-skills';
 import type { Attempt, Result } from '../types';
 
 export function SkillsPage() {
@@ -29,7 +22,20 @@ export function SkillsPage() {
     error: skillsError,
   } = useQuery({
     queryKey: ['skill-sets', activeSkill, activeSkillLevel],
-    queryFn: () => api<SkillExerciseSet[]>(`/jlpt/skills/${activeSkill}/${activeSkillLevel}`),
+    queryFn: async () => {
+      try {
+        const res = await api<SkillExerciseSet[]>(
+          `/jlpt/skills/${activeSkill}/${activeSkillLevel}`,
+        );
+        if (Array.isArray(res) && res.length > 0) return res;
+      } catch (err) {
+        console.warn(
+          'Backend /jlpt/skills chưa sẵn sàng hoặc trả về lỗi, dùng dữ liệu client-side:',
+          err,
+        );
+      }
+      return getSkillExercises(activeSkill, activeSkillLevel);
+    },
   });
 
   const history = useQuery({
@@ -97,7 +103,12 @@ export function SkillsPage() {
       </div>
 
       {/* 2. Level Filter Bar for Skills */}
-      <div className="tabs inline-actions spaced" role="tablist" aria-label="Chọn cấp độ kỹ năng" style={{ marginBlock: '12px 18px' }}>
+      <div
+        className="tabs inline-actions spaced"
+        role="tablist"
+        aria-label="Chọn cấp độ kỹ năng"
+        style={{ marginBlock: '12px 18px' }}
+      >
         {(['N5', 'N4', 'N3', 'N2'] as const).map((lvl) => (
           <button
             key={lvl}
@@ -125,7 +136,10 @@ export function SkillsPage() {
           color: 'var(--ink)',
         }}
       >
-        <strong>💡 Định hướng luyện {currentSkillInfo.label} — Cấp độ {activeSkillLevel}:</strong> {currentSkillInfo.desc}
+        <strong>
+          💡 Định hướng luyện {currentSkillInfo.label} — Cấp độ {activeSkillLevel}:
+        </strong>{' '}
+        {currentSkillInfo.desc}
       </div>
 
       {/* 4. Exercise Sets Grid */}
@@ -232,7 +246,12 @@ export function SkillsPage() {
               )}
               {r.audioUrl && (
                 <div className="jlpt-audio-player" style={{ marginBlock: '8px' }}>
-                  <audio controls preload="metadata" src={r.audioUrl} className="jlpt-audio-element" />
+                  <audio
+                    controls
+                    preload="metadata"
+                    src={r.audioUrl}
+                    className="jlpt-audio-element"
+                  />
                 </div>
               )}
               {r.passage && (
@@ -260,7 +279,10 @@ export function SkillsPage() {
                     fontSize: '13px',
                   }}
                 >
-                  <span className="eyebrow" style={{ margin: 0, fontSize: '11px', color: 'var(--ocean)' }}>
+                  <span
+                    className="eyebrow"
+                    style={{ margin: 0, fontSize: '11px', color: 'var(--ocean)' }}
+                  >
                     BẢN CHÉP LỜI (TRANSCRIPT)
                   </span>
                   <p lang="ja" style={{ whiteSpace: 'pre-line', margin: '4px 0 0 0' }}>

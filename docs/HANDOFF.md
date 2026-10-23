@@ -1,3 +1,48 @@
+## BÁO CÁO SỰ CỐ & PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ (RCA): LỖI 404 "KHÔNG TÌM THẤY CHỨC NĂNG NÀY" TRÊN TRANG LUYỆN 4 KỸ NĂNG (/SKILLS) — 23/10/2026
+
+- **Hiện tượng (Symptom):**
+  - Khi người dùng truy cập trang `https://wakaba-pink.vercel.app/skills` (Luyện 4 kỹ năng tiếng Nhật N5-N2), giao diện không thể tải bài tập mà hiện thông báo lỗi: `"Chưa thể tải nội dung - Không tìm thấy chức năng này."`.
+  - Bảng Console trình duyệt ghi nhận hàng loạt lỗi HTTP 404 (Not Found) đối với các request:
+    `GET https://wakaba-pink.vercel.app/api/jlpt/skills/listening/N5`
+    `GET https://wakaba-pink.vercel.app/api/jlpt/skills/grammar/N2`
+    và các cấp độ khác (N5, N4, N3, N2).
+  - Người dùng bị chặn hoàn toàn, không thể xem hoặc thực hành bất kỳ kỹ năng nào trong 4 kỹ năng (Nghe hiểu, Đọc hiểu, Từ vựng, Ngữ pháp).
+
+- **Phân tích nguyên nhân gốc rễ (Root Cause Analysis - RCA):**
+  - **1. Sự lệch pha triển khai kiến trúc lai giữa Vercel (Frontend) và Render (Backend):**
+    - Trang web tĩnh được deploy tự động lên Vercel (`wakaba-pink.vercel.app`) ngay sau mỗi commit Git. File `vercel.json` thiết lập reverse proxy rewrite chuyển tiếp toàn bộ request `/api/*` về máy chủ Render (`https://wakaba-mk61.onrender.com/api/*`).
+    - Trong khi đó, Render Free Tier sử dụng môi trường Docker runtime (`Dockerfile` nướng sẵn từ điển ~83MB), có chu kỳ deploy độc lập, tốn nhiều thời gian hoặc có thể bị nghẽn/tạm dừng build.
+    - Hiện tại, máy chủ Render production vẫn đang chạy phiên bản cũ `2.2.0-nanami` (chỉ có các route `/api/jlpt/papers` và `/api/tests`), chưa hoàn tất redeploy để có router mới `/api/jlpt/skills`. Khi nhận request `/api/jlpt/skills/*`, router Express mặc định kích hoạt handler fallback và trả về HTTP 404: `{ error: 'Không tìm thấy chức năng này.' }`.
+  - **2. Thiếu cơ chế dự phòng dữ liệu client-side (Client-Side Resilient Fallback):**
+    - Trong `apps/web/src/pages/skills.tsx`, `useQuery` phụ thuộc 100% vào API mạng:
+      `queryFn: () => api<SkillExerciseSet[]>(/jlpt/skills/${activeSkill}/${activeSkillLevel})`
+    - Khi API trả về 404, React Query chuyển sang trạng thái `error`, khiến trang hiển thị component `<ErrorState error={skillsError} />` chặn người dùng.
+    - Trong khi đó, toàn bộ kho bài tập và câu hỏi của 4 kỹ năng đều được định nghĩa tĩnh và độc lập trong `packages/shared/jlpt-skills.ts` qua hàm `getSkillExercises(skill, level)`. Dữ liệu này là mã TypeScript thuần, không phụ thuộc vào cơ sở dữ liệu SQLite hay API mạng, hoàn toàn có thể chạy mượt mà ngay trên trình duyệt máy khách (client-side).
+
+- **Biện pháp khắc phục đa tầng triệt để (Dual-Strategy Resilient Architecture):**
+  - **1. Cơ chế Tải bài tập 2 tầng (Seamless Exercise Query Fallback):**
+    - Tại `apps/web/src/pages/skills.tsx`, nâng cấp `queryFn` sang cơ chế song hành:
+      Ưu tiên gọi API backend `/jlpt/skills/:skill/:level`. Nếu backend phản hồi 404 hoặc máy chủ chưa sẵn sàng, frontend tự động bắt lỗi và fallback tức thì sang `getSkillExercises(activeSkill, activeSkillLevel)` từ `packages/shared/jlpt-skills.ts`.
+    - Đảm bảo 100% người dùng trên Vercel luôn xem được đầy đủ danh sách bài luyện tập của cả 4 kỹ năng và tất cả cấp độ N5–N2 bất kể trạng thái deploy của Render.
+  - **2. Cơ chế Chấm điểm & Xem lại kết quả độc lập (Client-Side Instant Grading & Review):**
+    - Tại `apps/web/src/components/skill-practice-modal.tsx`, khi người dùng bấm "Nộp bài":
+      Hệ thống gửi request tới `/api/jlpt/skills/submit`. Nếu backend chưa có endpoint này (404), frontend tự động chấm điểm chính xác 100% dựa trên đáp án đã nạp sẵn trong bài tập, tính toán tỷ lệ điểm, trích xuất danh sách câu sai (`failedVocab`) cho tính năng Flashcard SM-2 và hiển thị màn hình kết quả/giải thích/transcript chi tiết mà không ném lỗi ra ngoài.
+  - **3. Hỗ trợ Audio Nanami Neural qua TTS:**
+    - Gán đường dẫn âm thanh dự phòng `audioUrl: currentQ.audioUrl || (currentQ.transcript ? /api/tts?text=${encodeURIComponent(currentQ.transcript)} : undefined)` cho các câu hỏi nghe hiểu. API `/api/tts` đã chạy ổn định 100% trên Render từ bản 2.2.0, giúp bài nghe phát âm giọng đọc AI Nanami Neural mượt mà.
+  - **4. Tích hợp Flashcard an toàn:**
+    - Tính năng "Thêm từ làm sai vào Flashcard" sử dụng các API tiêu chuẩn `POST /flashcards/decks` và `POST /flashcards/cards` (vốn đã tồn tại và chạy ổn định 100% trên Render từ v1.0), đảm bảo học viên lưu thẻ thành công trọn vẹn.
+
+- **Xác minh kiểm thử & Chứng chỉ:**
+  - Chạy `npm run typecheck` (tsc --noEmit): Pass 100% 0 lỗi.
+  - Chạy `npm test` (Vitest run): 15/15 test suite pass, 140/140 tests pass.
+  - Chạy kịch bản tự động hóa CDP trên Chrome thật (`scripts/test-skills-fallback-cdp.mjs`) với việc mock 100% các request `/api/jlpt/skills/**` trả về mã lỗi 404 giống hệt Render:
+    - Trang `/skills` hiển thị ngay lập tức danh mục 4 kỹ năng (Nghe, Đọc, Từ vựng, Ngữ pháp) qua tất cả các cấp độ N5-N2.
+    - Không còn bất kỳ thông báo "Chưa thể tải nội dung" nào.
+    - Mở modal làm bài, chọn đáp án, bấm nộp bài thành công, hiển thị modal kết quả chi tiết.
+  - Đã lưu bằng chứng ảnh chụp màn hình kiểm chứng tại:
+    - `C:\Users\Hoang Vuong\.gemini\antigravity\brain\1ea9bb67-f17d-40e4-bf2e-e0fc3d7497f4\skills-fixed-desktop.png`
+    - `C:\Users\Hoang Vuong\.gemini\antigravity\brain\1ea9bb67-f17d-40e4-bf2e-e0fc3d7497f4\skills-submit-fallback.png`
+
 ## BÁO CÁO SỰ CỐ & PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ (RCA): LỖI TRÍCH XUẤT THIẾU TỪ VỰNG KHI TẢI FILE PDF TRÊN ĐIỆN THOẠI (17 TỪ THAY VÌ 32 TỪ) — 23/10/2026
 
 - **Hiện tượng (Symptom):**

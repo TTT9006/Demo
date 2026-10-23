@@ -30,7 +30,12 @@ interface SkillPracticeModalProps {
   onComplete?: () => void;
 }
 
-export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: SkillPracticeModalProps) {
+export function SkillPracticeModal({
+  open,
+  onOpenChange,
+  set,
+  onComplete,
+}: SkillPracticeModalProps) {
   const notify = useUI((s) => s.notify);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -81,6 +86,9 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
   if (!set) return null;
 
   const currentQ = set.questions[index];
+  const currentAudioUrl =
+    currentQ.audioUrl ||
+    (currentQ.transcript ? `/api/tts?text=${encodeURIComponent(currentQ.transcript)}` : undefined);
   const answeredCount = Object.keys(answers).filter((k) => answers[k]).length;
   const isFinished = results !== null;
 
@@ -121,18 +129,67 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const res = await post<{
+      let res: {
         score: number;
         total: number;
         correctCount: number;
         results: any[];
         failedVocab: Array<{ term: string; reading: string; meaning: string; questionId: string }>;
-      }>('/jlpt/skills/submit', {
-        setId: set.id,
-        skill: set.skill,
-        level: set.level,
-        answers,
-      });
+      };
+
+      try {
+        res = await post<{
+          score: number;
+          total: number;
+          correctCount: number;
+          results: any[];
+          failedVocab: Array<{
+            term: string;
+            reading: string;
+            meaning: string;
+            questionId: string;
+          }>;
+        }>('/jlpt/skills/submit', {
+          setId: set.id,
+          skill: set.skill,
+          level: set.level,
+          answers,
+        });
+      } catch (submitErr) {
+        console.warn(
+          'Backend /jlpt/skills/submit chưa sẵn sàng, tính điểm trực tiếp client-side:',
+          submitErr,
+        );
+        const resultsList = set.questions.map((q) => {
+          const given = answers[q.id] || '';
+          const correct = given === q.answer;
+          return {
+            ...q,
+            given,
+            correct,
+          };
+        });
+        const correctCount = resultsList.filter((r) => r.correct).length;
+        const score = Math.round((correctCount / resultsList.length) * 100);
+
+        const failedVocab = resultsList
+          .filter((r) => !r.correct && (r.term || r.category === 'vocabulary'))
+          .map((r) => ({
+            term: r.term || r.prompt.replace(/.*「(.*?)」.*/, '$1') || r.answer,
+            reading: r.reading || r.answer,
+            meaning: r.meaning || r.explanation,
+            questionId: r.id,
+          }));
+
+        res = {
+          score,
+          total: resultsList.length,
+          correctCount,
+          results: resultsList,
+          failedVocab,
+        };
+      }
+
       setResults(res);
       if (onComplete) onComplete();
     } catch (e) {
@@ -229,7 +286,12 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
           <div className="skill-results-view">
             <section className="score-panel" style={{ marginBlock: '16px' }}>
               <span className="eyebrow">KẾT QUẢ BÀI LUYỆN</span>
-              <strong style={{ fontSize: '42px', color: results.score >= 80 ? 'var(--jade)' : 'var(--peach)' }}>
+              <strong
+                style={{
+                  fontSize: '42px',
+                  color: results.score >= 80 ? 'var(--jade)' : 'var(--peach)',
+                }}
+              >
                 {results.score}
                 <small style={{ fontSize: '20px' }}>%</small>
               </strong>
@@ -253,14 +315,29 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
                     textAlign: 'left',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '6px',
+                    }}
+                  >
                     <Sparkles size={18} style={{ color: 'var(--jade)' }} />
                     <strong style={{ fontSize: '14px' }}>
                       Lưu {results.failedVocab.length} từ làm sai vào Flashcard (SM-2)
                     </strong>
                   </div>
-                  <p style={{ fontSize: '13px', margin: 0, color: 'var(--muted)', marginBottom: '10px' }}>
-                    Tự động tạo thẻ học kèm phiên âm và giải nghĩa để ôn tập theo thuật toán ngắt quãng SM-2, giúp ghi nhớ lâu bền.
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      margin: 0,
+                      color: 'var(--muted)',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    Tự động tạo thẻ học kèm phiên âm và giải nghĩa để ôn tập theo thuật toán ngắt
+                    quãng SM-2, giúp ghi nhớ lâu bền.
                   </p>
                   <Button
                     size="small"
@@ -277,7 +354,10 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
                 </div>
               )}
 
-              <div className="inline-actions" style={{ justifyContent: 'center', marginTop: '12px' }}>
+              <div
+                className="inline-actions"
+                style={{ justifyContent: 'center', marginTop: '12px' }}
+              >
                 <Button
                   variant="secondary"
                   onClick={() => {
@@ -296,32 +376,51 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
 
             {/* Detailed answers and explanations */}
             <div className="skill-review-list">
-              <h3 style={{ fontSize: '16px', marginBlock: '16px 12px' }}>Chi tiết từng câu & Giải thích</h3>
+              <h3 style={{ fontSize: '16px', marginBlock: '16px 12px' }}>
+                Chi tiết từng câu & Giải thích
+              </h3>
               {results.results.map((r, i) => (
                 <div
                   key={r.id}
                   className={`feedback ${r.correct ? 'correct' : 'incorrect'}`}
                   style={{ marginBottom: '12px', padding: '14px' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '6px',
+                    }}
+                  >
                     {r.correct ? (
                       <CheckCircle2 size={18} style={{ color: 'var(--jade)' }} />
                     ) : (
                       <XCircle size={18} style={{ color: 'var(--peach)' }} />
                     )}
                     <strong>
-                      Câu {i + 1}: {r.group} · {r.correct ? 'Đúng' : r.given ? 'Chưa đúng' : 'Bỏ trống'}
+                      Câu {i + 1}: {r.group} ·{' '}
+                      {r.correct ? 'Đúng' : r.given ? 'Chưa đúng' : 'Bỏ trống'}
                     </strong>
                   </div>
 
-                  {r.audioUrl && (
+                  {(r.audioUrl || r.transcript) && (
                     <div style={{ marginBlock: '8px' }}>
-                      <audio controls preload="metadata" src={r.audioUrl} style={{ width: '100%', height: '36px' }} />
+                      <audio
+                        controls
+                        preload="metadata"
+                        src={r.audioUrl || `/api/tts?text=${encodeURIComponent(r.transcript)}`}
+                        style={{ width: '100%', height: '36px' }}
+                      />
                     </div>
                   )}
 
                   {r.passage && (
-                    <div className="jlpt-passage" lang="ja" style={{ marginBlock: '8px', fontSize: '13px' }}>
+                    <div
+                      className="jlpt-passage"
+                      lang="ja"
+                      style={{ marginBlock: '8px', fontSize: '13px' }}
+                    >
                       {r.passage}
                     </div>
                   )}
@@ -331,9 +430,13 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
                   </p>
 
                   <div style={{ fontSize: '13px', marginBlock: '4px' }}>
-                    <span>Bạn chọn: <strong>{r.given || '(Chưa làm)'}</strong></span>
+                    <span>
+                      Bạn chọn: <strong>{r.given || '(Chưa làm)'}</strong>
+                    </span>
                     <span style={{ marginInline: '8px' }}>·</span>
-                    <span>Đáp án: <strong style={{ color: 'var(--jade)' }}>{r.answer}</strong></span>
+                    <span>
+                      Đáp án: <strong style={{ color: 'var(--jade)' }}>{r.answer}</strong>
+                    </span>
                   </div>
 
                   {/* Revealed Script after submit */}
@@ -348,7 +451,10 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
                         fontSize: '13px',
                       }}
                     >
-                      <span className="eyebrow" style={{ margin: 0, fontSize: '11px', color: 'var(--ocean)' }}>
+                      <span
+                        className="eyebrow"
+                        style={{ margin: 0, fontSize: '11px', color: 'var(--ocean)' }}
+                      >
                         BẢN CHÉP LỜI (TRANSCRIPT)
                       </span>
                       <p lang="ja" style={{ whiteSpace: 'pre-line', margin: '4px 0 0 0' }}>
@@ -387,7 +493,7 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
             )}
 
             {/* Audio player for listening questions */}
-            {currentQ.audioUrl && (
+            {currentAudioUrl && (
               <div
                 className="skill-audio-box"
                 style={{
@@ -403,23 +509,37 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
               >
                 <audio
                   ref={audioRef}
-                  src={currentQ.audioUrl}
+                  src={currentAudioUrl}
                   preload="metadata"
-                  onTimeUpdate={() => audioRef.current && setCurrentTime(audioRef.current.currentTime)}
-                  onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
+                  onTimeUpdate={() =>
+                    audioRef.current && setCurrentTime(audioRef.current.currentTime)
+                  }
+                  onLoadedMetadata={() =>
+                    audioRef.current && setDuration(audioRef.current.duration)
+                  }
                   onEnded={() => setIsPlaying(false)}
                 />
                 <Button size="small" onClick={togglePlayAudio}>
                   {isPlaying ? <Pause size={15} /> : <Play size={15} />}
-                  <span>{isPlaying ? 'Tạm dừng' : currentTime > 0 ? 'Tiếp tục' : 'Phát bài nghe'}</span>
+                  <span>
+                    {isPlaying ? 'Tạm dừng' : currentTime > 0 ? 'Tiếp tục' : 'Phát bài nghe'}
+                  </span>
                 </Button>
-                <Button variant="secondary" size="small" onClick={handleReplayAudio} title="Nghe lại từ đầu">
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={handleReplayAudio}
+                  title="Nghe lại từ đầu"
+                >
                   <RotateCcw size={14} />
                   <span>Nghe lại</span>
                 </Button>
 
                 {/* Speed Toggle */}
-                <div className="speed-toggle-group" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
+                <div
+                  className="speed-toggle-group"
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}
+                >
                   <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Tốc độ:</span>
                   {[0.8, 1.0, 1.2].map((rate) => (
                     <button
@@ -520,12 +640,11 @@ export function SkillPracticeModal({ open, onOpenChange, set, onComplete }: Skil
               </div>
 
               <div className="inline-actions">
-                <Button
-                  disabled={isSubmitting || answeredCount === 0}
-                  onClick={handleSubmit}
-                >
+                <Button disabled={isSubmitting || answeredCount === 0} onClick={handleSubmit}>
                   <Check size={16} />
-                  {isSubmitting ? 'Đang chấm điểm...' : `Nộp bài (${answeredCount}/${set.questions.length})`}
+                  {isSubmitting
+                    ? 'Đang chấm điểm...'
+                    : `Nộp bài (${answeredCount}/${set.questions.length})`}
                 </Button>
               </div>
             </div>

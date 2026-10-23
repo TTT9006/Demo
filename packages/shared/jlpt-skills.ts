@@ -1,4 +1,11 @@
-import type { JlptLevel, SkillType, SyncStatus, SkillExerciseItem, SkillCategoryView, JlptQuestion } from './jlpt-types';
+import type {
+  JlptLevel,
+  SkillType,
+  SyncStatus,
+  SkillExerciseItem,
+  SkillCategoryView,
+  JlptQuestion,
+} from './jlpt-types';
 import { words, context, paraphrases, usage } from './jlpt-vocabulary';
 import { grammarChoices, sentenceParts, textGrammar } from './jlpt-grammar';
 import { reading } from './jlpt-reading';
@@ -39,13 +46,15 @@ export const skillCategories: SkillCategoryView[] = [
         level: 'N3',
         books: ['Speed Master Choukai N3 (CD1 & CD2)'],
         count: 40,
-        description: 'Luyện nghe nắm bắt đại ý, nghe hiểu đề tài, tóm tắt ý chính và nghe phản xạ nhanh.',
+        description:
+          'Luyện nghe nắm bắt đại ý, nghe hiểu đề tài, tóm tắt ý chính và nghe phản xạ nhanh.',
       },
       {
         level: 'N2',
         books: ['Shin Kanzen Master Choukai N2 (CD1 & CD2)'],
         count: 38,
-        description: 'Luyện khả năng nắm ý chính, tổng hợp quan điểm người nói, và kỹ năng phản xạ nhanh.',
+        description:
+          'Luyện khả năng nắm ý chính, tổng hợp quan điểm người nói, và kỹ năng phản xạ nhanh.',
       },
     ],
   },
@@ -61,19 +70,22 @@ export const skillCategories: SkillCategoryView[] = [
       {
         level: 'N4',
         count: 28,
-        description: 'Đoạn văn vừa, bài văn trải nghiệm, thông báo trường học và tìm kiếm thông tin.',
+        description:
+          'Đoạn văn vừa, bài văn trải nghiệm, thông báo trường học và tìm kiếm thông tin.',
       },
       {
         level: 'N3',
         books: ['Tuyển tập 26 đề thi N3'],
         count: 32,
-        description: 'Đoạn văn trung bình 350 chữ, bài đọc giải thích, tìm kiếm thông tin theo tiêu chí.',
+        description:
+          'Đoạn văn trung bình 350 chữ, bài đọc giải thích, tìm kiếm thông tin theo tiêu chí.',
       },
       {
         level: 'N2',
         books: ['Tuyển tập 40 đề thi N2'],
         count: 35,
-        description: 'Đoạn văn bình luận, nghị luận xã hội, so sánh đa chiều và đọc tìm kiếm thông tin phức hợp.',
+        description:
+          'Đoạn văn bình luận, nghị luận xã hội, so sánh đa chiều và đọc tìm kiếm thông tin phức hợp.',
       },
     ],
   },
@@ -84,12 +96,14 @@ export const skillCategories: SkillCategoryView[] = [
       {
         level: 'N5',
         count: 40,
-        description: 'Cách đọc Kanji, Cách viết Kanji, Từ trong ngữ cảnh, Diễn đạt tương đương (Hỗ trợ đưa câu sai vào Flashcard SM-2).',
+        description:
+          'Cách đọc Kanji, Cách viết Kanji, Từ trong ngữ cảnh, Diễn đạt tương đương (Hỗ trợ đưa câu sai vào Flashcard SM-2).',
       },
       {
         level: 'N4',
         count: 45,
-        description: 'Đọc Kanji, Viết Kanji, Chọn từ đúng ngữ cảnh, Từ đồng nghĩa (Hỗ trợ đưa câu sai vào Flashcard SM-2).',
+        description:
+          'Đọc Kanji, Viết Kanji, Chọn từ đúng ngữ cảnh, Từ đồng nghĩa (Hỗ trợ đưa câu sai vào Flashcard SM-2).',
       },
       {
         level: 'N3',
@@ -99,7 +113,8 @@ export const skillCategories: SkillCategoryView[] = [
       {
         level: 'N2',
         count: 55,
-        description: 'Từ vựng trừu tượng, tiền tố/hậu tố, quán ngữ và sắc thái từ dùng trong thực tế.',
+        description:
+          'Từ vựng trừu tượng, tiền tố/hậu tố, quán ngữ và sắc thái từ dùng trong thực tế.',
       },
     ],
   },
@@ -110,22 +125,26 @@ export const skillCategories: SkillCategoryView[] = [
       {
         level: 'N5',
         count: 35,
-        description: 'Chọn mẫu ngữ pháp cơ bản, sắp xếp câu ngôi sao ★, ngữ pháp trong đoạn văn ngắn.',
+        description:
+          'Chọn mẫu ngữ pháp cơ bản, sắp xếp câu ngôi sao ★, ngữ pháp trong đoạn văn ngắn.',
       },
       {
         level: 'N4',
         count: 40,
-        description: 'Thể bị động, sai khiến, cho nhận, điều kiện, sắp xếp câu ngôi sao ★ tự biên soạn.',
+        description:
+          'Thể bị động, sai khiến, cho nhận, điều kiện, sắp xếp câu ngôi sao ★ tự biên soạn.',
       },
       {
         level: 'N3',
         count: 45,
-        description: 'Mẫu câu biểu đạt thái độ, dự đoán, đối chiếu, văn phong trang trọng và sắp xếp câu sao ★.',
+        description:
+          'Mẫu câu biểu đạt thái độ, dự đoán, đối chiếu, văn phong trang trọng và sắp xếp câu sao ★.',
       },
       {
         level: 'N2',
         count: 50,
-        description: 'Ngữ pháp trung thượng cấp, sắc thái tinh tế, văn bản lập luận, câu hỏi sao ★ biên soạn chuẩn JLPT.',
+        description:
+          'Ngữ pháp trung thượng cấp, sắc thái tinh tế, văn bản lập luận, câu hỏi sao ★ biên soạn chuẩn JLPT.',
       },
     ],
   },
@@ -159,7 +178,10 @@ function buildVocabularySkillSets(level: JlptLevel): SkillExerciseSet[] {
     prompt: `「${word}」の読み方はどれですか。`,
     options: shuffleOptions([
       kana,
-      ...bank.filter((_, j) => j !== i).slice(0, 3).map((r) => r[1]),
+      ...bank
+        .filter((_, j) => j !== i)
+        .slice(0, 3)
+        .map((r) => r[1]),
     ]),
     answer: kana,
     explanation: `「${word}」 đọc là 「${kana}」.`,
@@ -177,7 +199,10 @@ function buildVocabularySkillSets(level: JlptLevel): SkillExerciseSet[] {
     prompt: `「${kana}」を漢字で書くと、どれですか。`,
     options: shuffleOptions([
       word,
-      ...bank.filter((r) => r[0] !== word).slice(-3).map((r) => r[0]),
+      ...bank
+        .filter((r) => r[0] !== word)
+        .slice(-3)
+        .map((r) => r[0]),
     ]),
     answer: word,
     explanation: `「${kana}」 được viết bằng chữ Hán là 「${word}」.`,
@@ -285,7 +310,8 @@ function buildGrammarSkillSets(level: JlptLevel): SkillExerciseSet[] {
       title: `Luyện ngữ pháp ${level} · Chọn mẫu câu & Sắp xếp câu sao ★`,
       level,
       skill: 'grammar',
-      description: 'Luyện phân biệt trợ từ, liên từ và cấu trúc ngữ pháp trọng điểm kèm dạng bài sắp xếp ★.',
+      description:
+        'Luyện phân biệt trợ từ, liên từ và cấu trúc ngữ pháp trọng điểm kèm dạng bài sắp xếp ★.',
       syncStatus: 'khớp tự động',
       questions: [...choices, ...stars],
     },
@@ -366,6 +392,7 @@ function buildListeningSkillSets(level: JlptLevel): SkillExerciseSet[] {
         options: shuffleOptions(it.choices),
         answer: it.choices[0],
         transcript: it.script,
+        audioUrl: `/api/tts?text=${encodeURIComponent(it.script)}`,
         audioOptions: it.audioOptions,
         explanation: `Nội dung nghe dẫn đến lựa chọn đáp án: 「${it.choices[0]}」.`,
         annotationDisabled: true as const,
@@ -390,6 +417,7 @@ function buildListeningSkillSets(level: JlptLevel): SkillExerciseSet[] {
         options: shuffleOptions(it.choices),
         answer: it.choices[0],
         transcript: it.script,
+        audioUrl: `/api/tts?text=${encodeURIComponent(it.script)}`,
         audioOptions: it.audioOptions,
         explanation: `Lời đáp tự nhiên và phù hợp nhất trong văn cảnh: 「${it.choices[0]}」.`,
         annotationDisabled: true as const,
