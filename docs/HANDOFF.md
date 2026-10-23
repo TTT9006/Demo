@@ -1,3 +1,43 @@
+## BÁO CÁO SỰ CỐ & PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ (RCA): LỖI TRÍCH XUẤT THIẾU TỪ VỰNG KHI TẢI FILE PDF TRÊN ĐIỆN THOẠI (17 TỪ THAY VÌ 32 TỪ) — 23/10/2026
+
+- **Hiện tượng (Symptom):**
+  - Khi tải tệp `Bảng Từ Vựng Tiếng Nhật Bài 7A.pdf` lên điện thoại di động (hoặc trình duyệt có màn hình nhỏ), hệ thống chỉ trích xuất được **17 từ vựng** (thiếu mất 15 từ) thay vì đầy đủ **32 từ vựng**.
+  - Thẻ số 1 hiển thị sai nhãn Hán Việt: `手 [TRỢ] て Tay` (thay vì `[THỦ]`), và các từ vựng thuần Kana (như `スプーン`, `ナイフ`, `フォーク`, `はさみ`, `パソコン`, `パンチ`, `ホッチキス`, `セロテープ`, `プレゼント`, `スペイン`, `あげます`, `いらっしゃい。`, v.v.) biến mất hoàn toàn khỏi danh sách thẻ.
+
+- **Phân tích nguyên nhân gốc rễ (Root Cause Analysis - RCA):**
+  - **1. Nhận diện tiêu đề bảng quá mong manh trước hiện tượng phân rã glyph (Glyph Splitting) trên mobile:**
+    - Trong `apps/web/src/services/client-pdf-parser.ts`, bộ bóc tách bảng cũ tìm kiếm các chuỗi tiêu đề trực tiếp trên từng phần tử văn bản đơn lẻ (`item.str`):
+      ```typescript
+      const readingHeader = positioned.find(item => /Hiragana.*Katakana/i.test(item.str));
+      const indexHeader = positioned.find(item => item.str.trim() === 'STT');
+      const meaningHeader = positioned.find(item => /^Ngh/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
+      const typeHeader = positioned.find(item => /^Lo/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
+      ```
+    - Trên trình duyệt di động (Safari iOS / Chrome Mobile với subpixel rendering và font metrics khác biệt), các từ tiếng Việt có dấu thường bị tách thành các glyph rời rạc (ví dụ: `Lo` + `ạ` + `i`, `Ngh` + `ĩ` + `a` hoặc `Hiragana` + ` / ` + `Katakana`), hoặc độ lệch tọa độ Y vượt ngưỡng 3px.
+    - Chỉ cần 1 trong 4 tiêu đề không khớp, toàn bộ logic bóc tách bảng bị hủy bỏ ngay lập tức và rơi xuống tầng fallback gom dòng Y thô (`lineMap`).
+  - **2. Tầng dự phòng (Fallback Line Parser) nuốt chửng toàn bộ các hàng thuần Kana:**
+    - Khi các hàng bảng bị làm phẳng theo trục Y, dòng hàng thuần Kana (ví dụ: `3 - スプーン Danh từ Muỗng, thìa` hoặc `4 - ナイフ Danh từ Dao`) không chứa chữ Hán Kanji.
+    - Trong hàm `parsePdfTextLines`, điều kiện nhận diện một từ mới chỉ kiểm tra xem dòng có chứa Kanji hay không (`/[\u3400-\u4dbf\u4e00-\u9fff]/.test(line)`).
+    - Dòng chứa cả tiếng Nhật và tiếng Việt ("Danh từ Muỗng, thìa") không thỏa mãn `KANA_ACCENT_REGEX`, nên bị rơi vào nhánh xử lý nghĩa tiếng Việt (`currentMeaning = currentMeaning ? ... : line`).
+    - Hậu quả: Toàn bộ 15 từ vựng thuần Kana bị nuốt chửng và nối dồn vào phần giải nghĩa của thẻ Kanji đứng trước (`箸 [TRỢ]`). Tổng số thẻ tạo ra đúng bằng 17 thẻ Kanji (17 từ), và nhãn `[TRỢ]` của hàng 2 bị dính vào hàng 1 (`手`).
+
+- **Biện pháp khắc phục đa tầng triệt để:**
+  - **1. Lớp 1 - Robust Table Extraction (`extractTextLinesFromPdf`):**
+    - Gom nhóm các text items theo baseline trục Y (dung sai 4.5px) trước, ghép chuỗi dòng hoàn chỉnh rồi mới kiểm tra tiêu đề `STT`, `Hiragana / Katakana`, `Nghĩa`. Cơ chế này loại bỏ hoàn toàn ảnh hưởng của hiện tượng phân rã glyph.
+    - Xác định tự động biên độ tọa độ X cho từng cột (`kanjiX`, `readingX`, `typeX`, `meaningX`) và tính toán dải giới hạn dọc (vertical bounding box) độc lập cho từng hàng dựa trên các số thứ tự `STT`.
+    - Ghép nối ký tự chuẩn xác trong từng ô, tự động tách nhãn Hán Việt `[TAG]` và xuất thành định dạng TSV 4 cột sạch sẽ: `${term}\t${reading}\t${meaning}\t${sino}`.
+  - **2. Lớp 2 - Robust Numbered Row Parser trong Fallback (`parsePdfTextLines` Strategy 2):**
+    - Bổ sung Strategy 2 chuyên xử lý các bảng bị làm phẳng thành dòng có đánh số `^\d{1,3}\s*[-–—.]?\s*(.*)$`.
+    - Nhận diện nhãn Hán Việt ngay phía trước số thứ tự, nhận diện chữ Kanji ở dòng ngay bên dưới, tách phần loại từ (`Danh từ`, `Động từ`, `Cụm ĐT`, `Mẫu câu`) và phần nghĩa tiếng Việt.
+    - Đảm bảo dù bảng có bị rơi vào fallback, toàn bộ 32 từ vựng (kể cả từ thuần Kana) vẫn được trích xuất thành 32 thẻ độc lập 100%.
+  - **3. Lớp 3 - Nâng cấp Slide & General Parser (Strategy 3):**
+    - Sửa điều kiện nhận diện thẻ thuần Kana: khi gặp dòng Kana mới mà thẻ trước đã có nghĩa/cách đọc, tự động flush thẻ cũ và tạo thẻ mới, không bao giờ nuốt dòng Kana vào nghĩa thẻ trước.
+
+- **Xác minh kiểm thử & Chứng chỉ:**
+  - Đã chạy kiểm thử đơn vị `tests/client-pdf-table.test.ts` (3/3 test pass): kiểm tra trích xuất trực tiếp tệp PDF gốc Bài 7A (32/32 từ vựng) và kiểm tra trường hợp mô phỏng rơi vào fallback (32/32 từ vựng).
+  - Đã chạy kiểm thử E2E trình duyệt thật trên viewport di động (390x844 - iPhone 14) qua `tests/browser/test-mobile-pdf-upload.mjs`: xác nhận giao diện tải lên thành công hiển thị modal với `"32 từ vựng"`, kiểm tra 100% các từ Kana (`スプーン`, `ナイフ`, `フォーク`, `はさみ`, `パソコン`, `ごちそうさまでした`) đều hiển thị trong các trường nhập liệu.
+  - Đã lưu ảnh chụp màn hình kiểm chứng tại: `C:\Users\Hoang Vuong\.gemini\antigravity\brain\5a630e95-19dd-436d-9b2e-b328813940b5\mobile-pdf-import-success.png`.
+
 ## Sửa màn hình ôn thẻ điện thoại — 23/10/2026
 
 - Mặt thẻ mobile dùng chiều cao theo nội dung, giảm cỡ chữ nghĩa, nút lật sticky nằm trên thanh điều hướng và safe area. Pointer cancel chỉ hủy kéo, không lật/chấm thẻ.

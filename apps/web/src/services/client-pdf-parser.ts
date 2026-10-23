@@ -48,57 +48,106 @@ export async function extractTextLinesFromPdf(data: ArrayBuffer | Uint8Array): P
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
-    
-    // Tables have independent baselines inside each cell (e.g. a Han-Viet
-    // label above the kanji). Assign cells to numbered rows before flattening.
     const positioned = textContent.items.filter((item): item is import('pdfjs-dist/types/src/display/api').TextItem => 'str' in item && !!item.str.trim());
-    const readingHeader = positioned.find(item => /Hiragana.*Katakana/i.test(item.str));
-    const indexHeader = positioned.find(item => item.str.trim() === 'STT');
-    const meaningHeader = positioned.find(item => /^Ngh/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
-    const typeHeader = positioned.find(item => /^Lo/.test(item.str) && readingHeader && Math.abs(item.transform[5] - readingHeader.transform[5]) < 3);
-    if (readingHeader && indexHeader && meaningHeader && typeHeader) {
-      const headerY = indexHeader.transform[5];
-      const anchors = positioned.filter(item => /^\d+$/.test(item.str.trim()) && Math.abs(item.transform[4] - indexHeader.transform[4]) < 12 && item.transform[5] < headerY)
-        .sort((a, b) => b.transform[5] - a.transform[5]);
-      const cells = anchors.map(() => [[], [], []] as typeof positioned[]);
-      for (const item of positioned) {
-        const x = item.transform[4], y = item.transform[5];
-        if (y >= headerY - 5 || x < indexHeader.transform[4] + 20 || !anchors.length) continue;
-        let row = 0;
-        for (let i = 1; i < anchors.length; i++) {
-          if (Math.abs(y - anchors[i].transform[5]) < Math.abs(y - anchors[row].transform[5])) row = i;
-        }
-        if (Math.abs(y - anchors[row].transform[5]) > 24) continue;
-        const column = x < readingHeader.transform[4] - 3 ? 0 : x < typeHeader.transform[4] - 3 ? 1 : x >= meaningHeader.transform[4] - 3 ? 2 : -1;
-        if (column >= 0) cells[row][column].push(item);
+
+    // 1. Group items by baseline Y (tolerance 4.5px) to detect table headers robustly
+    const lineBuckets: { y: number; items: typeof positioned; text: string }[] = [];
+    for (const it of positioned) {
+      const y = it.transform[5];
+      let bucket = lineBuckets.find(b => Math.abs(b.y - y) <= 4.5);
+      if (!bucket) {
+        bucket = { y, items: [], text: '' };
+        lineBuckets.push(bucket);
       }
-      const joinCell = (items: typeof positioned) => {
-        items.sort((a, b) => Math.abs(a.transform[5] - b.transform[5]) > 3 ? b.transform[5] - a.transform[5] : a.transform[4] - b.transform[4]);
-        return items.map((item, i) => {
-          const prev = items[i - 1];
-          const space = prev && (Math.abs(prev.transform[5] - item.transform[5]) > 3 || item.transform[4] - prev.transform[4] - prev.width > 1.2);
-          return (space ? ' ' : '') + item.str;
-        }).join('').trim();
-      };
-      if (anchors.length) {
-        for (const row of cells) {
-          const [term, reading, meaning] = row.map((items, column) => { const text = joinCell(items); return column < 2 ? text.replace(/(?<=[\u3040-\u30ff\u3400-\u9fff])\s+(?=[\u3040-\u30ff\u3400-\u9fff])/g, '') : text; });
-          lines.push(`${term === '-' ? reading : term}\t${reading}\t${meaning}`);
+      bucket.items.push(it);
+    }
+
+    for (const b of lineBuckets) {
+      b.items.sort((a, b) => a.transform[4] - b.transform[4]);
+      b.text = b.items.map(it => it.str).join(' ');
+    }
+
+    // Detect header line: contains STT/number column + Hiragana/Katakana + Nghĩa
+    const headerBucket = lineBuckets.find(b =>
+      b.text &&
+      b.text.includes('STT') &&
+      (/Hiragana|Katakana/i.test(b.text)) &&
+      (/Ngh/i.test(b.text) || /nghĩa/i.test(b.text))
+    );
+
+    if (headerBucket) {
+      const headerY = headerBucket.y;
+
+      const sttItem = headerBucket.items.find(it => it.str.trim() === 'STT');
+      const readingItem = headerBucket.items.find(it => /Hiragana/i.test(it.str));
+      const typeItem = headerBucket.items.find(it => /^Lo/i.test(it.str));
+      const meaningItem = headerBucket.items.find(it => /^Ngh/i.test(it.str));
+
+      const sttX = sttItem ? sttItem.transform[4] : 55;
+      const readingX = readingItem ? readingItem.transform[4] : 180;
+      const typeX = typeItem ? typeItem.transform[4] : (readingX + (meaningItem ? meaningItem.transform[4] - readingX : 160) * 0.6);
+      const meaningX = meaningItem ? meaningItem.transform[4] : 340;
+      const kanjiX = sttX + 22; // Kanji column starts right after STT
+
+      const anchors = positioned.filter(it =>
+        /^\d+$/.test(it.str.trim()) &&
+        Math.abs(it.transform[4] - sttX) < 25 &&
+        it.transform[5] < headerY - 5
+      ).sort((a, b) => b.transform[5] - a.transform[5]);
+
+      if (anchors.length > 0) {
+        const joinCell = (items: typeof positioned, isJapanese = false) => {
+          items.sort((a, b) => Math.abs(a.transform[5] - b.transform[5]) > 3 ? b.transform[5] - a.transform[5] : a.transform[4] - b.transform[4]);
+          const joined = items.map((item, i) => {
+            const prev = items[i - 1];
+            const space = prev && (Math.abs(prev.transform[5] - item.transform[5]) > 3 || item.transform[4] - prev.transform[4] - (prev.width || 0) > 1.2);
+            return (space ? ' ' : '') + item.str;
+          }).join('').trim();
+          return isJapanese ? joined.replace(/(?<=[\u3040-\u30ff\u3400-\u9fff])\s+(?=[\u3040-\u30ff\u3400-\u9fff])/g, '') : joined;
+        };
+
+        for (let i = 0; i < anchors.length; i++) {
+          const cur = anchors[i];
+          const prevY = i === 0 ? headerY : anchors[i - 1].transform[5];
+          const nextY = i === anchors.length - 1 ? cur.transform[5] - 40 : anchors[i + 1].transform[5];
+
+          const top = (prevY + cur.transform[5]) / 2;
+          const bottom = (cur.transform[5] + nextY) / 2;
+
+          const rowItems = positioned.filter(it => it.transform[5] < top && it.transform[5] >= bottom);
+
+          const termItems = rowItems.filter(it => it.transform[4] >= kanjiX && it.transform[4] < readingX - 4);
+          const readingItems = rowItems.filter(it => it.transform[4] >= readingX - 4 && it.transform[4] < typeX - 4);
+          const meaningItems = rowItems.filter(it => it.transform[4] >= meaningX - 4);
+
+          let rawTerm = joinCell(termItems, true);
+          let rawReading = joinCell(readingItems, true);
+          let rawMeaning = joinCell(meaningItems, false);
+
+          let sino = '';
+          const sinoMatch = rawTerm.match(SINO_VIETNAMESE_REGEX);
+          if (sinoMatch) {
+            sino = sinoMatch[0].replace(/\s+/g, ' ').trim();
+            rawTerm = rawTerm.replace(SINO_VIETNAMESE_REGEX, '').trim();
+          }
+
+          const term = (!rawTerm || rawTerm === '-') ? rawReading : rawTerm;
+          const reading = rawReading || term;
+
+          lines.push(`${term}\t${reading}\t${rawMeaning}${sino ? `\t${sino}` : ''}`);
         }
         continue;
       }
     }
 
-    // Group text items by roughly their Y coordinate to reconstruct lines
+    // Fallback: Group text items by roughly their Y coordinate to reconstruct lines
     const lineMap = new Map<number, { x: number; text: string }[]>();
 
     for (const item of textContent.items) {
       if (!('str' in item) || !item.str.trim()) continue;
-      // item.transform: [scaleX, skewY, skewX, scaleY, transX, transY]
       const y = Math.round(item.transform[5]);
       const x = item.transform[4];
 
-      // Find closest existing Y within 4px tolerance
       let matchedY = y;
       for (const existingY of lineMap.keys()) {
         if (Math.abs(existingY - y) <= 4) {
@@ -113,12 +162,10 @@ export async function extractTextLinesFromPdf(data: ArrayBuffer | Uint8Array): P
       lineMap.get(matchedY)!.push({ x, text: item.str });
     }
 
-    // Sort lines from top to bottom (descending Y in PDF coordinates)
     const sortedYs = Array.from(lineMap.keys()).sort((a, b) => b - a);
 
     for (const y of sortedYs) {
       const items = lineMap.get(y)!;
-      // Sort items in line from left to right (ascending X)
       items.sort((a, b) => a.x - b.x);
       const lineStr = items.map((it) => it.text).join(' ').trim();
       if (lineStr) {
@@ -142,9 +189,135 @@ export function parsePdfTextLines(rawLines: string[], filename = 'Tai-lieu.pdf')
     .map((l) => l.replace(/[★☆‹#›]/g, '').trim())
     .filter((l) => l.length > 0 && l !== '‹#›');
 
-  // Strategy 1: Check if this PDF is an exported slide deck (Minna no Nihongo Google Slides exported as PDF)
-  // Each slide page typically has:
-  // [Term], [Reading with ＼/￣], [Meaning], [Hán Việt]
+  // Strategy 1: Tab-separated lines (e.g. from table extractor)
+  const tabLines = lines.filter(l => l.includes('\t'));
+  if (tabLines.length > 0 && tabLines.length >= lines.length * 0.3) {
+    for (const line of tabLines) {
+      const parts = line.split('\t').map(p => p.trim());
+      if (parts.length >= 2) {
+        let term = parts[0];
+        let reading = parts[1] || '';
+        let meaning = parts[2] || '';
+        let sino = parts[3] || '';
+
+        const sm = term.match(SINO_VIETNAMESE_REGEX) || meaning.match(SINO_VIETNAMESE_REGEX);
+        if (sm) {
+          if (!sino) sino = sm[0];
+          term = term.replace(SINO_VIETNAMESE_REGEX, '').trim();
+        }
+        if (sino) {
+          sino = sino.replace(/\s+/g, ' ').trim();
+        }
+
+        if (term === '-' && reading) term = reading;
+        if (!reading && term) reading = term;
+
+        const cleanRead = cleanPitchAccent(reading || term);
+        cards.push({
+          term: term || reading,
+          reading: reading || term,
+          cleanReading: cleanRead,
+          sinoVietnamese: sino || undefined,
+          meaning: meaning || 'Chưa có nghĩa',
+          note: sino ? `Hán Việt: ${sino}` : undefined,
+        });
+      }
+    }
+    if (cards.length > 0) {
+      return { deckName: defaultDeckName, cards, totalRawLines: lines.length };
+    }
+  }
+
+  // Strategy 2: Numbered table lines from flattened PDF tables or lists
+  const numberedIndices = lines
+    .map((l, idx) => ({ match: l.match(/^(\d{1,3})\s*[-–—.]?\s*(.*)$/), idx }))
+    .filter(x => x.match && parseInt(x.match[1], 10) > 0 && parseInt(x.match[1], 10) <= 250);
+
+  if (numberedIndices.length >= 3) {
+    const TYPE_REGEX = /\b(Danh\s*từ|Động\s*từ|Tính\s*từ\s*(?:[iI]|[nN]a)?|Phó\s*từ|Trợ\s*từ|Liên\s*từ|Thán\s*từ|Mẫu\s*câu|Cụm\s*(?:ĐT|TT|DT)?|Tên\s*riêng)\b/i;
+
+    for (let k = 0; k < numberedIndices.length; k++) {
+      const { match, idx } = numberedIndices[k];
+      const content = match![2].trim();
+      const nextIdx = k + 1 < numberedIndices.length ? numberedIndices[k + 1].idx : lines.length;
+
+      // Check lines immediately preceding this index for Sino-Vietnamese tag e.g. [THỦ], [TRỢ]
+      let sino = '';
+      for (let p = Math.max(0, idx - 2); p < idx; p++) {
+        const prevLine = lines[p];
+        if (/^\d+/.test(prevLine)) continue;
+        const sm = prevLine.match(SINO_VIETNAMESE_REGEX);
+        if (sm) {
+          sino = sm.map(s => s.replace(/\s+/g, ' ').trim()).join(' ');
+        }
+      }
+
+      // Check lines between idx and nextIdx for Kanji
+      let kanji = '';
+      const extraMeaningLines: string[] = [];
+
+      for (let j = idx + 1; j < nextIdx; j++) {
+        const line = lines[j];
+        if (j === nextIdx - 1 && SINO_VIETNAMESE_REGEX.test(line)) continue;
+        if (KANJI_REGEX.test(line) && !kanji) {
+          const clean = line.replace(SINO_VIETNAMESE_REGEX, '').replace(/\s+/g, '');
+          if (!/[a-zA-ZÀ-ỹ]{3,}/.test(line)) {
+            kanji = clean;
+            continue;
+          }
+        }
+        if (/[a-zA-ZÀ-ỹ]/.test(line) && !line.includes('Trang') && !line.includes('Danh Sách') && !line.includes('STT')) {
+          extraMeaningLines.push(line);
+        }
+      }
+
+      let reading = '';
+      let meaning = '';
+
+      const typeMatch = content.match(TYPE_REGEX);
+      if (typeMatch && typeMatch.index !== undefined) {
+        reading = content.slice(0, typeMatch.index).trim();
+        meaning = content.slice(typeMatch.index + typeMatch[0].length).trim();
+      } else {
+        const m = content.match(/^([\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\s\[\]～〜ー。、！？\-–—―]+)\s+([a-zA-ZÀ-ỹ].*)$/);
+        if (m) {
+          reading = m[1].trim();
+          meaning = m[2].trim();
+        } else {
+          reading = content;
+          meaning = '';
+        }
+      }
+
+      reading = reading.replace(/^[-–—]\s*/, '').replace(/\s+/g, '').trim();
+
+      if (extraMeaningLines.length > 0) {
+        const extra = extraMeaningLines.join('; ').trim();
+        meaning = meaning ? `${meaning}; ${extra}` : extra;
+      }
+
+      meaning = meaning.replace(/\s+/g, ' ').replace(/\s+([,;.!?])/g, '$1').trim();
+      const term = kanji || reading;
+
+      if (term || reading) {
+        const cleanRead = cleanPitchAccent(reading || term);
+        cards.push({
+          term: term || reading,
+          reading: reading || term,
+          cleanReading: cleanRead,
+          sinoVietnamese: sino || undefined,
+          meaning: meaning || 'Chưa có nghĩa',
+          note: sino ? `Hán Việt: ${sino}` : undefined,
+        });
+      }
+    }
+
+    if (cards.length > 0) {
+      return { deckName: defaultDeckName, cards, totalRawLines: lines.length };
+    }
+  }
+
+  // Strategy 3: Slide-deck or single-line fallback
   let currentTerm = '';
   let currentReading = '';
   let currentPitch = '';
@@ -266,19 +439,23 @@ export function parsePdfTextLines(rawLines: string[], filename = 'Tai-lieu.pdf')
     }
 
     // Line is Japanese Kana / Kanji term
-    if (/[\u3400-\u4dbf\u4e00-\u9fff]/.test(line)) {
+    if (KANJI_REGEX.test(line)) {
       if (currentTerm) {
-        // If we already have a term, flush previous slide
         flushCurrentSlide();
       }
       currentTerm = line;
       continue;
     }
 
-    // Pure Kana term (if no term yet and not pitch accent)
-    if (!currentTerm && KANA_ACCENT_REGEX.test(line) && !line.includes('＼') && !line.includes('￣')) {
-      currentTerm = line;
-      continue;
+    // Pure Kana term (if no term yet, or if previous card has meaning/reading)
+    if (KANA_ACCENT_REGEX.test(line) && !line.includes('＼') && !line.includes('￣')) {
+      if (currentTerm && (currentMeaning || currentReading)) {
+        flushCurrentSlide();
+      }
+      if (!currentTerm) {
+        currentTerm = line;
+        continue;
+      }
     }
 
     // Vietnamese meaning line
