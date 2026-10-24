@@ -1,3 +1,24 @@
+## ĐỔI VỊ TRÍ NÚT NỘP BÀI (GÓC TRÁI) VÀ ĐIỀU HƯỚNG CÂU TIẾP (GÓC PHẢI) TRÊN MODAL BÀI LUYỆN KỸ NĂNG — 24/10/2026
+
+- **Yêu cầu & Mục tiêu:**
+  - Theo phản hồi và ảnh đính kèm từ người dùng: Trong giao diện modal làm bài luyện kỹ năng (`SkillPracticeModal`), đổi vị trí để nút "Nộp bài" nằm ở góc trái (`inline-actions` đầu tiên) và nhóm nút điều hướng "Câu trước" / "Câu tiếp" nằm ở góc phải (`inline-actions` thứ hai).
+  - Yêu cầu nghiêm ngặt: Chỉ tráo đổi thứ tự vị trí hiển thị của 2 khối sẵn có, không thêm thấu hay sửa đổi logic/styling khác nhằm tránh phát sinh lỗi vặt.
+
+- **Thực hiện thay đổi:**
+  - Tại `apps/web/src/components/skill-practice-modal.tsx` (dòng 630-670), tráo đổi thứ tự hiển thị của 2 thẻ `<div className="inline-actions">` trong khung `skill-session-footer` (vốn có `display: flex; justify-content: space-between`):
+    - Đưa khối chứa nút `<Button>Nộp bài (...)</Button>` lên trước (nằm ở góc trái).
+    - Đưa khối chứa nút `<Button>Câu trước</Button>` và `<Button>Câu tiếp</Button>` ra sau (nằm ở góc phải).
+
+- **Kết quả Kiểm thử & Đo kiểm:**
+  - **Typecheck:** `npm run typecheck` (tsc --noEmit) đạt 100% 0 lỗi.
+  - **Unit tests:** `vitest run tests/skills-and-jlpt-exam.test.ts` đạt 6/6 tests pass.
+  - **Build:** `npm run build` hoàn tất không có lỗi.
+  - **Kiểm thử tự động trên Chrome thật (CDP - Playwright `scripts/test-footer-layout-cdp.mjs`):**
+    - Tọa độ X nút Nộp bài: 190 px (góc trái).
+    - Tọa độ X nút Câu trước: 885.58 px.
+    - Tọa độ X nút Câu tiếp: 996.25 px (góc phải).
+    - Đã xác nhận: `submitBox.x < nextBox.x`, chụp ảnh minh chứng tại `skill-footer-layout.png`.
+
 ## TRỘN NGẪU NHIÊN THỨ TỰ CÁC ĐÁP ÁN MỖI KHI NGƯỜI DÙNG VÀO ĐỀ LUYỆN KỸ NĂNG (/SKILLS) — 23/10/2026
 
 - **Yêu cầu & Mục tiêu:**

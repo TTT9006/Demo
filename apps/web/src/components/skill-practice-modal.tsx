@@ -638,6 +638,15 @@ export function SkillPracticeModal({
               }}
             >
               <div className="inline-actions">
+                <Button disabled={isSubmitting || answeredCount === 0} onClick={handleSubmit}>
+                  <Check size={16} />
+                  {isSubmitting
+                    ? 'Đang chấm điểm...'
+                    : `Nộp bài (${answeredCount}/${questions.length})`}
+                </Button>
+              </div>
+
+              <div className="inline-actions">
                 <Button
                   variant="secondary"
                   size="small"
@@ -653,15 +662,6 @@ export function SkillPracticeModal({
                   onClick={() => setIndex((i) => i + 1)}
                 >
                   Câu tiếp <ArrowRight size={15} />
-                </Button>
-              </div>
-
-              <div className="inline-actions">
-                <Button disabled={isSubmitting || answeredCount === 0} onClick={handleSubmit}>
-                  <Check size={16} />
-                  {isSubmitting
-                    ? 'Đang chấm điểm...'
-                    : `Nộp bài (${answeredCount}/${questions.length})`}
                 </Button>
               </div>
             </div>
