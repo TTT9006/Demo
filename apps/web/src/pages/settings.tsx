@@ -12,23 +12,19 @@ import { useUI } from '../stores/ui';
 import { Button, PageHeader } from '../components/ui';
 export function SettingsPage() {
   const { data: user } = useUser();
-  const [goal, setGoal] = useState(20);
-  const [level, setLevel] = useState('N5');
   const [theme, setTheme] = useState('light');
   const [busy, setBusy] = useState(false);
   const notify = useUI((s) => s.notify);
   const client = useQueryClient();
   useEffect(() => {
     if (user) {
-      setGoal(user.goal);
-      setLevel(user.level);
       setTheme(user.theme);
     }
-  }, [user?.id, user?.goal, user?.level, user?.theme]);
+  }, [user?.id, user?.theme]);
   const save = async () => {
     setBusy(true);
     try {
-      const data = await patch<User>('/profile', { goal, level, theme });
+      const data = await patch<User>('/profile', { theme });
       client.setQueryData(['user'], data);
       void client.invalidateQueries({ queryKey: ['dashboard'] });
       notify('Đã lưu cài đặt của bạn.');
@@ -52,33 +48,6 @@ export function SettingsPage() {
           void save();
         }}
       >
-        <section className="panel settings-section">
-          <div>
-            <h2>Mục tiêu học tập</h2>
-            <p>Vừa sức để có thể thực hiện mỗi ngày.</p>
-          </div>
-          <div>
-            <label>
-              Trình độ JLPT hướng đến
-              <select value={level} onChange={(e) => setLevel(e.target.value)}>
-                {['N5', 'N4', 'N3', 'N2', 'N1'].map((l) => (
-                  <option key={l}>{l}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Số lượt ôn từ vựng mỗi ngày
-              <input
-                type="number"
-                required
-                min={1}
-                max={200}
-                value={goal}
-                onChange={(e) => setGoal(Number(e.target.value))}
-              />
-            </label>
-          </div>
-        </section>
         <section className="panel settings-section spaced">
           <div>
             <h2>Không gian học</h2>

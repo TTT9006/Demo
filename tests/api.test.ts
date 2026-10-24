@@ -215,6 +215,32 @@ describe.sequential('Authenticated learning workflows', () => {
     expect(cardInDb.repetitions).toBe(2);
     expect(cardInDb.due.getTime()).toBeGreaterThan(Date.now() + 5 * 86400000);
   });
+  it('supports free review across multiple decks with shuffling and deck filtering', async () => {
+    const secondDeck = await session.post('/api/flashcards/decks').send({ name: 'Bộ thẻ thứ hai' });
+    const card2 = await session.post('/api/flashcards/cards').send({
+      deckId: secondDeck.body.id,
+      japanese: '飲む',
+      reading: 'のむ',
+      meaning: 'uống',
+    });
+    const multiDeckReview = await session
+      .get('/api/flashcards/review/due')
+      .query({ decks: `${deckId},${secondDeck.body.id}`, mode: 'all' });
+    expect(multiDeckReview.status).toBe(200);
+    expect(multiDeckReview.body).toHaveLength(2);
+    const ids = multiDeckReview.body.map((c: { id: string }) => c.id);
+    expect(ids).toContain(cardId);
+    expect(ids).toContain(card2.body.id);
+    expect(multiDeckReview.body[0].deck).toBeDefined();
+    expect(multiDeckReview.body[0].deck.name).toBeDefined();
+
+    // Single deck filter via comma or query param
+    const singleOnly = await session
+      .get('/api/flashcards/review/due')
+      .query({ decks: secondDeck.body.id, mode: 'all' });
+    expect(singleOnly.body).toHaveLength(1);
+    expect(singleOnly.body[0].id).toBe(card2.body.id);
+  });
   it('evaluates grammar exercises and persists completion', async () => {
     const lesson = await session.get('/api/grammar/desu');
     expect(lesson.body.exercises[0].answer).toBeUndefined();

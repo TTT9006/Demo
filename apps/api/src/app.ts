@@ -307,7 +307,7 @@ app.post('/api/radicals/:id/srs', async (req, res) => {
         reading: r.readings.join(' / '),
         meaning: r.name,
         english: r.meanings.join('; '),
-        note: 'Kangxi ' + radicalId + ' · Tên Hán Việt: ' + r.vietnameseNames.join(', '),
+        note: 'Khang Hy ' + radicalId + ' · Tên Hán Việt: ' + r.vietnameseNames.join(', '),
       },
       update: {},
     });
@@ -617,15 +617,61 @@ app.delete('/api/flashcards/cards/:id', async (req, res) => {
 app.get('/api/flashcards/review/due', async (req, res) => {
   const isAll = req.query.mode === 'all' || req.query.mode === 'anytime';
   const cardId = typeof req.query.card === 'string' ? req.query.card : undefined;
+
+  let deckIds: string[] | undefined;
+  if (typeof req.query.decks === 'string' && req.query.decks.trim()) {
+    deckIds = req.query.decks.split(',').map((id) => id.trim()).filter(Boolean);
+  } else if (Array.isArray(req.query.deck)) {
+    deckIds = req.query.deck.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
+  } else if (typeof req.query.deck === 'string' && req.query.deck.trim()) {
+    if (req.query.deck.includes(',')) {
+      deckIds = req.query.deck.split(',').map((id) => id.trim()).filter(Boolean);
+    } else {
+      deckIds = [req.query.deck.trim()];
+    }
+  }
+
+  const deckFilter =
+    deckIds && deckIds.length > 0
+      ? deckIds.length === 1
+        ? { id: deckIds[0], userId: res.locals.user.id }
+        : { id: { in: deckIds }, userId: res.locals.user.id }
+      : { userId: res.locals.user.id };
+
+  if (isAll) {
+    const cards = await db.card.findMany({
+      where: {
+        ...(cardId ? { id: cardId } : {}),
+        deck: deckFilter,
+      },
+      include: {
+        deck: {
+          select: { id: true, name: true },
+        },
+      },
+      take: 1000,
+    });
+
+    // Fisher-Yates shuffle to randomize words from multiple decks together
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+
+    return res.json(cards);
+  }
+
   return res.json(
     await db.card.findMany({
       where: {
         ...(cardId ? { id: cardId } : {}),
+        deck: deckFilter,
+        ...(cardId ? {} : { due: { lte: new Date() } }),
+      },
+      include: {
         deck: {
-          userId: res.locals.user.id,
-          ...(typeof req.query.deck === 'string' ? { id: req.query.deck } : {}),
+          select: { id: true, name: true },
         },
-        ...(isAll || cardId ? {} : { due: { lte: new Date() } }),
       },
       orderBy: { due: 'asc' },
       take: 100,

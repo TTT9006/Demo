@@ -24,6 +24,7 @@ export type Card = {
   repetitions: number;
   due: string;
   lastReviewed: string | null;
+  deck?: { id: string; name: string };
 };
 export type Deck = { id: string; name: string; description: string; cards: Card[] };
 export type Translation = { translatedText: string; status: string; reviewedAt: string | null };

@@ -149,7 +149,7 @@ export function Tests() {
     queryFn: () => api<Attempt[]>('/tests/history'),
   });
 
-  const examLevels = ['N5', 'N4', 'N3', 'N2'] as const;
+  const examLevels = ['N5', 'N4', 'N3', 'N2', 'N1'] as const;
   const allExams = data || [];
   const examCounts = {
     all: allExams.length,
@@ -157,6 +157,7 @@ export function Tests() {
     N4: allExams.filter((t) => t.level === 'N4').length,
     N3: allExams.filter((t) => t.level === 'N3').length,
     N2: allExams.filter((t) => t.level === 'N2').length,
+    N1: allExams.filter((t) => t.level === 'N1').length,
   };
 
   const filteredExams =

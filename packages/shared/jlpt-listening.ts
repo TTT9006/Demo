@@ -1,4 +1,4 @@
-import type { JlptLevel } from './jlpt-types';
+import type { SkillLevel } from './jlpt-types';
 export type ListeningItem = {
   group: string;
   prompt: string;
@@ -358,7 +358,7 @@ const advancedQuick = [
     '予定をまだ立てていなかったんですね。',
   ],
 ];
-export function listeningItems(level: JlptLevel): ListeningItem[] {
+export function listeningItems(level: SkillLevel): ListeningItem[] {
   const counts = {
     N5: [7, 6, 0, 5, 6],
     N4: [8, 7, 0, 5, 8],

@@ -1,6 +1,6 @@
-import type { JlptLevel } from './jlpt-types';
+import type { SkillLevel } from './jlpt-types';
 // All items below are original practice material, not copied exam questions.
-export const words: Record<JlptLevel, string[][]> = {
+export const words: Record<SkillLevel, string[][]> = {
   N5: `学校|がっこう
 先生|せんせい
 電車|でんしゃ
@@ -75,7 +75,7 @@ export const words: Record<JlptLevel, string[][]> = {
     .map((s) => s.split('|')),
 };
 // prompt | correct | distractors. The answer index is rotated by the paper builder.
-export const context: Record<JlptLevel, string[][]> = {
+export const context: Record<SkillLevel, string[][]> = {
   N5: `のどがかわきました。水を（　）。|飲みます|読みます|書きます|聞きます
 今日はとても（　）です。コートを着ます。|寒い|近い|長い|早い
 パンを二つ（　）。|ください|あります|います|なります
@@ -117,7 +117,7 @@ export const context: Record<JlptLevel, string[][]> = {
     .split('\n')
     .map((s) => s.split('|')),
 };
-export const paraphrases: Record<JlptLevel, string[][]> = {
+export const paraphrases: Record<SkillLevel, string[][]> = {
   N5: `このへやはひろいです。|このへやは大きいです。|このへやはくらいです。|このへやはさむいです。|このへやは古いです。
 わたしはまいあさ走ります。|わたしは朝、いつも走ります。|わたしは夜だけ走ります。|わたしはきのうだけ走りました。|わたしは走りません。
 この店はえきのそばです。|この店はえきの近くです。|この店はえきの中です。|この店はえきから遠いです。|この店はえきの上です。`
@@ -144,7 +144,7 @@ export const paraphrases: Record<JlptLevel, string[][]> = {
     .split('\n')
     .map((s) => s.split('|')),
 };
-export const usage: Record<Exclude<JlptLevel, 'N5'>, string[][]> = {
+export const usage: Record<Exclude<SkillLevel, 'N5'>, string[][]> = {
   N4: `約束|友達と駅で会う約束をしました。|この薬を一日三回約束します。|窓を約束して寝ました。|ご飯を約束して食べました。
 準備|旅行の準備をしています。|駅から家まで準備を歩きました。|花が赤く準備しました。|この靴は準備でおいしいです。
 残念|雨で遠足が中止になって残念です。|この机は残念を四つ持っています。|毎朝残念を飲みます。|彼は残念を運転しています。

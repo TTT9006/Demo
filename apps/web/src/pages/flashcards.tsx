@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toRomaji } from 'wanakana';
 import { JapaneseAnnotatedText, useAnnotationMode } from '../components/japanese-annotated-text';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -22,6 +22,7 @@ import type { Card, Deck } from '../types';
 import { ReviewCardInteractive } from '../components/review-card-interactive';
 import { DeckCoverArt } from '../components/deck-cover-art';
 import { VocabularyImportModal } from '../components/vocabulary-import-modal';
+import { DeckSelectionModal } from '../components/deck-selection-modal';
 import {
   AudioButton,
   Button,
@@ -31,6 +32,15 @@ import {
   Modal,
   PageHeader,
 } from '../components/ui';
+
+function shuffleCards<T>(cards: T[]): T[] {
+  const result = [...cards];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
 function DeckForm({ deck, close }: { deck?: Deck; close: () => void }) {
   const [name, setName] = useState(deck?.name || '');
   const [description, setDescription] = useState(deck?.description || '');
@@ -88,8 +98,10 @@ export function Flashcards() {
     queryKey: ['decks'],
     queryFn: () => api<Deck[]>('/flashcards/decks'),
   });
+  const navigate = useNavigate();
   const [create, setCreate] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [freeReviewSelectOpen, setFreeReviewSelectOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const matching = (data || []).filter((deck) =>
@@ -144,6 +156,14 @@ export function Flashcards() {
             <RotateCcw size={16} />
             Ôn lại tự do
           </Link>
+          <Button
+            variant="secondary"
+            onClick={() => setFreeReviewSelectOpen(true)}
+            title="Chọn các bộ muốn ôn cùng lúc khi ôn tự do"
+          >
+            <Layers size={16} />
+            Chọn các bộ muốn ôn
+          </Button>
         </div>
       </section>
       <div className="section-heading spaced">
@@ -234,6 +254,21 @@ export function Flashcards() {
         <DeckForm close={() => setCreate(false)} />
       </Modal>
       <VocabularyImportModal open={importOpen} onOpenChange={setImportOpen} />
+      <DeckSelectionModal
+        open={freeReviewSelectOpen}
+        onOpenChange={setFreeReviewSelectOpen}
+        decks={data || []}
+        selectedDeckIds={(data || []).map((d) => d.id)}
+        onConfirm={(selectedIds) => {
+          if (data && selectedIds.length === data.length) {
+            navigate('/flashcards/review?mode=all');
+          } else if (selectedIds.length === 1) {
+            navigate(`/flashcards/review?deck=${selectedIds[0]}&mode=all`);
+          } else {
+            navigate(`/flashcards/review?mode=all&decks=${selectedIds.join(',')}`);
+          }
+        }}
+      />
     </>
   );
 }
@@ -526,33 +561,92 @@ export function Review() {
   const annotationMode = useAnnotationMode();
   const [params, setParams] = useSearchParams();
   const deck = params.get('deck');
+  const decksParam = params.get('decks');
   const cardId = params.get('card');
   const modeParam = params.get('mode');
   const isAnytime = modeParam === 'all' || Boolean(cardId);
   const client = useQueryClient();
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState(0);
+  const [sessionSeed, setSessionSeed] = useState(1);
+  const [deckModalOpen, setDeckModalOpen] = useState(false);
+
+  const { data: allDecks = [] } = useQuery({
+    queryKey: ['decks'],
+    queryFn: () => api<Deck[]>('/flashcards/decks'),
+  });
+
+  const selectedDeckIds = useMemo(() => {
+    if (decksParam) {
+      return decksParam.split(',').map((id) => id.trim()).filter(Boolean);
+    }
+    if (deck) {
+      return [deck.trim()];
+    }
+    return allDecks.map((d) => d.id);
+  }, [decksParam, deck, allDecks]);
+
+  const selectedCardsCount = useMemo(() => {
+    const activeDecks = allDecks.filter((d) => selectedDeckIds.includes(d.id));
+    return activeDecks.reduce((sum, d) => sum + (d.cards?.length || 0), 0);
+  }, [allDecks, selectedDeckIds]);
+
+  const selectedDeckNamesText = useMemo(() => {
+    if (!allDecks.length) return 'Tất cả các bộ thẻ';
+    if (!decksParam && !deck) return `Tất cả các bộ (${allDecks.length} bộ)`;
+    const matchingDecks = allDecks.filter((d) => selectedDeckIds.includes(d.id));
+    if (matchingDecks.length === allDecks.length) {
+      return `Tất cả các bộ (${allDecks.length} bộ)`;
+    }
+    if (matchingDecks.length === 1) {
+      return matchingDecks[0].name;
+    }
+    return `${matchingDecks.length} bộ: ${matchingDecks.map((d) => d.name).join(', ')}`;
+  }, [allDecks, selectedDeckIds, decksParam, deck]);
 
   const queryParams = new URLSearchParams();
   if (deck) queryParams.set('deck', deck);
+  if (decksParam) queryParams.set('decks', decksParam);
   if (cardId) queryParams.set('card', cardId);
-  if (isAnytime) queryParams.set('mode', 'all');
+  if (isAnytime) {
+    queryParams.set('mode', 'all');
+    queryParams.set('seed', String(sessionSeed));
+  }
+
+  const queryKey = [
+    'review',
+    isAnytime ? 'all' : 'due',
+    isAnytime ? (decksParam || deck || 'all') : (deck || 'all'),
+    cardId || '',
+    sessionSeed,
+  ];
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['review', deck, isAnytime ? 'all' : 'due', cardId],
-    queryFn: () => api<Card[]>('/flashcards/review/due?' + queryParams.toString()),
+    queryKey,
+    queryFn: async () => {
+      const res = await api<Card[]>('/flashcards/review/due?' + queryParams.toString());
+      return isAnytime ? shuffleCards(res) : res;
+    },
     staleTime: 0,
   });
+
   const card = data?.[0];
+  const interactiveCard = useMemo(() => {
+    if (!card) return undefined;
+    const deckName = card.deck?.name || allDecks.find((d) => d.id === card.deckId)?.name;
+    return {
+      ...card,
+      deckName,
+    };
+  }, [card, allDecks]);
+
   const mutation = useMutation({
     mutationFn: (rating: number) =>
       post('/flashcards/review', { cardId: card?.id, rating, allowEarly: true }),
     onSuccess: () => {
       setDone(done + 1);
       setFlipped(false);
-      client.setQueryData<Card[]>(['review', deck, isAnytime ? 'all' : 'due', cardId], (old) =>
-        old?.slice(1),
-      );
+      client.setQueryData<Card[]>(queryKey, (old) => old?.slice(1));
       void client.invalidateQueries({ queryKey: ['dashboard'] });
       void client.invalidateQueries({ queryKey: ['decks'] });
       void client.invalidateQueries({ queryKey: ['deck'] });
@@ -565,10 +659,37 @@ export function Review() {
       next.set('mode', 'all');
     } else {
       next.delete('mode');
+      next.delete('decks');
     }
     next.delete('card');
     setParams(next);
     setDone(0);
+    setFlipped(false);
+    setSessionSeed((s) => s + 1);
+  };
+
+  const handleApplyDecks = (newSelectedIds: string[]) => {
+    const next = new URLSearchParams(params);
+    next.set('mode', 'all');
+    next.delete('card');
+    if (allDecks.length > 0 && newSelectedIds.length === allDecks.length) {
+      next.delete('deck');
+      next.delete('decks');
+    } else if (newSelectedIds.length === 1) {
+      next.set('deck', newSelectedIds[0]);
+      next.delete('decks');
+    } else {
+      next.set('decks', newSelectedIds.join(','));
+      next.delete('deck');
+    }
+    setParams(next);
+    setSessionSeed((s) => s + 1);
+    setDone(0);
+    setFlipped(false);
+  };
+
+  const handleReshuffle = () => {
+    client.setQueryData<Card[]>(queryKey, (old) => (old ? shuffleCards(old) : []));
     setFlipped(false);
   };
 
@@ -598,6 +719,40 @@ export function Review() {
           Ôn lại tự do (Tất cả thẻ)
         </button>
       </div>
+
+      {isAnytime && (
+        <div className="review-deck-selector-bar">
+          <div className="review-deck-selector-info">
+            <span className="deck-selector-pill" title={selectedDeckNamesText}>
+              <Layers size={14} aria-hidden="true" />
+              <span>{selectedDeckNamesText}</span>
+            </span>
+          </div>
+          <div className="review-deck-selector-actions">
+            <Button
+              type="button"
+              variant="secondary"
+              size="small"
+              onClick={() => setDeckModalOpen(true)}
+              title="Chọn các bộ muốn ôn cùng lúc khi ôn tự do"
+            >
+              <Layers size={14} />
+              <span>Chọn các bộ muốn ôn</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="small"
+              onClick={handleReshuffle}
+              title="Xáo trộn lại danh sách thẻ"
+            >
+              <RotateCcw size={14} />
+              <span>Xáo trộn lại</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
       <PageHeader
         eyebrow={isAnytime ? 'ÔN TẬP TỰ DO · BẤT CỨ LÚC NÀO' : 'MỖI LẦN NHỚ LẠI, MỘT LẦN VỮNG HƠN'}
         title={isAnytime ? 'Ôn lại theo ý muốn.' : 'Khoảng thời gian cho từ vựng.'}
@@ -611,7 +766,7 @@ export function Review() {
         <Loading />
       ) : error ? (
         <ErrorState error={error} />
-      ) : card ? (
+      ) : interactiveCard ? (
         <div className="review-session">
           <div className="review-progress-wrap">
             <div className="review-progress-header">
@@ -625,7 +780,7 @@ export function Review() {
             />
           </div>
           <ReviewCardInteractive
-            card={card}
+            card={interactiveCard}
             flipped={flipped}
             onFlip={() => setFlipped(!flipped)}
             onSwipe={(dir) => {
@@ -671,7 +826,7 @@ export function Review() {
             {done > 0
               ? `Đã ôn ${done} từ. Lịch ôn dài hạn đã được điều chỉnh theo lần ôn mới nhất.`
               : isAnytime
-                ? 'Bộ thẻ này hiện chưa có thẻ nào.'
+                ? 'Các bộ thẻ đã chọn hiện chưa có từ vựng nào.'
                 : 'Hiện tại chưa có thẻ nào đến hạn ôn. Bạn có thể ôn lại bất cứ lúc nào!'}
           </p>
           <div
@@ -684,16 +839,25 @@ export function Review() {
                 Ôn lại tất cả thẻ ngay
               </Button>
             ) : (
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  void client.invalidateQueries({ queryKey: ['review'] });
-                  setDone(0);
-                }}
-              >
-                <RotateCcw size={16} />
-                Ôn lại từ đầu
-              </Button>
+              <>
+                <Button
+                  onClick={() => {
+                    setSessionSeed((s) => s + 1);
+                    setDone(0);
+                    setFlipped(false);
+                  }}
+                >
+                  <RotateCcw size={16} />
+                  Ôn lại từ đầu (Xáo trộn mới)
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setDeckModalOpen(true)}
+                >
+                  <Layers size={16} />
+                  Chọn bộ thẻ khác
+                </Button>
+              </>
             )}
             <Link className="button secondary" to="/flashcards">
               Danh sách bộ thẻ
@@ -701,6 +865,13 @@ export function Review() {
           </div>
         </Empty>
       )}
+      <DeckSelectionModal
+        open={deckModalOpen}
+        onOpenChange={setDeckModalOpen}
+        decks={allDecks}
+        selectedDeckIds={selectedDeckIds}
+        onConfirm={handleApplyDecks}
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { toRomaji } from 'wanakana';
 import { JapaneseAnnotatedText } from './japanese-annotated-text';
 import { AudioButton } from './ui';
-import { Check, X } from 'lucide-react';
+import { Check, X, Layers } from 'lucide-react';
 
 export interface InteractiveCardData {
   id: string;
@@ -152,7 +152,15 @@ export function ReviewCardInteractive({
         >
           {/* Front Face */}
           <div className="review-card-face review-card-front">
-            <span className="eyebrow">{eyebrowFront}</span>
+            <div className="review-card-meta-top">
+              <span className="eyebrow">{eyebrowFront}</span>
+              {card.deckName && (
+                <span className="review-card-deck-tag" title={`Bộ thẻ: ${card.deckName}`}>
+                  <Layers size={11} aria-hidden="true" />
+                  {card.deckName}
+                </span>
+              )}
+            </div>
             <h2 lang="ja">
               <JapaneseAnnotatedText
                 text={card.japanese}
@@ -168,7 +176,15 @@ export function ReviewCardInteractive({
 
           {/* Back Face */}
           <div className="review-card-face review-card-back">
-            <span className="eyebrow">{eyebrowBack}</span>
+            <div className="review-card-meta-top">
+              <span className="eyebrow">{eyebrowBack}</span>
+              {card.deckName && (
+                <span className="review-card-deck-tag" title={`Bộ thẻ: ${card.deckName}`}>
+                  <Layers size={11} aria-hidden="true" />
+                  {card.deckName}
+                </span>
+              )}
+            </div>
             <h2 lang="ja">
               <JapaneseAnnotatedText
                 text={card.japanese}

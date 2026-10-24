@@ -6236,3 +6236,196 @@ main :is(h1, h2, h3, p, label), .dialog-title { overflow-wrap: anywhere; }
   .review-session .review-swipe-guide { gap: 8px; flex-wrap: wrap; }
   .review-session .review-footnote { font-size: 12px; }
 }
+
+
+/* Free Review Deck Selector & Multi-deck Shuffle Styles */
+.review-deck-selector-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin: 0 auto 20px;
+  max-width: 600px;
+  flex-wrap: wrap;
+}
+.review-deck-selector-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.deck-selector-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.deck-selector-pill svg {
+  color: var(--jade);
+  flex-shrink: 0;
+}
+.review-deck-selector-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.review-card-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.review-card-deck-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+[data-theme='dark'] .review-card-deck-tag {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+}
+.deck-select-modal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 520px;
+}
+.deck-select-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.deck-select-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.deck-select-search {
+  flex: 1;
+  min-width: 180px;
+}
+.deck-select-list {
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+.deck-select-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.deck-select-item:hover {
+  background: var(--card);
+  border-color: var(--jade);
+}
+.deck-select-item.selected {
+  border-color: var(--jade);
+  background: rgba(85, 120, 80, 0.08);
+}
+[data-theme='dark'] .deck-select-item.selected {
+  background: rgba(148, 167, 129, 0.12);
+  border-color: #a4c995;
+}
+.deck-select-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.deck-select-checkbox-checked {
+  color: var(--jade);
+}
+.deck-select-checkbox-empty {
+  color: var(--muted);
+}
+.deck-select-item-content {
+  flex: 1;
+  min-width: 0;
+}
+.deck-select-item-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.deck-select-item-name {
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.deck-select-item-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.deck-select-card-badge {
+  font-size: 11px;
+  font-family: var(--mono, monospace);
+  color: var(--jade);
+  background: rgba(85, 120, 80, 0.1);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+[data-theme='dark'] .deck-select-card-badge {
+  background: rgba(148, 167, 129, 0.15);
+  color: #a4c995;
+}
+.deck-select-empty {
+  text-align: center;
+  padding: 24px 0;
+}
+.deck-select-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.deck-select-summary {
+  font-size: 12px;
+  color: var(--muted);
+}
+.deck-select-summary strong {
+  color: var(--ink);
+}

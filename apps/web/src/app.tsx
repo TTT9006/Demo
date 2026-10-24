@@ -39,7 +39,7 @@ import { useUI } from './stores/ui';
 import { Loading, Button } from './components/ui';
 import { AuthPage } from './pages/auth';
 import { Dashboard, Progress } from './pages/dashboard';
-import { Dictionary, DictionaryDetail, DictionaryAdmin } from './pages/dictionary';
+import { Dictionary, DictionaryDetail } from './pages/dictionary';
 import { Flashcards, DeckDetail, Review } from './pages/flashcards';
 import { ConsolidatedReview } from './pages/consolidated-review';
 import { Grammar, GrammarLesson, GrammarReview } from './pages/grammar';
@@ -135,11 +135,6 @@ function Layout() {
             <Dropdown.Portal>
               <Dropdown.Content className="dropdown" sideOffset={8}>
                 <Dropdown.Item onSelect={() => navigate('/profile')}>Hồ sơ của tôi</Dropdown.Item>
-                {user.role === 'admin' && (
-                  <Dropdown.Item onSelect={() => navigate('/admin/dictionary')}>
-                    Quản lý từ điển
-                  </Dropdown.Item>
-                )}
                 <Dropdown.Item
                   onSelect={() =>
                     void post('/auth/logout')
@@ -265,7 +260,6 @@ export function App() {
           <Route path="progress" element={<Progress />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="admin/dictionary" element={<DictionaryAdmin />} />
           <Route
             path="*"
             element={

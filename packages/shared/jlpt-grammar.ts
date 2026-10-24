@@ -1,5 +1,5 @@
-import type { JlptLevel } from './jlpt-types';
-export const grammarChoices: Record<JlptLevel, string[][]> = {
+import type { SkillLevel } from './jlpt-types';
+export const grammarChoices: Record<SkillLevel, string[][]> = {
   N5: `妹は学生（　）。|です|ます|あります|います
 これは田中さん（　）傘です。|の|を|へ|で
 毎朝七時（　）起きます。|に|を|が|と
@@ -59,7 +59,7 @@ export const grammarChoices: Record<JlptLevel, string[][]> = {
     .split('\n')
     .map((s) => s.split('|')),
 };
-export const sentenceParts: Record<JlptLevel, string[][]> = {
+export const sentenceParts: Record<SkillLevel, string[][]> = {
   N5: `机／の／上に本が／あります。
 私の／かばんの／中に／あります。
 これは／日本語で／書いた／手紙です。
@@ -87,7 +87,7 @@ export const sentenceParts: Record<JlptLevel, string[][]> = {
     .split('\n')
     .map((s) => s.split('／')),
 };
-export const textGrammar: Record<JlptLevel, { passage: string; items: string[][] }> = {
+export const textGrammar: Record<SkillLevel, { passage: string; items: string[][] }> = {
   N5: {
     passage:
       '昨日、友達と公園へ行きました。天気は（1）。公園でお弁当を（2）。それから写真を撮りました。帰るとき、雨が降りました。（3）、傘がなかったので、駅まで走りました。家に帰ってから温かいお茶を（4）。とても楽しい一日でした。',

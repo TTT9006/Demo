@@ -1,10 +1,10 @@
-import type { JlptLevel, JlptPaper, JlptQuestion, JlptSummary } from './jlpt-types';
+import type { JlptLevel, SkillLevel, JlptPaper, JlptQuestion, JlptSummary } from './jlpt-types';
 import { words, context, paraphrases, usage } from './jlpt-vocabulary';
 import { grammarChoices, sentenceParts, textGrammar } from './jlpt-grammar';
 import { reading } from './jlpt-reading';
 import { listeningItems } from './jlpt-listening';
 
-function makePaper(level: JlptLevel): JlptPaper {
+function makePaper(level: SkillLevel): JlptPaper {
   const questions: JlptQuestion[] = [];
   const add = (
     category: JlptQuestion['category'],
@@ -45,7 +45,12 @@ function makePaper(level: JlptLevel): JlptPaper {
     }
     questions.push(question);
   };
-  const [readCount, spellCount] = { N5: [7, 5], N4: [7, 5], N3: [8, 6], N2: [5, 5] }[level];
+  const [readCount, spellCount] = ({
+    N5: [7, 5],
+    N4: [7, 5],
+    N3: [8, 6],
+    N2: [5, 5],
+  } as Record<SkillLevel, [number, number]>)[level];
   const bank = words[level];
   bank.slice(0, readCount).forEach(([word, kana], i) =>
     add(
@@ -160,7 +165,12 @@ function makePaper(level: JlptLevel): JlptPaper {
         audioUrl: `/api/tts?text=${encodeURIComponent(item.script)}`,
       },
     );
-  const minutes = { N5: [20, 40, 30], N4: [25, 55, 35], N3: [30, 70, 40], N2: [105, 50] }[level];
+  const minutes = ({
+    N5: [20, 40, 30],
+    N4: [25, 55, 35],
+    N3: [30, 70, 40],
+    N2: [105, 50],
+  } as Record<SkillLevel, number[]>)[level];
   const sections =
     level === 'N2'
       ? [
@@ -211,6 +221,13 @@ import { jlptN5Paper201707 } from './jlpt-papers-n5-2017-07';
 import { jlptN5Paper201307 } from './jlpt-papers-n5-2013-07';
 import { jlptN5Paper201212 } from './jlpt-papers-n5-2012-12';
 import { jlptN5Paper20102011 } from './jlpt-papers-n5-2010-2011';
+import { jlptN4Paper202407 } from './jlpt-papers-n4-2024-07';
+import { jlptN4Paper201707 } from './jlpt-papers-n4-2017-07';
+import { jlptN3Paper202307 } from './jlpt-papers-n3-2023-07';
+import { jlptN3Paper202207 } from './jlpt-papers-n3-2022-07';
+import { jlptN2Paper202307 } from './jlpt-papers-n2-2023-07';
+import { jlptN2Paper202207 } from './jlpt-papers-n2-2022-07';
+import { jlptN1Paper202307 } from './jlpt-papers-n1-2023-07';
 
 export const jlptPracticePapers = (['N5', 'N4', 'N3', 'N2'] as const).map(makePaper);
 export const jlptOfficialPapers: JlptPaper[] = [
@@ -221,6 +238,13 @@ export const jlptOfficialPapers: JlptPaper[] = [
   jlptN5Paper201307,
   jlptN5Paper201212,
   jlptN5Paper20102011,
+  jlptN4Paper202407,
+  jlptN4Paper201707,
+  jlptN3Paper202307,
+  jlptN3Paper202207,
+  jlptN2Paper202307,
+  jlptN2Paper202207,
+  jlptN1Paper202307,
 ];
 export const jlptPapers: JlptPaper[] = [...jlptPracticePapers, ...jlptOfficialPapers];
 export function paperSummary(p: JlptPaper): JlptSummary {

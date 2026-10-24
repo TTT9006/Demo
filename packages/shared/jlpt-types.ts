@@ -1,4 +1,5 @@
-export type JlptLevel = 'N5' | 'N4' | 'N3' | 'N2';
+export type JlptLevel = 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
+export type SkillLevel = 'N5' | 'N4' | 'N3' | 'N2';
 
 export type SyncStatus = 'chưa kiểm' | 'khớp tự động' | 'đã soát thủ công';
 export type AnswerSource = 'Đáp án gốc' | 'Đáp án tham khảo';

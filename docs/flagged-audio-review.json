@@ -1,6 +1,236 @@
 {
   "results": [
     {
+      "examId": "jlpt-n5-2024-07",
+      "examTitle": "JLPT N5 07/2024",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 24,
+      "expectedCount": 24,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 197.8,
+          "end": 240,
+          "duration": 42.2,
+          "sizeBytes": 676431,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 251.5,
+          "end": 311,
+          "duration": 59.5,
+          "sizeBytes": 953120,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 322.3,
+          "end": 372,
+          "duration": 49.7,
+          "sizeBytes": 796385,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 383.3,
+          "end": 434,
+          "duration": 50.7,
+          "sizeBytes": 812267,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 444.8,
+          "end": 514.5,
+          "duration": 69.7,
+          "sizeBytes": 1116542,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 525.6,
+          "end": 582,
+          "duration": 56.4,
+          "sizeBytes": 903800,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 593.1,
+          "end": 651,
+          "duration": 57.9,
+          "sizeBytes": 927624,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 778.6,
+          "end": 838,
+          "duration": 59.4,
+          "sizeBytes": 951448,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 848.8,
+          "end": 891,
+          "duration": 42.2,
+          "sizeBytes": 676431,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 902.4,
+          "end": 953,
+          "duration": 50.6,
+          "sizeBytes": 811013,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 964.4,
+          "end": 1018,
+          "duration": 53.6,
+          "sizeBytes": 858661,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1029,
+          "end": 1089,
+          "duration": 60,
+          "sizeBytes": 961061,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1099.8,
+          "end": 1153,
+          "duration": 53.2,
+          "sizeBytes": 852391,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1290.8,
+          "end": 1317,
+          "duration": 26.2,
+          "sizeBytes": 420222,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1326.3,
+          "end": 1346,
+          "duration": 19.7,
+          "sizeBytes": 316568,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1355.6,
+          "end": 1381,
+          "duration": 25.4,
+          "sizeBytes": 407683,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1390.4,
+          "end": 1416.5,
+          "duration": 26.1,
+          "sizeBytes": 418968,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1425.9,
+          "end": 1453.5,
+          "duration": 27.6,
+          "sizeBytes": 442791,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1539,
+          "end": 1559.5,
+          "duration": 20.5,
+          "sizeBytes": 329106,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 1566.8,
+          "end": 1589.5,
+          "duration": 22.7,
+          "sizeBytes": 364215,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 1597,
+          "end": 1616.5,
+          "duration": 19.5,
+          "sizeBytes": 313224,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 1623.8,
+          "end": 1644.5,
+          "duration": 20.7,
+          "sizeBytes": 332450,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 1652.1,
+          "end": 1672,
+          "duration": 19.9,
+          "sizeBytes": 319493,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 1679.7,
+          "end": 1699.5,
+          "duration": 19.8,
+          "sizeBytes": 317822,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
       "examId": "jlpt-n5-2010-2011",
       "examTitle": "JLPT N5 2010-2011",
       "syncStatus": "khớp tự động",
@@ -1144,6 +1374,1922 @@
           "end": 1729.7,
           "duration": 27.1,
           "sizeBytes": 434734,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
+      "examId": "jlpt-n4-2024-07",
+      "examTitle": "JLPT N4 07/2024",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 28,
+      "expectedCount": 28,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 188,
+          "end": 255,
+          "duration": 67,
+          "sizeBytes": 1073059,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 260,
+          "end": 328,
+          "duration": 68,
+          "sizeBytes": 1089359,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 334,
+          "end": 405,
+          "duration": 71,
+          "sizeBytes": 1137007,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 411.5,
+          "end": 490,
+          "duration": 78.5,
+          "sizeBytes": 1257379,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 495,
+          "end": 570,
+          "duration": 75,
+          "sizeBytes": 1201372,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 574.5,
+          "end": 635,
+          "duration": 60.5,
+          "sizeBytes": 969405,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 643,
+          "end": 712,
+          "duration": 69,
+          "sizeBytes": 1105242,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 718,
+          "end": 798,
+          "duration": 80,
+          "sizeBytes": 1281202,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 935.5,
+          "end": 1022,
+          "duration": 86.5,
+          "sizeBytes": 1385274,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 1028,
+          "end": 1115,
+          "duration": 87,
+          "sizeBytes": 1393216,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 1120,
+          "end": 1218,
+          "duration": 98,
+          "sizeBytes": 1569176,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1223.5,
+          "end": 1314,
+          "duration": 90.5,
+          "sizeBytes": 1449222,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1320,
+          "end": 1408,
+          "duration": 88,
+          "sizeBytes": 1409098,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1414,
+          "end": 1498,
+          "duration": 84,
+          "sizeBytes": 1345150,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1504.5,
+          "end": 1630,
+          "duration": 125.5,
+          "sizeBytes": 2009287,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1718.5,
+          "end": 1750,
+          "duration": 31.5,
+          "sizeBytes": 505052,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1752.5,
+          "end": 1786,
+          "duration": 33.5,
+          "sizeBytes": 537235,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1788.5,
+          "end": 1820,
+          "duration": 31.5,
+          "sizeBytes": 505052,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1821.5,
+          "end": 1852,
+          "duration": 30.5,
+          "sizeBytes": 489170,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 1854.5,
+          "end": 1886,
+          "duration": 31.5,
+          "sizeBytes": 505052,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 1968,
+          "end": 1993,
+          "duration": 25,
+          "sizeBytes": 401398,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 1995,
+          "end": 2023,
+          "duration": 28,
+          "sizeBytes": 449046,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 2025,
+          "end": 2051,
+          "duration": 26,
+          "sizeBytes": 417281,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 2052,
+          "end": 2079,
+          "duration": 27,
+          "sizeBytes": 433163,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q25",
+          "start": 2080,
+          "end": 2106,
+          "duration": 26,
+          "sizeBytes": 417281,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q26",
+          "start": 2108,
+          "end": 2136,
+          "duration": 28,
+          "sizeBytes": 449046,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q27",
+          "start": 2137,
+          "end": 2167,
+          "duration": 30,
+          "sizeBytes": 481229,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q28",
+          "start": 2168,
+          "end": 2198,
+          "duration": 30,
+          "sizeBytes": 481229,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
+      "examId": "jlpt-n3-2023-07",
+      "examTitle": "JLPT N3 07/2023",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 28,
+      "expectedCount": 28,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 0,
+          "end": 80,
+          "duration": 80,
+          "sizeBytes": 1281151,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 81,
+          "end": 162,
+          "duration": 81,
+          "sizeBytes": 1297034,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 163,
+          "end": 237,
+          "duration": 74,
+          "sizeBytes": 1185021,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 238,
+          "end": 334,
+          "duration": 96,
+          "sizeBytes": 1536942,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 335,
+          "end": 428,
+          "duration": 93,
+          "sizeBytes": 1489295,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 429,
+          "end": 511,
+          "duration": 82,
+          "sizeBytes": 1313334,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 512,
+          "end": 615,
+          "duration": 103,
+          "sizeBytes": 1648956,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 616,
+          "end": 716,
+          "duration": 100,
+          "sizeBytes": 1601308,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 717,
+          "end": 825,
+          "duration": 108,
+          "sizeBytes": 1729204,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 826,
+          "end": 937,
+          "duration": 111,
+          "sizeBytes": 1777269,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 938,
+          "end": 1029,
+          "duration": 91,
+          "sizeBytes": 1457112,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1030,
+          "end": 1129,
+          "duration": 99,
+          "sizeBytes": 1585008,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1130,
+          "end": 1229,
+          "duration": 99,
+          "sizeBytes": 1585008,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1229,
+          "end": 1311.5,
+          "duration": 82.5,
+          "sizeBytes": 1321276,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1311.5,
+          "end": 1405,
+          "duration": 93.5,
+          "sizeBytes": 1497236,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1405,
+          "end": 1437,
+          "duration": 32,
+          "sizeBytes": 512942,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1437,
+          "end": 1470,
+          "duration": 33,
+          "sizeBytes": 529243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1470,
+          "end": 1506,
+          "duration": 36,
+          "sizeBytes": 577308,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1506,
+          "end": 1540,
+          "duration": 34,
+          "sizeBytes": 545125,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 1540,
+          "end": 1570,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 1570,
+          "end": 1602,
+          "duration": 32,
+          "sizeBytes": 512942,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 1602,
+          "end": 1635,
+          "duration": 33,
+          "sizeBytes": 529243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 1635,
+          "end": 1666,
+          "duration": 31,
+          "sizeBytes": 497060,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 1666,
+          "end": 1695,
+          "duration": 29,
+          "sizeBytes": 465295,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q25",
+          "start": 1695,
+          "end": 1728,
+          "duration": 33,
+          "sizeBytes": 529243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q26",
+          "start": 1728,
+          "end": 1760,
+          "duration": 32,
+          "sizeBytes": 512942,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q27",
+          "start": 1760,
+          "end": 1790,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q28",
+          "start": 1790,
+          "end": 1821.5,
+          "duration": 31.5,
+          "sizeBytes": 505001,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
+      "examId": "jlpt-n2-2023-07",
+      "examTitle": "JLPT N2 07/2023",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 29,
+      "expectedCount": 29,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 0,
+          "end": 109,
+          "duration": 109,
+          "sizeBytes": 1745086,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 110,
+          "end": 198,
+          "duration": 88,
+          "sizeBytes": 1409047,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 199,
+          "end": 294,
+          "duration": 95,
+          "sizeBytes": 1521060,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 295,
+          "end": 392,
+          "duration": 97,
+          "sizeBytes": 1553243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 393,
+          "end": 455,
+          "duration": 62,
+          "sizeBytes": 993178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 456,
+          "end": 575,
+          "duration": 119,
+          "sizeBytes": 1905165,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 576,
+          "end": 699,
+          "duration": 123,
+          "sizeBytes": 1969112,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 700,
+          "end": 827,
+          "duration": 127,
+          "sizeBytes": 2033060,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 828,
+          "end": 950,
+          "duration": 122,
+          "sizeBytes": 1953230,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 951,
+          "end": 1050,
+          "duration": 99,
+          "sizeBytes": 1585008,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 1051,
+          "end": 1157,
+          "duration": 106,
+          "sizeBytes": 1697021,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1158,
+          "end": 1250,
+          "duration": 92,
+          "sizeBytes": 1472995,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1251,
+          "end": 1345,
+          "duration": 94,
+          "sizeBytes": 1505178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1346,
+          "end": 1443,
+          "duration": 97,
+          "sizeBytes": 1553243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1444,
+          "end": 1536,
+          "duration": 92,
+          "sizeBytes": 1472995,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1537,
+          "end": 1639,
+          "duration": 102,
+          "sizeBytes": 1633073,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1640,
+          "end": 1670,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1671,
+          "end": 1703,
+          "duration": 32,
+          "sizeBytes": 512942,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1704,
+          "end": 1733,
+          "duration": 29,
+          "sizeBytes": 465295,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 1734,
+          "end": 1765,
+          "duration": 31,
+          "sizeBytes": 497060,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 1766,
+          "end": 1794,
+          "duration": 28,
+          "sizeBytes": 448995,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 1795,
+          "end": 1825,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 1826,
+          "end": 1856,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 1857,
+          "end": 1889,
+          "duration": 32,
+          "sizeBytes": 512942,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q25",
+          "start": 1890,
+          "end": 1921,
+          "duration": 31,
+          "sizeBytes": 497060,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q26",
+          "start": 1922,
+          "end": 1953,
+          "duration": 31,
+          "sizeBytes": 497060,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q27",
+          "start": 1953,
+          "end": 2100,
+          "duration": 147,
+          "sizeBytes": 2353217,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q28",
+          "start": 2100,
+          "end": 2225,
+          "duration": 125,
+          "sizeBytes": 2001295,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q29",
+          "start": 2225,
+          "end": 2254.5,
+          "duration": 29.5,
+          "sizeBytes": 473236,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
+      "examId": "jlpt-n1-2023-07",
+      "examTitle": "JLPT N1 07/2023",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 30,
+      "expectedCount": 30,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 0,
+          "end": 82,
+          "duration": 82,
+          "sizeBytes": 1313334,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 82,
+          "end": 182,
+          "duration": 100,
+          "sizeBytes": 1601308,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 182,
+          "end": 274,
+          "duration": 92,
+          "sizeBytes": 1472995,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 274,
+          "end": 378,
+          "duration": 104,
+          "sizeBytes": 1665256,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 378,
+          "end": 464,
+          "duration": 86,
+          "sizeBytes": 1377282,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 464,
+          "end": 599,
+          "duration": 135,
+          "sizeBytes": 2160956,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 599,
+          "end": 735,
+          "duration": 136,
+          "sizeBytes": 2177256,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 735,
+          "end": 832,
+          "duration": 97,
+          "sizeBytes": 1553243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 832,
+          "end": 984,
+          "duration": 152,
+          "sizeBytes": 2433047,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 984,
+          "end": 1071,
+          "duration": 87,
+          "sizeBytes": 1393165,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 1071,
+          "end": 1184,
+          "duration": 113,
+          "sizeBytes": 1809034,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1184,
+          "end": 1294,
+          "duration": 110,
+          "sizeBytes": 1760969,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1294,
+          "end": 1387,
+          "duration": 93,
+          "sizeBytes": 1489295,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1387,
+          "end": 1490,
+          "duration": 103,
+          "sizeBytes": 1648956,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1490,
+          "end": 1572,
+          "duration": 82,
+          "sizeBytes": 1313334,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1572,
+          "end": 1670,
+          "duration": 98,
+          "sizeBytes": 1569125,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1670,
+          "end": 1700,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1700,
+          "end": 1736,
+          "duration": 36,
+          "sizeBytes": 577308,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1736,
+          "end": 1769,
+          "duration": 33,
+          "sizeBytes": 529243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 1769,
+          "end": 1794,
+          "duration": 25,
+          "sizeBytes": 401347,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 1794,
+          "end": 1833,
+          "duration": 39,
+          "sizeBytes": 624956,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 1833,
+          "end": 1866,
+          "duration": 33,
+          "sizeBytes": 529243,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 1866,
+          "end": 1890,
+          "duration": 24,
+          "sizeBytes": 385047,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 1890,
+          "end": 1920,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q25",
+          "start": 1920,
+          "end": 1950,
+          "duration": 30,
+          "sizeBytes": 481178,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q26",
+          "start": 1950,
+          "end": 1987,
+          "duration": 37,
+          "sizeBytes": 593191,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q27",
+          "start": 1987,
+          "end": 2014,
+          "duration": 27,
+          "sizeBytes": 433112,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q28",
+          "start": 2014,
+          "end": 2161,
+          "duration": 147,
+          "sizeBytes": 2353217,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q29",
+          "start": 2161,
+          "end": 2295,
+          "duration": 134,
+          "sizeBytes": 2145073,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q30",
+          "start": 2295,
+          "end": 2325.6,
+          "duration": 30.6,
+          "sizeBytes": 490791,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
+      "examId": "jlpt-n2-2022-07",
+      "examTitle": "JLPT N2 07/2022",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 31,
+      "expectedCount": 31,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 90.11,
+          "end": 160.1,
+          "duration": 70,
+          "sizeBytes": 1121010,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 160.1,
+          "end": 246.04,
+          "duration": 85.9,
+          "sizeBytes": 1375965,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 246.04,
+          "end": 359.98,
+          "duration": 113.9,
+          "sizeBytes": 1824017,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 359.98,
+          "end": 451.24,
+          "duration": 91.3,
+          "sizeBytes": 1461229,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 451.24,
+          "end": 542.28,
+          "duration": 91,
+          "sizeBytes": 1457885,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 575.76,
+          "end": 714.11,
+          "duration": 138.4,
+          "sizeBytes": 2214809,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 714.11,
+          "end": 821.34,
+          "duration": 107.2,
+          "sizeBytes": 1716602,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 821.34,
+          "end": 938.89,
+          "duration": 117.5,
+          "sizeBytes": 1881696,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 938.89,
+          "end": 1033.22,
+          "duration": 94.3,
+          "sizeBytes": 1510548,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 1033.22,
+          "end": 1180.56,
+          "duration": 147.3,
+          "sizeBytes": 2358587,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 1180.56,
+          "end": 1328.2,
+          "duration": 147.6,
+          "sizeBytes": 2363185,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1368.98,
+          "end": 1460,
+          "duration": 91,
+          "sizeBytes": 1457467,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1460,
+          "end": 1562.38,
+          "duration": 102.4,
+          "sizeBytes": 1639279,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1562.38,
+          "end": 1659.12,
+          "duration": 96.7,
+          "sizeBytes": 1549000,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1659.12,
+          "end": 1748,
+          "duration": 88.9,
+          "sizeBytes": 1423195,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1748,
+          "end": 1867.55,
+          "duration": 119.5,
+          "sizeBytes": 1913879,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1898.64,
+          "end": 1931.96,
+          "duration": 33.3,
+          "sizeBytes": 534195,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1931.96,
+          "end": 1968.78,
+          "duration": 36.8,
+          "sizeBytes": 590202,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1968.78,
+          "end": 2002,
+          "duration": 33.2,
+          "sizeBytes": 532524,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 2002,
+          "end": 2035.49,
+          "duration": 33.5,
+          "sizeBytes": 537121,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 2035.49,
+          "end": 2066.62,
+          "duration": 31.1,
+          "sizeBytes": 499087,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 2066.62,
+          "end": 2098.61,
+          "duration": 32,
+          "sizeBytes": 512879,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 2098.61,
+          "end": 2129.78,
+          "duration": 31.2,
+          "sizeBytes": 499923,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 2129.78,
+          "end": 2165.26,
+          "duration": 35.5,
+          "sizeBytes": 568886,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q25",
+          "start": 2165.26,
+          "end": 2203.66,
+          "duration": 38.4,
+          "sizeBytes": 615279,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q26",
+          "start": 2203.66,
+          "end": 2237.22,
+          "duration": 33.6,
+          "sizeBytes": 537957,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q27",
+          "start": 2237.22,
+          "end": 2255,
+          "duration": 17.8,
+          "sizeBytes": 285510,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q28",
+          "start": 2255,
+          "end": 2270.42,
+          "duration": 15.4,
+          "sizeBytes": 247893,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q29",
+          "start": 2282.75,
+          "end": 2447.55,
+          "duration": 164.8,
+          "sizeBytes": 2637784,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q30",
+          "start": 2447.55,
+          "end": 2595.59,
+          "duration": 148,
+          "sizeBytes": 2369872,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q31",
+          "start": 2595.59,
+          "end": 2617.73,
+          "duration": 22.1,
+          "sizeBytes": 355309,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
+      "examId": "jlpt-n3-2022-07",
+      "examTitle": "JLPT N3 07/2022",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 28,
+      "expectedCount": 28,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 120,
+          "end": 193,
+          "duration": 73,
+          "sizeBytes": 1169075,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 193,
+          "end": 289,
+          "duration": 96,
+          "sizeBytes": 1536879,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 289,
+          "end": 393,
+          "duration": 104,
+          "sizeBytes": 1665193,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 393,
+          "end": 473,
+          "duration": 80,
+          "sizeBytes": 1281088,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 473,
+          "end": 568,
+          "duration": 95,
+          "sizeBytes": 1520997,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 568,
+          "end": 678,
+          "duration": 110,
+          "sizeBytes": 1760906,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 719,
+          "end": 834,
+          "duration": 115,
+          "sizeBytes": 1841154,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 834,
+          "end": 962,
+          "duration": 128,
+          "sizeBytes": 2048879,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 962,
+          "end": 1065,
+          "duration": 103,
+          "sizeBytes": 1648893,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 1065,
+          "end": 1176,
+          "duration": 111,
+          "sizeBytes": 1777206,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 1176,
+          "end": 1274,
+          "duration": 98,
+          "sizeBytes": 1569062,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1274,
+          "end": 1423,
+          "duration": 149,
+          "sizeBytes": 2384919,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1475,
+          "end": 1580,
+          "duration": 105,
+          "sizeBytes": 1681075,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1580,
+          "end": 1682,
+          "duration": 102,
+          "sizeBytes": 1633010,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1682,
+          "end": 1773,
+          "duration": 91,
+          "sizeBytes": 1457049,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1795,
+          "end": 1846,
+          "duration": 51,
+          "sizeBytes": 817154,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1846,
+          "end": 1887,
+          "duration": 41,
+          "sizeBytes": 657075,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1887,
+          "end": 1934,
+          "duration": 47,
+          "sizeBytes": 753206,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1934,
+          "end": 1982,
+          "duration": 48,
+          "sizeBytes": 769088,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 2016,
+          "end": 2050,
+          "duration": 34,
+          "sizeBytes": 545062,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 2050,
+          "end": 2086,
+          "duration": 36,
+          "sizeBytes": 577245,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 2086,
+          "end": 2125,
+          "duration": 39,
+          "sizeBytes": 624893,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 2125,
+          "end": 2160,
+          "duration": 35,
+          "sizeBytes": 560945,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 2160,
+          "end": 2194,
+          "duration": 34,
+          "sizeBytes": 545062,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q25",
+          "start": 2194,
+          "end": 2230,
+          "duration": 36,
+          "sizeBytes": 577245,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q26",
+          "start": 2230,
+          "end": 2265,
+          "duration": 35,
+          "sizeBytes": 560945,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q27",
+          "start": 2265,
+          "end": 2300,
+          "duration": 35,
+          "sizeBytes": 560945,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q28",
+          "start": 2300,
+          "end": 2445.6,
+          "duration": 145.6,
+          "sizeBytes": 1357157,
+          "status": "ok",
+          "note": ""
+        }
+      ],
+      "suspiciousCount": 0
+    },
+    {
+      "examId": "jlpt-n4-2017-07",
+      "examTitle": "JLPT N4 07/2017",
+      "syncStatus": "khớp tự động",
+      "totalSegments": 28,
+      "expectedCount": 28,
+      "hasCorrectCount": true,
+      "hasEmptySegments": false,
+      "hasOverlaps": false,
+      "isChronological": true,
+      "details": [
+        {
+          "id": "q01",
+          "start": 161,
+          "end": 227,
+          "duration": 66,
+          "sizeBytes": 1056813,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q02",
+          "start": 227,
+          "end": 302,
+          "duration": 75,
+          "sizeBytes": 1200813,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q03",
+          "start": 302,
+          "end": 366,
+          "duration": 64,
+          "sizeBytes": 1024941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q04",
+          "start": 366,
+          "end": 442,
+          "duration": 76,
+          "sizeBytes": 1216941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q05",
+          "start": 442,
+          "end": 517,
+          "duration": 75,
+          "sizeBytes": 1200813,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q06",
+          "start": 517,
+          "end": 585,
+          "duration": 68,
+          "sizeBytes": 1089069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q07",
+          "start": 585,
+          "end": 640,
+          "duration": 55,
+          "sizeBytes": 880941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q08",
+          "start": 640,
+          "end": 735,
+          "duration": 95,
+          "sizeBytes": 1521069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q09",
+          "start": 872,
+          "end": 961,
+          "duration": 89,
+          "sizeBytes": 1425069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q10",
+          "start": 961,
+          "end": 1064,
+          "duration": 103,
+          "sizeBytes": 1648941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q11",
+          "start": 1064,
+          "end": 1151,
+          "duration": 87,
+          "sizeBytes": 1392813,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q12",
+          "start": 1151,
+          "end": 1227,
+          "duration": 76,
+          "sizeBytes": 1216941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q13",
+          "start": 1227,
+          "end": 1339,
+          "duration": 112,
+          "sizeBytes": 1792941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q14",
+          "start": 1339,
+          "end": 1440,
+          "duration": 101,
+          "sizeBytes": 1617069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q15",
+          "start": 1440,
+          "end": 1537,
+          "duration": 97,
+          "sizeBytes": 1552941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q16",
+          "start": 1623,
+          "end": 1660,
+          "duration": 37,
+          "sizeBytes": 592941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q17",
+          "start": 1660,
+          "end": 1699,
+          "duration": 39,
+          "sizeBytes": 624813,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q18",
+          "start": 1699,
+          "end": 1739,
+          "duration": 40,
+          "sizeBytes": 640941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q19",
+          "start": 1739,
+          "end": 1777,
+          "duration": 38,
+          "sizeBytes": 609069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q20",
+          "start": 1777,
+          "end": 1815,
+          "duration": 38,
+          "sizeBytes": 609069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q21",
+          "start": 1902,
+          "end": 1930,
+          "duration": 28,
+          "sizeBytes": 448941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q22",
+          "start": 1930,
+          "end": 1961,
+          "duration": 31,
+          "sizeBytes": 496941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q23",
+          "start": 1961,
+          "end": 1993,
+          "duration": 32,
+          "sizeBytes": 513069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q24",
+          "start": 1993,
+          "end": 2025,
+          "duration": 32,
+          "sizeBytes": 513069,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q25",
+          "start": 2025,
+          "end": 2056,
+          "duration": 31,
+          "sizeBytes": 496941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q26",
+          "start": 2056,
+          "end": 2087,
+          "duration": 31,
+          "sizeBytes": 496941,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q27",
+          "start": 2087,
+          "end": 2117,
+          "duration": 30,
+          "sizeBytes": 480813,
+          "status": "ok",
+          "note": ""
+        },
+        {
+          "id": "q28",
+          "start": 2117,
+          "end": 2250.77,
+          "duration": 133.8,
+          "sizeBytes": 1208877,
           "status": "ok",
           "note": ""
         }

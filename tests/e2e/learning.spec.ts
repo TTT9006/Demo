@@ -65,9 +65,9 @@ test('account registration and settings persist after reload', async ({ page }) 
   await page.getByRole('button', { name: 'Tạo tài khoản', exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto('/settings');
-  await page.getByLabel('Số lượt ôn từ vựng mỗi ngày').fill('12');
+  await page.getByRole('button', { name: 'Tối' }).click();
   await page.getByRole('button', { name: 'Lưu thay đổi' }).click();
   await expect(page.getByRole('status')).toContainText('Đã lưu cài đặt');
   await page.reload();
-  await expect(page.getByLabel('Số lượt ôn từ vựng mỗi ngày')).toHaveValue('12');
+  await expect(page.getByRole('button', { name: 'Tối' })).toHaveClass(/selected/);
 });

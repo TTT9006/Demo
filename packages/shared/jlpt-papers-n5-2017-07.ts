@@ -1086,6 +1086,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l01",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu yêu cầu (Có tranh/tình huống)",
           "prompt": "女の人は、どの靴下を買いますか。",
           "options": [
@@ -1105,6 +1106,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l02",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu yêu cầu (Có tranh/tình huống)",
           "prompt": "女の人は、一日に何回薬を飲みますか。",
           "options": [
@@ -1123,6 +1125,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l03",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu yêu cầu (Có tranh/tình huống)",
           "prompt": "店の人は、どのかばんを取りますか。",
           "options": [
@@ -1142,6 +1145,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l04",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu yêu cầu (Có tranh/tình huống)",
           "prompt": "学生は、机の上に何を置きますか。",
           "options": [
@@ -1161,6 +1165,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l05",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu yêu cầu (Có tranh/tình huống)",
           "prompt": "学生は、始めに何をしますか。",
           "options": [
@@ -1180,6 +1185,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l06",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu yêu cầu (Có tranh/tình huống)",
           "prompt": "男の人は、何を持っていきますか。",
           "options": [
@@ -1199,6 +1205,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l07",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu yêu cầu (Có tranh/tình huống)",
           "prompt": "女の人は、何番のバスに乗りますか。",
           "options": [
@@ -1217,6 +1224,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l08",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu điểm cốt lõi",
           "prompt": "女の学生は、今日、何時間勉強しますか。",
           "options": [
@@ -1235,6 +1243,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l09",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu điểm cốt lõi",
           "prompt": "女の人の電話番号は何番ですか。",
           "options": [
@@ -1253,6 +1262,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l10",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu điểm cốt lõi",
           "prompt": "男の学生は、だれと住んでいますか。",
           "options": [
@@ -1271,6 +1281,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l11",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu điểm cốt lõi",
           "prompt": "二人はどこで昼ご飯を食べますか。",
           "options": [
@@ -1289,6 +1300,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l12",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu điểm cốt lõi",
           "prompt": "学生は何で名前を書きますか。",
           "options": [
@@ -1307,6 +1319,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l13",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Hiểu điểm cốt lõi",
           "prompt": "二人は明日どこで会いますか。",
           "options": [
@@ -1325,6 +1338,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l14",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Diễn đạt bằng lời nói",
           "prompt": "ご飯を食べました。何と言いますか。",
           "options": [
@@ -1343,6 +1357,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l15",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Diễn đạt bằng lời nói",
           "prompt": "電車の中です。女の人が来ました。何と言いますか。",
           "options": [
@@ -1361,6 +1376,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l16",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Diễn đạt bằng lời nói",
           "prompt": "家へ帰ります。友達に何と言いますか。",
           "options": [
@@ -1379,6 +1395,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l17",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Diễn đạt bằng lời nói",
           "prompt": "郵便局で切手を買います。何と言いますか。",
           "options": [
@@ -1397,6 +1414,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l18",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Diễn đạt bằng lời nói",
           "prompt": "友達は鉛筆がありません。友達に何と言いますか。",
           "options": [
@@ -1415,6 +1433,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l19",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Phản xạ nhanh",
           "prompt": "今日は何日ですか。",
           "options": [
@@ -1432,6 +1451,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l20",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Phản xạ nhanh",
           "prompt": "すみません、図書館はどこですか。",
           "options": [
@@ -1449,6 +1469,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l21",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Phản xạ nhanh",
           "prompt": "明日、何時に学校に来ますか。",
           "options": [
@@ -1466,6 +1487,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l22",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Phản xạ nhanh",
           "prompt": "田中さん、その荷物を持ちましょうか。",
           "options": [
@@ -1483,6 +1505,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l23",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Phản xạ nhanh",
           "prompt": "ちょっと休みませんか。",
           "options": [
@@ -1500,6 +1523,7 @@ export const jlptN5Paper201707: JlptPaper = {
           "id": "n5-2017-07-l24",
           "type": "choice",
           "category": "listening",
+          "syncStatus": "khớp tự động",
           "group": "Phản xạ nhanh",
           "prompt": "それは、何の本ですか。",
           "options": [

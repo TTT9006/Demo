@@ -17,7 +17,6 @@ const alphabets: Record<string, string[]> = {
   Katakana: Array.from(
     'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン',
   ),
-  Kanji: Array.from('一二三四五六七八九十日月火水木金土人山川田口目耳手本学'),
 };
 export function Writing() {
   const { data: user } = useUser();

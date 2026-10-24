@@ -1,5 +1,6 @@
 import type {
   JlptLevel,
+  SkillLevel,
   SkillType,
   SyncStatus,
   SkillExerciseItem,
@@ -154,6 +155,7 @@ export const skillCategories: SkillCategoryView[] = [
 
 // Helper to build skill exercises per skill and level
 export function getSkillExercises(skill: SkillType, level: JlptLevel): SkillExerciseSet[] {
+  if (level === 'N1') return [];
   if (skill === 'vocabulary') {
     return buildVocabularySkillSets(level);
   }
@@ -170,7 +172,7 @@ export function getSkillExercises(skill: SkillType, level: JlptLevel): SkillExer
 }
 
 // 1. VOCABULARY BUILDER (Includes term, reading, meaning for SM-2 flashcard integration)
-function buildVocabularySkillSets(level: JlptLevel): SkillExerciseSet[] {
+function buildVocabularySkillSets(level: SkillLevel): SkillExerciseSet[] {
   const bank = words[level];
   const kanjiReadings: JlptQuestion[] = bank.slice(0, 10).map(([word, kana], i) => ({
     id: `vocab-${level}-read-${i + 1}`,
@@ -267,7 +269,7 @@ function buildVocabularySkillSets(level: JlptLevel): SkillExerciseSet[] {
 }
 
 // 2. GRAMMAR BUILDER (Original authoring, no copyright infringement)
-function buildGrammarSkillSets(level: JlptLevel): SkillExerciseSet[] {
+function buildGrammarSkillSets(level: SkillLevel): SkillExerciseSet[] {
   const choices: JlptQuestion[] = grammarChoices[level].map((row, i) => ({
     id: `grammar-${level}-choice-${i + 1}`,
     type: 'choice' as const,
@@ -330,7 +332,7 @@ function buildGrammarSkillSets(level: JlptLevel): SkillExerciseSet[] {
 }
 
 // 3. READING BUILDER
-function buildReadingSkillSets(level: JlptLevel): SkillExerciseSet[] {
+function buildReadingSkillSets(level: SkillLevel): SkillExerciseSet[] {
   const bundles = reading[level];
   const sets: SkillExerciseSet[] = [];
 
@@ -364,7 +366,7 @@ function buildReadingSkillSets(level: JlptLevel): SkillExerciseSet[] {
 }
 
 // 4. LISTENING BUILDER (Shin Kanzen N2, Speed Master N3, Goukaku Dekiru N4-N5 & Authentic slices)
-function buildListeningSkillSets(level: JlptLevel): SkillExerciseSet[] {
+function buildListeningSkillSets(level: SkillLevel): SkillExerciseSet[] {
   const items = listeningItems(level);
 
   // Group listening items into sets by book / subCategory

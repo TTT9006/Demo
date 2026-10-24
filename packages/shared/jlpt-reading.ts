@@ -1,11 +1,11 @@
-import type { JlptLevel } from './jlpt-types';
+import type { SkillLevel } from './jlpt-types';
 type Reading = { group: string; passage: string; items: string[][] };
 const r = (group: string, passage: string, questions: string): Reading => ({
   group,
   passage,
   items: questions.split('\n').map((s) => s.split('|')),
 });
-export const reading: Record<JlptLevel, Reading[]> = {
+export const reading: Record<SkillLevel, Reading[]> = {
   N5: [
     r(
       'Đoạn ngắn',

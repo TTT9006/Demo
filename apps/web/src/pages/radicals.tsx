@@ -67,7 +67,7 @@ export function RadicalLearning({ userId }: { userId: string }) {
   return (
     <>
       <section className="panel radical-catalog">
-        <h2>214 bộ thủ Kangxi</h2>
+        <h2>214 bộ thủ Khang Hy</h2>
         <div className="toolbar">
           <label>
             Tìm bộ thủ
@@ -127,7 +127,7 @@ export function RadicalLearning({ userId }: { userId: string }) {
           </span>
           <h2>{selected.vietnameseNames.join(' / ') || selected.name}</h2>
           <p>
-            Kangxi #{selected.id} ·{' '}
+            Khang Hy #{selected.id} ·{' '}
             {form.strokes === null
               ? 'Chưa có số nét cho dạng này'
               : form.strokes + ' nét (dạng đang chọn)'}

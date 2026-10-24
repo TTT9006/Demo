@@ -25,6 +25,7 @@ describe('JLPT Exam Qualification & Skills Practice', () => {
   it('qualifies exactly candidate exams with full standard JLPT structure for "Luyện thi"', () => {
     const practiceExams = jlptPapers.filter((p) => p.isPracticeExam);
     const candidateIds = [
+      'jlpt-n5-2024-07',
       'jlpt-n5-2010-2011',
       'jlpt-n5-2012-12',
       'jlpt-n5-2013-07',
@@ -60,6 +61,28 @@ describe('JLPT Exam Qualification & Skills Practice', () => {
     expect(paper2017?.isPracticeExam).toBe(false);
     expect(paper2017?.isDuplicateAudio).toBe(true);
     expect(paper2017?.duplicateNote).toContain('2010–2011');
+
+    // Verify N4, N3, N2, N1 exams are in practice exam pool
+    const newExams = [
+      { id: 'jlpt-n4-2024-07', level: 'N4', listeningCount: 28 },
+      { id: 'jlpt-n3-2023-07', level: 'N3', listeningCount: 28 },
+      { id: 'jlpt-n2-2023-07', level: 'N2', listeningCount: 29 },
+      { id: 'jlpt-n1-2023-07', level: 'N1', listeningCount: 30 },
+    ];
+    for (const exp of newExams) {
+      const exam = practiceExams.find((p) => p.id === exp.id);
+      expect(exam).toBeDefined();
+      expect(exam?.level).toBe(exp.level);
+      expect(exam?.isPracticeExam).toBe(true);
+      expect(exam?.keySource).toMatch(/Đáp án gốc|Đáp án tham khảo/);
+      const listeningSec = exam?.sections.find((s) => s.id === 'listening');
+      expect(listeningSec?.questions.length).toBe(exp.listeningCount);
+      for (const q of listeningSec!.questions) {
+        expect(q.audioUrl).toBeDefined();
+        expect(q.audioUrl).toMatch(/^\/audio\/jlpt\//);
+        expect(q.syncStatus).toBe('khớp tự động');
+      }
+    }
   });
 
   it('serves skills metadata and categorized structure across N5-N2', async () => {
