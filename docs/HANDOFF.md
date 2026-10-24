@@ -1,3 +1,30 @@
+## LOẠI BỎ TOÀN BỘ CÁC PHẦN DƯ THỪA LIÊN QUAN ĐẾN ĐIỀU KHOẢN, CHÍNH SÁCH VÀ COOKIE BANNER — 24/10/2026
+
+- **Yêu cầu & Mục tiêu:**
+  - Theo yêu cầu người dùng: Loại bỏ toàn bộ các phần rườm rà, dư thừa liên quan đến chính sách, điều khoản và cookie (Chính sách bảo mật, Điều khoản sử dụng, Chính sách cookie, Cookie Banner, modal xác thực pháp lý khi đăng ký, các liên kết footer).
+  - Tối ưu hóa trải nghiệm người dùng: Đăng ký tài khoản trực tiếp mượt mà, không bị chặn bởi pop-up điều khoản; giao diện gọn gàng, giảm kích thước gói bundle web (~130 kB).
+
+- **Các thay đổi đã thực hiện:**
+  1. **Loại bỏ Cookie Banner:**
+     - Xóa component `apps/web/src/components/cookie-banner.tsx`.
+     - Loại bỏ việc nhúng `<CookieBanner />` tại `apps/web/src/app.tsx`.
+  2. **Loại bỏ Modal Chấp thuận pháp lý khi đăng ký:**
+     - Xóa component `apps/web/src/components/legal-consent-modal.tsx`.
+     - Tại `apps/web/src/pages/auth.tsx`, gỡ bỏ `LegalConsentModal`, `showLegalModal`, đoạn ghi chú pháp lý `auth-legal-note` và khối liên kết `auth-legal-footer`. Người dùng bấm "Tạo tài khoản" sẽ đăng ký và vào thẳng Dashboard ngay lập tức.
+  3. **Loại bỏ các Trang và Liên kết Điều khoản / Chính sách:**
+     - Xóa trang `apps/web/src/pages/legal.tsx` (gồm `TermsPage`, `PrivacyPage`, `CookiePolicyPage`).
+     - Tại `apps/web/src/app.tsx`:
+       - Loại bỏ khối liên kết footer `footer-legal-links` (Điều khoản • Bảo mật • Cookie).
+       - Các route `/terms`, `/privacy`, `/cookies` được chuyển hướng êm thuận về `/dashboard` (`Navigate replace`) để tránh lỗi 404 cho các liên kết cũ.
+     - Tại `apps/web/src/pages/settings.tsx`:
+       - Loại bỏ khối liên kết `privacy-links` đến `/privacy`, `/terms`, `/cookies`.
+       - Rút gọn tiêu đề và mô tả phần Quản lý Dữ liệu Học tập (giữ nguyên tính năng thiết thực: tải bản sao JSON dữ liệu cá nhân và yêu cầu xóa tài khoản).
+
+- **Kết quả Kiểm thử & Đo kiểm:**
+  - **Typecheck:** `npm run typecheck` đạt 100% 0 lỗi.
+  - **Unit tests:** `npm test` đạt 15/15 test files, 141/141 tests passed.
+  - **Build:** `npm run build` thành công, dung lượng file JS bundle giảm từ `2,410 kB` xuống `2,280 kB`.
+
 ## ĐỔI VỊ TRÍ NÚT NỘP BÀI (GÓC TRÁI) VÀ ĐIỀU HƯỚNG CÂU TIẾP (GÓC PHẢI) TRÊN MODAL BÀI LUYỆN KỸ NĂNG — 24/10/2026
 
 - **Yêu cầu & Mục tiêu:**

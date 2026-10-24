@@ -47,8 +47,6 @@ import { Tests, TestSession } from './pages/tests';
 import { SkillsPage } from './pages/skills';
 import { Writing } from './pages/writing';
 import { SettingsPage, Profile } from './pages/settings';
-import { TermsPage, PrivacyPage, CookiePolicyPage } from './pages/legal';
-import { CookieBanner } from './components/cookie-banner';
 const navigation = [
   { to: '/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
   { to: '/flashcards', label: 'Thẻ từ vựng', icon: Layers },
@@ -215,13 +213,6 @@ function Layout() {
         {!examMode && <footer className="footer">
           <div className="footer-left">
             <span>若葉 · Học từng chút, lớn mỗi ngày.</span>
-            <div className="footer-legal-links">
-              <Link to="/terms">Điều khoản</Link>
-              <span>•</span>
-              <Link to="/privacy">Bảo mật (NĐ 13)</Link>
-              <span>•</span>
-              <Link to="/cookies">Chính sách Cookie</Link>
-            </div>
           </div>
           <Link to="/settings#sources">
             Nguồn dữ liệu & bản quyền <ArrowUpRight size={12} />
@@ -251,9 +242,9 @@ export function App() {
       <Routes>
         <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<AuthPage register />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/cookies" element={<CookiePolicyPage />} />
+        <Route path="/terms" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/privacy" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/cookies" element={<Navigate to="/dashboard" replace />} />
         <Route element={<Layout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
@@ -287,7 +278,6 @@ export function App() {
         </Route>
       </Routes>
       <Toast />
-      <CookieBanner />
     </>
   );
 }

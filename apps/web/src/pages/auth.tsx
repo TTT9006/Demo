@@ -5,10 +5,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { post } from '../services/api';
 import { Button } from '../components/ui';
-import { LegalConsentModal } from '../components/legal-consent-modal';
 
 const schema = z.object({
   email: z.email('Email chưa hợp lệ'),
@@ -22,8 +21,6 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [pendingData, setPendingData] = useState<z.infer<typeof schema> | null>(null);
-  const [showLegalModal, setShowLegalModal] = useState(false);
 
   const {
     register: field,
@@ -39,7 +36,6 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         demo ? '/auth/demo' : register ? '/auth/register' : '/auth/login',
         data,
       );
-      setShowLegalModal(false);
       client.clear();
       client.setQueryData(['user'], user);
       navigate('/dashboard');
@@ -51,12 +47,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   };
 
   const handleFormSubmit = (data: z.infer<typeof schema>) => {
-    if (register) {
-      setPendingData(data);
-      setShowLegalModal(true);
-    } else {
-      void submit(data);
-    }
+    void submit(data);
   };
 
   return (
@@ -146,14 +137,6 @@ export function AuthPage({ register = false }: { register?: boolean }) {
               {busy ? 'Đang xử lý…' : register ? 'Tạo tài khoản' : 'Đăng nhập'}
               <ArrowRight size={17} />
             </Button>
-            {register && (
-              <p className="auth-legal-note">
-                <ShieldCheck size={14} />
-                <span>
-                  Bằng việc bấm Tạo tài khoản, bạn sẽ được chuyển đến bước xác thực và chấp thuận các văn bản pháp lý (theo Nghị định 13/2023/NĐ-CP).
-                </span>
-              </p>
-            )}
           </form>
 
           <div className="or">
@@ -176,36 +159,11 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             <span>Chuẩn kiến thức JLPT: Bám sát <strong>Minna no Nihongo</strong>, <strong>Shinkanzen Master</strong> & <strong>Soumatome</strong>.</span>
           </div>
 
-          <div className="auth-legal-footer">
-            <Link to="/terms">Điều khoản sử dụng</Link>
-            <span>•</span>
-            <Link to="/privacy">Chính sách bảo mật (NĐ 13)</Link>
-            <span>•</span>
-            <Link to="/cookies">Chính sách Cookie</Link>
-          </div>
-
           <small className="muted">
             Tài khoản mẫu dùng chung trên website này. Đăng ký riêng để lưu tiến độ của bạn.
           </small>
         </div>
       </section>
-
-      {register && (
-        <LegalConsentModal
-          open={showLegalModal}
-          onOpenChange={setShowLegalModal}
-          busy={busy}
-          onConfirm={() => {
-            if (pendingData) {
-              void submit({
-                ...pendingData,
-                legalConsent: true,
-                legalAcceptedAt: new Date().toISOString(),
-              });
-            }
-          }}
-        />
-      )}
     </div>
   );
 }

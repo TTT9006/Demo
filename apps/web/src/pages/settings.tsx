@@ -303,14 +303,14 @@ export function Profile() {
       </section>
       <section className="panel settings-section spaced">
         <div>
-          <h2>Quyền riêng tư & Bảo vệ Dữ liệu</h2>
-          <p>Thực thi các quyền của chủ thể dữ liệu cá nhân theo <strong>Nghị định 13/2023/NĐ-CP</strong>.</p>
+          <h2>Quản lý Dữ liệu Học tập</h2>
+          <p>Quản lý và sao lưu dữ liệu tiến trình học tập của bạn.</p>
         </div>
         <div className="privacy-actions-list">
           <div className="privacy-action-card">
             <div>
               <strong>Tải về bản sao dữ liệu cá nhân</strong>
-              <p>Trích xuất toàn bộ hồ sơ, thẻ từ vựng và lịch sử học tập dạng tệp JSON (Điều 9 Khoản 7 NĐ 13).</p>
+              <p>Trích xuất toàn bộ hồ sơ, thẻ từ vựng và lịch sử học tập dạng tệp JSON.</p>
             </div>
             <Button
               variant="secondary"
@@ -325,8 +325,8 @@ export function Profile() {
 
           <div className="privacy-action-card danger">
             <div>
-              <strong>Xóa vĩnh viễn tài khoản & dữ liệu</strong>
-              <p>Xóa toàn bộ tài khoản, các bộ thẻ và kết quả học tập khỏi hệ thống trong vòng 72 giờ (Điều 9 Khoản 5 &amp; Điều 16 NĐ 13).</p>
+              <strong>Xóa tài khoản & dữ liệu</strong>
+              <p>Xóa tài khoản, các bộ thẻ và kết quả học tập khỏi hệ thống.</p>
             </div>
             <Button
               variant="secondary"
@@ -338,12 +338,6 @@ export function Profile() {
               <Trash2 size={16} />
               Yêu cầu xóa tài khoản
             </Button>
-          </div>
-
-          <div className="privacy-links">
-            <Link to="/privacy">Chính sách bảo mật (NĐ 13) <ArrowUpRight size={13} /></Link>
-            <Link to="/terms">Điều khoản sử dụng <ArrowUpRight size={13} /></Link>
-            <Link to="/cookies">Chính sách Cookie <ArrowUpRight size={13} /></Link>
           </div>
         </div>
       </section>
