@@ -307,7 +307,7 @@ app.post('/api/radicals/:id/srs', async (req, res) => {
         reading: r.readings.join(' / '),
         meaning: r.name,
         english: r.meanings.join('; '),
-        note: 'Khang Hy ' + radicalId + ' · Tên Hán Việt: ' + r.vietnameseNames.join(', '),
+        note: 'Kanji ' + radicalId + ' · Tên Hán Việt: ' + r.vietnameseNames.join(', '),
       },
       update: {},
     });
